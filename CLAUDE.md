@@ -21,5 +21,5 @@ Este projeto utiliza **OpenSpec** para gerenciamento de requisitos/tarefas (Spec
 
 ## 3. Comandos Principais
 - Validar integridade das specs: `openspec validate`
-- Listar mudanças ativas: `openspec change list`
+- Listar mudanças ativas: `openspec list`
 - Arquivar spec ao concluir: `openspec archive`

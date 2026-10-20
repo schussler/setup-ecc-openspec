@@ -1,0 +1,27 @@
+{
+  "template": {
+    "repo": "https://github.com/schussler/setup-ecc-openspec.git",
+    "branch": "main"
+  },
+  "upstreams": {
+    "ecc": "2.2.3",
+    "openspec": "1.14.3"
+  },
+  "managed": [
+    ".claude/rules/common",
+    ".claude/rules/openspec.md",
+    ".claude/rules/README.md",
+    ".claude/agents",
+    ".claude/skills",
+    ".claude/commands/opsx",
+    ".claude/commands/toolset-retro.md"
+  ],
+  "owned": [
+    "CLAUDE.md",
+    "README.md",
+    "openspec/config.yaml",
+    "openspec/changes",
+    "openspec/specs",
+    ".claude/rules/project"
+  ]
+}

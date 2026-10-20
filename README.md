@@ -93,6 +93,7 @@ Agentes especializados (`common/agents.md`) apoiam cada etapa: **planner** (plan
 | `/opsx:propose <descrição>` | Criar change com todos os artefatos de planejamento |
 | `/opsx:apply [nome]` | Implementar as tasks do change |
 | `/opsx:archive` | Arquivar change concluído |
+| `/toolset-retro [foco]` | Retrospectiva do toolset `.claude/` ao fim de uma sessão: aplica ajustes e adia o resto como change |
 | `openspec list` | Listar changes ativos |
 | `openspec validate <nome>` | Validar integridade de um change |
 | `openspec status --change <nome>` | Status dos artefatos de um change |

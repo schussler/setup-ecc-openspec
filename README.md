@@ -22,29 +22,41 @@ Cada mudança (*change*) no fluxo `spec-driven` produz quatro artefatos:
 ## Pré-requisitos
 
 - **[Claude Code](https://claude.com/claude-code)** instalado e autenticado
-- **CLI do OpenSpec** disponível no PATH (`openspec --version` para conferir)
+- **CLI do OpenSpec 1.14.3** disponível no PATH (`openspec --version` para conferir; é a versão registrada em `template.json`). O perfil de workflows é global na máquina: rode `openspec config profile core` uma vez, para ter o workflow `update` junto com os demais
 - **Rules ECC** instaladas no projeto (este template já as traz em `.claude/rules/`); para instalar em outro lugar, siga `.claude/rules/README.md`
 
 ## Inicializando um novo projeto
 
-1. **Crie o projeto a partir deste template** (use como template no GitHub, ou clone e reinicie o histórico):
+Use a skill **`/new-project`**. Ela cria o projeto a partir deste template e pede confirmação antes do primeiro commit:
 
-   ```bash
-   git clone <url-deste-repo> meu-projeto
-   cd meu-projeto
-   rm -rf .git && git init
-   ```
+1. Informe o diretório de destino (que não exista ou esteja vazio), o nome do projeto, uma descrição de uma linha e as linguagens que o projeto usa (ex.: `typescript python`). `common/` é sempre mantido.
+2. A skill clona o template, remove o histórico, remove as pastas de rules das linguagens não escolhidas e grava em `template.json` a origem e as rules escolhidas.
+3. Ela reescreve `CLAUDE.md` e `README.md` do projeto e valida o OpenSpec.
 
-2. **Confira a estrutura herdada** — `openspec/` já vem inicializado com o schema `spec-driven`, e `.claude/rules/` já contém as rules ECC (`common/` + `openspec.md`). Se estiver montando do zero em vez de clonar, rode `openspec init` e copie as rules conforme `.claude/rules/README.md`.
+Para fazer à mão:
 
-3. **Adapte o `CLAUDE.md`** ao contexto do projeto se necessário — ele é o contrato que o agente segue em toda sessão. Os rule sets específicos de linguagem já vêm incluídos no template (ex.: `.claude/rules/typescript/`) — mantenha os que correspondem à sua stack; para detalhes da estrutura, veja `.claude/rules/README.md`.
+```bash
+git clone <url-deste-repo> meu-projeto
+cd meu-projeto
+rm -rf .git && git init
+openspec validate --all
+openspec config list   # confirme profile: core
+```
 
-4. **Verifique a saúde do setup**:
+Depois, adapte o `CLAUDE.md` à stack do projeto (ele é o contrato que o agente segue em toda sessão) e mantenha só as rules das linguagens que o projeto usa. Detalhes da estrutura em `.claude/rules/README.md`.
 
-   ```bash
-   openspec doctor      # saúde do root OpenSpec
-   openspec list        # nenhum change ativo ainda
-   ```
+## Manutenção do template e dos projetos derivados
+
+Cada projeto criado a partir do template guarda um `template.json` com a origem (`template.repo` e `template.branch`), as versões de ECC e OpenSpec, a lista de caminhos gerenciados (`managed`, atualizados pelo template) e a de caminhos próprios (`owned`, nunca sobrescritos: `CLAUDE.md`, `README.md`, `openspec/config.yaml`, `openspec/changes/`, `openspec/specs/` e `.claude/rules/project/`).
+
+| Skill | Onde rodar | O que faz |
+|-------|-----------|-----------|
+| `/template-update` | projeto derivado | Compara os caminhos gerenciados com o template, mostra o que mudaria e aplica só depois da sua confirmação |
+| `/template-check` | este template | Valida o manifest, os caminhos, as versões e a ausência de caminhos pessoais e segredos |
+| `/upstream-sync-check` | este template | Compara rules, agents, skills e workflows com os upstreams ECC e OpenSpec e lista o que está desatualizado |
+| `/toolset-retro` | qualquer um | Retrospectiva do toolset `.claude/` ao fim de uma sessão |
+
+Para corrigir uma rule de origem ECC só num projeto, não edite o arquivo de origem: ele é sobrescrito na próxima atualização. Crie a rule local em `.claude/rules/project/`, que é um caminho próprio do projeto.
 
 ## Fluxo de trabalho de uma mudança
 
@@ -93,6 +105,10 @@ Agentes especializados (`common/agents.md`) apoiam cada etapa: **planner** (plan
 | `/opsx:propose <descrição>` | Criar change com todos os artefatos de planejamento |
 | `/opsx:apply [nome]` | Implementar as tasks do change |
 | `/opsx:archive` | Arquivar change concluído |
+| `/new-project` | Criar um projeto novo a partir do template |
+| `/template-update` | Atualizar um projeto derivado a partir do template |
+| `/template-check` | Validar o template antes de usá-lo como base ou publicá-lo |
+| `/upstream-sync-check` | Ver o que está desatualizado em relação ao ECC e ao OpenSpec |
 | `/toolset-retro [foco]` | Retrospectiva do toolset `.claude/` ao fim de uma sessão: aplica ajustes e adia o resto como change |
 | `openspec list` | Listar changes ativos |
 | `openspec validate <nome>` | Validar integridade de um change |
@@ -110,7 +126,10 @@ Agentes especializados (`common/agents.md`) apoiam cada etapa: **planner** (plan
 ├── CLAUDE.md                # Contrato do agente: fluxo OpenSpec + padrões ECC
 ├── CLAUDE.ecc.md            # CLAUDE.md original do ECC upstream (referência)
 ├── README.md                # Este guia
+├── template.json            # Origem do template, versões e caminhos gerenciados/próprios
 ├── .claude/
+│   ├── agents/              # Agentes ECC
+│   ├── skills/              # Skills ECC, OpenSpec e de manutenção do template
 │   └── rules/
 │       ├── openspec.md      # Regra de integração com OpenSpec
 │       ├── README.md        # Como instalar/estender as rules ECC

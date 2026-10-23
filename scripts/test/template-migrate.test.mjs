@@ -9,7 +9,12 @@ import {
 import { makeTempDir, writeTree, readRepoFile, REPO_ROOT } from './helpers.mjs';
 
 const TEMPLATE = REPO_ROOT;
-const PILOT = '/Users/schussler/orca/workspaces/MN_Academy/matt-add-pockos';
+// A real derived project: MIGRATE_PILOT_PROJECT, or the template as it was at
+// 822f1cf (the version MN_Academy was created from), exported with git archive.
+const PILOT = process.env.MIGRATE_PILOT_PROJECT;
+const PILOT_COMMIT = '822f1cf';
+const hasPilotCommit = spawnSync('git', ['cat-file', '-e', `${PILOT_COMMIT}^{commit}`], { cwd: REPO_ROOT }).status === 0;
+const pilotAvailable = Boolean(PILOT) || hasPilotCommit;
 const OLD_MANIFEST = {
   template: { repo: 'https://github.com/schussler/setup-ecc-openspec.git', branch: 'main' },
   upstreams: { ecc: '2.2.3', openspec: '1.14.3' },
@@ -167,12 +172,18 @@ test('isPreserved detecta conteudo perdido', () => {
 
 function pilotCopy() {
   const root = makeTempDir('pilot-');
-  const files = execFileSync('git', ['ls-files', '-z'], { cwd: PILOT, encoding: 'utf8' }).split('\0').filter(Boolean);
-  for (const file of files) cpSync(join(PILOT, file), join(root, file));
+  if (PILOT) {
+    const files = execFileSync('git', ['ls-files', '-z'], { cwd: PILOT, encoding: 'utf8' }).split('\0').filter(Boolean);
+    for (const file of files) cpSync(join(PILOT, file), join(root, file));
+    return root;
+  }
+  const tar = join(makeTempDir('pilot-tar-'), 'pilot.tar');
+  execFileSync('git', ['archive', '--format=tar', '-o', tar, PILOT_COMMIT], { cwd: REPO_ROOT });
+  execFileSync('tar', ['-xf', tar, '-C', root]);
   return root;
 }
 
-test('migracao e idempotente', { skip: !existsSync(PILOT) && 'projeto piloto ausente' }, () => {
+test('migracao e idempotente', { skip: !pilotAvailable && 'projeto piloto ausente' }, () => {
   const project = pilotCopy();
   apply({ template: TEMPLATE, project, items: ALL, checks: NODE_CHECKS });
   const first = snapshot(project);
@@ -182,7 +193,7 @@ test('migracao e idempotente', { skip: !existsSync(PILOT) && 'projeto piloto aus
   assert.ok(plan({ template: TEMPLATE, project }).items.every((item) => item.status === 'done'));
 });
 
-test('nada do projeto e perdido na migracao', { skip: !existsSync(PILOT) && 'projeto piloto ausente' }, () => {
+test('nada do projeto e perdido na migracao', { skip: !pilotAvailable && 'projeto piloto ausente' }, () => {
   const project = pilotCopy();
   const before = snapshot(project);
   apply({ template: TEMPLATE, project, items: ALL, checks: NODE_CHECKS });
@@ -196,7 +207,7 @@ test('nada do projeto e perdido na migracao', { skip: !existsSync(PILOT) && 'pro
   }
 });
 
-test('projeto migrado roda os gates sem erro de configuracao', { skip: !existsSync(PILOT) && 'projeto piloto ausente' }, () => {
+test('projeto migrado roda os gates sem erro de configuracao', { skip: !pilotAvailable && 'projeto piloto ausente' }, () => {
   const project = pilotCopy();
   apply({ template: TEMPLATE, project, items: ALL, checks: NODE_CHECKS });
   writeTree(project, { 'test/ok.test.mjs': "import { test } from 'node:test';\ntest('ok', () => {});\n" });

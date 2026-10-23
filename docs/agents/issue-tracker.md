@@ -43,6 +43,11 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ## Log
 
+### 2026-10-23 — Correção: caminho da máquina no teste da migração
+
+- O `template-check` reprovou no check 6, porque `scripts/test/template-migrate.test.mjs` tinha o caminho absoluto do `MN_Academy`. O "READY" registrado ao fechar a pendência 3 não valia: o check só olha arquivos rastreados, e o teste ainda não estava commitado naquele momento. O commit `913d75f` entrou com a falha.
+- **Corrigido:** o teste monta o projeto derivado com `git archive 822f1cf`, a versão do template de onde o `MN_Academy` foi gerado, ou usa `MIGRATE_PILOT_PROJECT` quando definido. 17/17 nos dois modos; `template-check` READY.
+
 ### 2026-10-23 — Pendência 2: aprovada na rodada 2 de 10
 
 - **A rodada 1 não valeu:** as 8 falhas vieram de "You've hit your session limit" (limite da conta), não da tarefa. O runner passou a tratar o limite como orçamento esgotado (`quota_exhausted`), sem contar falha de gate (commit `7bf7aa7`).

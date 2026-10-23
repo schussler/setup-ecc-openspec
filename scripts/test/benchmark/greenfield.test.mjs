@@ -127,3 +127,12 @@ test('bootstrap ignora diretorios vazios deixados pelo git mv', async () => {
   const result = verifyBootstrap({ target, task });
   assert.deepEqual(result.problems, []);
 });
+
+test('limite de uso interrompe a rodada sem contar falha de gate', async () => {
+  const { run } = setup({ n: 2, env: { FAKE_CLAUDE_MODE: 'error', FAKE_CLAUDE_RESULT: "You've hit your usage limit" } });
+  const { runs, budget } = await run();
+  assert.equal(runs[0].status, 'budget_exhausted');
+  assert.equal(runs[0].gates.bootstrap, undefined);
+  assert.equal(runs[1].status, 'not_run');
+  assert.equal(budget.exhausted, true);
+});

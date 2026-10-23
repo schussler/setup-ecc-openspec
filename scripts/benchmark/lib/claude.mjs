@@ -12,6 +12,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export const DEFAULT_TIMEOUT_MS = 25 * 60 * 1000;
+// The account's usage limit is infrastructure, not an agent or gate failure.
+const QUOTA = /hit your (session |usage |weekly )?limit|usage limit reached/i;
 const DEFAULT_KILL_GRACE_MS = 10 * 1000;
 
 export function buildStepPrompt(skill, taskArgument = '') {
@@ -89,8 +91,9 @@ export function invokeClaude({
         resolve({ status: 'error', reason: `saída sem JSON (exit ${code})`, duration_ms: durationMs, cost_usd: null, stderr });
         return;
       }
+      const quota = typeof json.result === 'string' && QUOTA.test(json.result);
       resolve({
-        status: json.is_error || code !== 0 ? 'error' : 'ok',
+        status: quota ? 'quota_exhausted' : json.is_error || code !== 0 ? 'error' : 'ok',
         reason: json.is_error ? json.subtype : null,
         duration_ms: durationMs,
         cost_usd: json.total_cost_usd ?? null,

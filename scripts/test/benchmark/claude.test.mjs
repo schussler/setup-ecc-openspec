@@ -76,3 +76,11 @@ test('invokeClaude registra falha de spawn sem derrubar o runner', async () => {
   assert.match(result.reason, /spawn/);
   assert.equal(result.cost_usd, null);
 });
+
+test('invokeClaude marca limite de uso da conta como quota_exhausted', async () => {
+  const result = await invokeClaude({
+    bin: FAKE, cwd: makeTempDir(), prompt: '/x', allowedTools: ['Read'],
+    env: { FAKE_CLAUDE_MODE: 'error', FAKE_CLAUDE_RESULT: "You've hit your session limit · resets 7:30pm" },
+  });
+  assert.equal(result.status, 'quota_exhausted');
+});

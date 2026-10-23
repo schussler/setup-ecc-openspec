@@ -37,9 +37,15 @@ export async function runStep(run, { name, prompt, cwd, allowedTools, addDirs, b
     cwd, prompt, allowedTools, addDirs,
   });
   const step = { name, ...result, compound_denials: countCompoundDenials(result.permission_denials) };
-  run.steps.push(step);
   run.invocations += 1;
   run.cost_usd += result.cost_usd ?? 0;
+  if (result.status === 'quota_exhausted') {
+    // Stop the round like an exhausted budget: no later invocation can succeed.
+    budget.exhaust();
+    step.status = 'budget_exhausted';
+    step.reason = 'quota_exhausted';
+  }
+  run.steps.push(step);
   return step;
 }
 

@@ -27,7 +27,7 @@ if (mode === 'sleep') {
     type: 'result',
     subtype: mode === 'error' ? 'error_during_execution' : 'success',
     is_error: mode === 'error',
-    result: mode === 'error' ? 'falhou' : 'ok',
+    result: process.env.FAKE_CLAUDE_RESULT ?? (mode === 'error' ? 'falhou' : 'ok'),
     total_cost_usd: Number(process.env.FAKE_CLAUDE_COST ?? 0.01),
     duration_ms: 5,
     num_turns: 2,

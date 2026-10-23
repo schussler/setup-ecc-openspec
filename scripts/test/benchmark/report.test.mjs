@@ -92,3 +92,30 @@ test('scrubPaths remove caminhos da maquina mesmo truncados', async () => {
   assert.ok(!out.includes('/home/u'), out);
   assert.match(out, /<work-dir>\/project/);
 });
+
+test('negacoes de comando composto sao contadas', async () => {
+  const { countCompoundDenials } = await import('../../benchmark/lib/report.mjs');
+  const denials = ['node a; echo $?', 'cd x && ls', 'touch y'].map((command) => ({ tool_name: 'Bash', tool_input: { command } }));
+  assert.equal(countCompoundDenials(denials), 2);
+  assert.equal(countCompoundDenials([{ tool_name: 'Write', tool_input: { file_path: 'a;b' } }]), 0);
+});
+
+test('relatorio avalia os criterios de aceite', () => {
+  const runs = Array.from({ length: 10 }, (_, i) => run(i < 9 ? 'passed' : 'failed', { stopped_after_denial: i === 9 }));
+  const report = buildReport({
+    scenario: 'archive-only',
+    task: {
+      id: 't', scoped_paths: [],
+      acceptance: { gate_pass_count: { archive: 10 }, max_stopped_after_denial: 0, max_compound_denials_mean: 1, max_out_of_scope: 0 },
+    },
+    n: 10, budget: { max: 10, used: 10, exhausted: true }, groups: { default: runs }, startedAt: 'a', finishedAt: 'b',
+  });
+  const byName = Object.fromEntries(report.acceptance.criteria.map((c) => [c.name, c]));
+  assert.equal(byName['gate_pass_count.archive'].value, 9);
+  assert.equal(byName['gate_pass_count.archive'].passed, false);
+  assert.equal(byName.max_stopped_after_denial.value, 1);
+  assert.equal(byName.max_out_of_scope.passed, true);
+  assert.equal(report.acceptance.accepted, false);
+  assert.equal(report.status, 'complete');
+  assert.match(renderMarkdown(report), /Critérios de aceite/);
+});

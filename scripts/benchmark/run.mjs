@@ -17,12 +17,14 @@ import { createBudget } from './lib/budget.mjs';
 import { DEFAULT_TIMEOUT_MS } from './lib/claude.mjs';
 import { runGreenfield } from './lib/greenfield.mjs';
 import { runLegacy } from './lib/legacy.mjs';
+import { runArchiveOnly } from './lib/archive-only.mjs';
 import { buildReport, renderMarkdown, scrubPaths } from './lib/report.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SCENARIOS = {
   greenfield: { task: 'greenfield-duration', run: runGreenfield },
   legacy: { task: 'legacy-pricing', run: runLegacy },
+  'archive-only': { task: 'legacy-pricing-archive', run: runArchiveOnly },
 };
 
 export function parseOptions(argv) {
@@ -62,7 +64,8 @@ export async function main(argv) {
   const options = parseOptions(argv);
   const budget = createBudget(options.maxInvocations);
   const claude = { bin: options.claudeBin, model: options.model, timeoutMs: options.timeoutMin * 60000, env: {} };
-  const names = options.scenario === 'all' ? Object.keys(SCENARIOS) : [options.scenario];
+  // `all` runs the full scenarios; partial ones (archive-only) run only on request.
+  const names = options.scenario === 'all' ? ['greenfield', 'legacy'] : [options.scenario];
   const reports = {};
   for (const name of names) {
     const startedAt = new Date().toISOString();

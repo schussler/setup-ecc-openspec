@@ -9,7 +9,7 @@ import { measureImplementation } from '../../gates/implement-gate.mjs';
 import { scenarioCoverage, scenariosIn } from '../../gates/archive-gate.mjs';
 import { checkScope } from '../../gates/scope-check.mjs';
 import { invokeClaude } from './claude.mjs';
-import { parseCoverage } from './report.mjs';
+import { countCompoundDenials, parseCoverage } from './report.mjs';
 
 export function loadTask(taskDir) {
   const task = JSON.parse(readFileSync(join(taskDir, 'task.json'), 'utf8'));
@@ -36,7 +36,7 @@ export async function runStep(run, { name, prompt, cwd, allowedTools, addDirs, b
     bin: claude.bin, env: claude.env, model: claude.model, timeoutMs: claude.timeoutMs,
     cwd, prompt, allowedTools, addDirs,
   });
-  const step = { name, ...result };
+  const step = { name, ...result, compound_denials: countCompoundDenials(result.permission_denials) };
   run.steps.push(step);
   run.invocations += 1;
   run.cost_usd += result.cost_usd ?? 0;
@@ -126,6 +126,10 @@ export async function pool(items, limit, worker) {
   await Promise.all(lanes);
 }
 
+// Gates reported but left out of a run's pass/fail (the hidden acceptance
+// tests measure the context, not the pipeline).
+export const INFORMATIONAL_GATES = new Set(['hidden']);
+
 export function finish(run, started) {
   run.duration_ms = Date.now() - started;
   run.cost_usd = Math.round(run.cost_usd * 10000) / 10000;
@@ -133,8 +137,9 @@ export function finish(run, started) {
     run.status = 'budget_exhausted';
     return run;
   }
-  const failed = Object.entries(run.gates).find(([, gate]) => !gate.passed);
+  const failed = Object.entries(run.gates).find(([name, gate]) => !gate.passed && !INFORMATIONAL_GATES.has(name));
   run.status = failed ? 'failed' : 'passed';
+  run.stopped_after_denial = Boolean(failed) && run.steps.some((step) => (step.permission_denials ?? []).length > 0);
   if (failed && !run.failure) run.failure = `gate ${failed[0]} reprovado`;
   return run;
 }

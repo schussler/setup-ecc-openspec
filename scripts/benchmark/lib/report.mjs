@@ -13,6 +13,14 @@ export function scrubPaths(text, { workDir, home }) {
     .replaceAll(home, '~');
 }
 
+// A denied command that chains or redirects through the shell: permissions match
+// commands literally, so these never match an allow rule.
+const COMPOUND = /;|&&|\|\||\$\?|\$\(|`|(^|\s)cd\s/;
+
+export function countCompoundDenials(denials = []) {
+  return denials.filter((denial) => COMPOUND.test(denial.tool_input?.command ?? '')).length;
+}
+
 export function parseCoverage(output) {
   const match = output.match(/all files\s*\|\s*([\d.]+)/);
   return match ? Number(match[1]) : null;
@@ -56,7 +64,31 @@ function summarize(runs) {
     ])),
     cost_usd: round(sum(runs.map((run) => run.cost_usd)), 4),
     invocations: sum(runs.map((run) => run.invocations)),
+    compound_denials_mean: stats(executed.map((run) => sum(run.steps.map((step) => step.compound_denials ?? 0))))?.mean ?? null,
+    stopped_after_denial: executed.filter((run) => run.stopped_after_denial).length,
   };
+}
+
+function evaluateAcceptance(acceptance, runs) {
+  if (!acceptance) return null;
+  const executed = runs.filter((run) => EXECUTED.has(run.status));
+  const criteria = [];
+  for (const [gate, min] of Object.entries(acceptance.gate_pass_count ?? {})) {
+    const value = executed.filter((run) => run.gates?.[gate]?.passed).length;
+    criteria.push({ name: `gate_pass_count.${gate}`, value, threshold: `>= ${min}`, passed: value >= min });
+  }
+  const max = (name, value, limit) => criteria.push({ name, value, threshold: `<= ${limit}`, passed: value !== null && value <= limit });
+  if ('max_stopped_after_denial' in acceptance) {
+    max('max_stopped_after_denial', executed.filter((run) => run.stopped_after_denial).length, acceptance.max_stopped_after_denial);
+  }
+  if ('max_compound_denials_mean' in acceptance) {
+    const mean = stats(executed.map((run) => sum(run.steps.map((step) => step.compound_denials ?? 0))))?.mean ?? null;
+    max('max_compound_denials_mean', mean, acceptance.max_compound_denials_mean);
+  }
+  if ('max_out_of_scope' in acceptance) {
+    max('max_out_of_scope', sum(executed.map((run) => run.gates?.scope?.out_of_scope?.length ?? 0)), acceptance.max_out_of_scope);
+  }
+  return { criteria, accepted: criteria.every((criterion) => criterion.passed) };
 }
 
 export function buildReport({ scenario, task, n, budget, groups, startedAt, finishedAt, interrupted = false, notes = [] }) {
@@ -78,6 +110,7 @@ export function buildReport({ scenario, task, n, budget, groups, startedAt, fini
     scenario,
     task: task.id,
     comparison,
+    acceptance: evaluateAcceptance(task.acceptance, all),
     scoped_paths: task.scoped_paths,
     n,
     status,
@@ -103,6 +136,7 @@ function renderGroup(name, { summary, runs }) {
     `- **Arquivos fora de \`scoped_paths\`:** ${summary.out_of_scope_files}`,
     `- **Cobertura:** antes ${fmtStats(summary.coverage_before, '%')}; depois ${fmtStats(summary.coverage_after, '%')}`,
     `- **Custo:** US$ ${fmt(summary.cost_usd)} em ${summary.invocations} invocações`,
+    `- **Negações de comando composto:** média ${fmt(summary.compound_denials_mean)} por execução; ${summary.stopped_after_denial} execuções pararam após negação`,
     '',
     '| Gate | Avaliado | Aprovado | Taxa |',
     '|------|----------|----------|------|',
@@ -146,6 +180,16 @@ export function renderMarkdown(report) {
       ? [`- **Com vs. sem \`docs/agents/\`:** sucesso ${fmt(report.comparison.with_docs_success_rate, '%')} vs. ${fmt(report.comparison.without_docs_success_rate, '%')} (com − sem: ${fmt(report.comparison.difference_pp, ' p.p.')})`]
       : []),
     '',
+    ...(report.acceptance
+      ? [
+        `## Critérios de aceite: ${report.acceptance.accepted ? 'aprovado' : 'reprovado'}`,
+        '',
+        '| Critério | Valor | Limiar | Resultado |',
+        '|----------|-------|--------|-----------|',
+        ...report.acceptance.criteria.map((c) => `| ${c.name} | ${fmt(c.value)} | ${c.threshold} | ${c.passed ? '✓' : '✗'} |`),
+        '',
+      ]
+      : []),
     ...Object.entries(report.groups).map(([name, group]) => renderGroup(name, group)),
   ].join('\n');
 }

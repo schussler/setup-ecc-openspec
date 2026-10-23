@@ -25,9 +25,9 @@
 
 ## 4. Fatia 4 — `spec-archive`, `pr`, `handoff`, `CLAUDE.md`
 
-- [ ] 4.1 Testes (RED) e implementação de `archive-gate.mjs`, `pr-gate.mjs` e `scope-check.mjs`; verificar com `node --test`
-- [ ] 4.2 Criar as skills `spec-archive`, `pr` (sob pedido, com confirmação) e `handoff`; verificar com os testes de contrato
-- [ ] 4.3 Atualizar `CLAUDE.md` (leitura de `docs/agents/`, pipeline de 4 passos, gates não puláveis, hooks no headless) e o README; verificar com o teste de contrato do `CLAUDE.md`
+- [x] 4.1 Testes (RED) e implementação de `archive-gate.mjs`, `pr-gate.mjs` e `scope-check.mjs`; verificar com `node --test`
+- [x] 4.2 Criar as skills `spec-archive`, `pr` (sob pedido, com confirmação) e `handoff`; verificar com os testes de contrato
+- [x] 4.3 Atualizar `CLAUDE.md` (leitura de `docs/agents/`, pipeline de 4 passos, gates não puláveis, hooks no headless) e o README; verificar com o teste de contrato do `CLAUDE.md`
 
 ## 5. Fatia 5 — modo headless
 

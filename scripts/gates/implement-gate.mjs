@@ -8,11 +8,9 @@
 // Exit: 0 pass, 1 retry, 2 stop, 3 error.
 import { pathToFileURL } from 'node:url';
 import { ChecksError, countErrors, listTestFiles, loadChecks, parseTestCounts, runCommand } from './checks.mjs';
-import { parseArgs, readGates, runCli, writeGates } from './gate-store.mjs';
+import { MAX_CORRECTIONS, MAX_ERRORS, REQUIRED_PCT, decideVerdict, parseArgs, pct, readGates, runCli, writeGates } from './gate-store.mjs';
 
-export const MAX_CORRECTIONS = 3;
-export const REQUIRED_PCT = 100;
-export const MAX_ERRORS = 0;
+export { MAX_CORRECTIONS, REQUIRED_PCT, MAX_ERRORS, decideVerdict };
 
 export function recordBaseline({ root, change }) {
   const gates = readGates(root, change);
@@ -25,7 +23,6 @@ export function recordBaseline({ root, change }) {
 }
 
 const shellQuote = (value) => `'${value.replace(/'/g, "'\\''")}'`;
-const pct = (pass, total) => (total === 0 ? null : Math.round((pass / total) * 10000) / 100);
 
 async function runTestFile(root, command, file) {
   const result = await runCommand(command.replaceAll('{file}', shellQuote(file)), { cwd: root });
@@ -55,14 +52,6 @@ async function scoreWholeSuite(root, command, oldFiles, newFiles) {
     old: { ...whole, files: oldFiles },
     new: { ...whole, files: newFiles, fail: 0 },
   };
-}
-
-export function decideVerdict({ passed, failures }, previous) {
-  if (passed) return 'pass';
-  if (previous.length >= MAX_CORRECTIONS) return 'stop';
-  const last = previous.at(-1);
-  if (last && failures >= last.failures) return 'stop';
-  return 'retry';
 }
 
 const meets = (value) => value === null || value >= REQUIRED_PCT;

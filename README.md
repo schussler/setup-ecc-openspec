@@ -11,6 +11,8 @@ A regra central do template: **zero código sem spec**. Toda funcionalidade nasc
 | **OpenSpec** | Gerencia *o que* construir: propostas, specs, design e tarefas versionados em `openspec/`. É a fonte da verdade dos requisitos. |
 | **ECC** | Governa *como* construir: rules em `.claude/rules/` (TDD, estilo, segurança, code review) e agentes especializados (planner, tdd-guide, code-reviewer, etc.). |
 | **CLAUDE.md** | Instruções que o Claude Code carrega em toda sessão, conectando as duas camadas. |
+| **docs/agents/** | Contexto de engenharia que o agente lê antes de agir: `architecture.md`, `domain.md` e `issue-tracker.md` (log e ponto de restauração). Projetos novos recebem os modelos de `templates/docs/agents/`. |
+| **scripts/gates/** | Gates com pontuação verificável (implementação, arquivamento, PR, escopo). Os comandos vêm de `template.json` → `checks`. |
 
 Cada mudança (*change*) no fluxo `spec-driven` produz quatro artefatos:
 
@@ -57,6 +59,21 @@ Cada projeto criado a partir do template guarda um `template.json` com a origem 
 | `/toolset-retro` | qualquer um | Retrospectiva do toolset `.claude/` ao fim de uma sessão |
 
 Para corrigir uma rule de origem ECC só num projeto, não edite o arquivo de origem: ele é sobrescrito na próxima atualização. Crie a rule local em `.claude/rules/project/`, que é um caminho próprio do projeto.
+
+## Pipeline com gates
+
+O fluxo do dia a dia são quatro skills. As `spec-*` são wrappers finos sobre os comandos `/opsx:*` descritos na próxima seção:
+
+| Passo | Skill | Gate (script) | Aprova quando |
+|-------|-------|---------------|---------------|
+| 1 | `spec-create` | `openspec validate --strict` | a change é válida |
+| 2 | `spec-implement` | `scripts/gates/implement-gate.mjs` | testes novos e antigos em 100%, 0 erro de lint e de tipo |
+| 3 | `spec-archive` | `scripts/gates/archive-gate.mjs` | 100% dos cenários têm teste de mesmo nome, e a suíte passa |
+| 4 | `pr` (só sob pedido) | `scripts/gates/pr-gate.mjs` | nenhuma change ativa, `git status` limpo e testes passando |
+
+Cada gate permite até 3 correções e para se a pontuação não melhorar. As tentativas ficam em `openspec/changes/<change>/gates.json` e em `docs/agents/issue-tracker.md`. Preencha `checks` em `template.json` antes do primeiro `spec-implement`.
+
+Partes de `spec-create`, `spec-implement`, `pr` e `handoff` são adaptadas de [`mattpocock/skills`](https://github.com/mattpocock/skills) (MIT; ver o `NOTICE.md` de cada skill).
 
 ## Fluxo de trabalho de uma mudança
 
@@ -126,10 +143,15 @@ Agentes especializados (`common/agents.md`) apoiam cada etapa: **planner** (plan
 ├── CLAUDE.md                # Contrato do agente: fluxo OpenSpec + padrões ECC
 ├── CLAUDE.ecc.md            # CLAUDE.md original do ECC upstream (referência)
 ├── README.md                # Este guia
-├── template.json            # Origem do template, versões e caminhos gerenciados/próprios
+├── template.json            # Origem, versões, managed/owned/template_only e checks
+├── docs/agents/             # Contexto do agente (do template; projetos recebem os modelos)
+├── templates/docs/agents/   # Modelos TBD copiados pelo /new-project
+├── scripts/
+│   ├── gates/               # Gates do pipeline (vão para os projetos)
+│   └── test/                # Suíte do template (node --test)
 ├── .claude/
 │   ├── agents/              # Agentes ECC
-│   ├── skills/              # Skills ECC, OpenSpec e de manutenção do template
+│   ├── skills/              # Skills ECC, OpenSpec, pipeline spec-* e manutenção do template
 │   └── rules/
 │       ├── openspec.md      # Regra de integração com OpenSpec
 │       ├── README.md        # Como instalar/estender as rules ECC

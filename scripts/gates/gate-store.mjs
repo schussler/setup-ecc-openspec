@@ -31,8 +31,24 @@ export function parseArgs(argv) {
   return { command, options };
 }
 
-// Exit codes shared by the gate CLIs.
-export const EXIT = Object.freeze({ pass: 0, retry: 1, stop: 2, error: 3 });
+// Self-correction cycle shared by the gates. Constants on purpose: no flag can
+// lower a threshold or grant extra attempts.
+export const MAX_CORRECTIONS = 3;
+export const REQUIRED_PCT = 100;
+export const MAX_ERRORS = 0;
+
+export function decideVerdict({ passed, failures }, previous) {
+  if (passed) return 'pass';
+  if (previous.length >= MAX_CORRECTIONS) return 'stop';
+  const last = previous.at(-1);
+  if (last && failures >= last.failures) return 'stop';
+  return 'retry';
+}
+
+export const pct = (pass, total) => (total === 0 ? null : Math.round((pass / total) * 10000) / 100);
+
+// Exit codes shared by the gate CLIs. `fail` is for gates without a cycle.
+export const EXIT = Object.freeze({ pass: 0, retry: 1, fail: 1, stop: 2, error: 3 });
 
 export async function runCli(main) {
   try {

@@ -6,7 +6,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 - **Change ativa:** `add-matt-skills-and-benchmark`
 - **Branch:** `feat/add-matt-skills-and-benchmark`, a partir de `main` em `822f1cf`
-- **Próximo passo:** Fatia 4: `archive-gate`, `pr-gate`, `scope-check`, skills `spec-archive`, `pr` e `handoff`, e `CLAUDE.md`. Antes de escrever código, rodar `implement-gate.mjs baseline` (sessão nova de gate)
+- **Próximo passo:** Fatia 5: verificar `claude -p` com skill nomeada e `allowedTools` do projeto (pré-requisito), depois `.claude/settings.json`, `--headless` e `--non-interactive`. Começar com `implement-gate.mjs baseline`
 - **Bloqueios:** nenhum
 - **Atualizado em:** 2026-10-23
 
@@ -23,8 +23,32 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 | 2026-10-23 | add-matt-skills-and-benchmark | implement (F3) | 2 | — | `listTestFiles` ignora `.claude/` e `openspec/`; teste novo `listTestFiles ignora o toolset…` (RED visto antes) | new 100% (44/44), lint 0, tipo 0 | pass |
 | 2026-10-23 | add-matt-skills-and-benchmark | implement (F3) | 3 | — | baseline novo preserva sessões em `implement.history` (teste e código no mesmo passo; RED não observado) | new 100% (45/45), lint 0, tipo 0 | pass |
 | 2026-10-23 | add-matt-skills-and-benchmark | saída F3 (`validate --all` + `template-check` 1–10) | 1 | — | — | 1/1 válida; READY | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | suíte (TDD F4, contratos) | 1 | 7 falhas RED esperadas; após as skills, 3: `spec-create` sem "cannot be skipped" (defeito real) e 2 testes de ordem que comparavam a 1ª ocorrência no arquivo inteiro | skill `spec-create` corrigida; **testes alterados com justificativa**: `/opsx:archive` e `gh pr create` aparecem na introdução e no frontmatter, que não são passos, então a ordem agora é medida só dentro de `## Steps` | 60/62 (faltava o `CLAUDE.md`) | retry |
+| 2026-10-23 | add-matt-skills-and-benchmark | implement (F4) | 1 | — | gates de arquivamento, PR e escopo; skills `spec-archive`, `pr` e `handoff`; `CLAUDE.md`; README | antigos 100% (49/49), novos 100% (13/13), lint 0, tipo 0 | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | saída F4 (`validate --all` + `template-check` 1–10) | 1 | — | — | 1/1 válida; READY | pass |
 
 ## Log
+
+### 2026-10-23 — Fatia 4
+
+- **Gates:**
+  - `archive-gate.mjs`: pré-condição de implementação `pass`, suíte verde e cenário↔teste pelo nome normalizado.
+  - `pr-gate.mjs`: nenhuma change ativa, árvore limpa e testes passando.
+  - `scope-check.mjs`: arquivos fora de `scoped_paths` desde uma referência git.
+
+  O ciclo (`decideVerdict`, constantes) foi movido para `gate-store.mjs`, compartilhado pelos gates.
+- **Skills:**
+  - `spec-archive`: gate → `/opsx:archive` ou `openspec archive --yes` → `openspec-sync-specs`.
+  - `pr`: só sob pedido explícito, nunca headless, com confirmação antes de `gh pr create`; `NOTICE.md` MIT.
+  - `handoff`: ponto de restauração em `docs/agents/issue-tracker.md`; `NOTICE.md` MIT.
+- **Verificado na prática:** `openspec archive <c> --yes` move a change para `openspec/changes/archive/<AAAA-MM-DD>-<c>/` com o `gates.json` e aplica os deltas em `openspec/specs/`.
+- **`CLAUDE.md`:**
+  - leitura obrigatória de `docs/agents/`;
+  - pipeline de 4 passos, com gates que não podem ser pulados;
+  - modo headless (`dontAsk`, sem `--dangerously-skip-permissions`, sem `--bare`, hooks do ECC ativos);
+  - a nota de que ele é `owned`.
+
+  O README ganhou a seção "Pipeline com gates".
 
 ### 2026-10-23 — Fatia 3
 

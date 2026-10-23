@@ -35,5 +35,5 @@ A feature description, and optionally a change name in kebab-case. If the name i
 ## Rules
 
 - No code, no tests, no commits of implementation in this skill.
-- Do not skip the validation gate, and do not weaken a spec to make it validate.
+- The validation gate cannot be skipped, also not in headless mode. Do not weaken a spec to make it validate.
 - Do not change the global OpenSpec configuration.

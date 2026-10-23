@@ -2,6 +2,7 @@
 // of every gate evaluation. It is archived together with the change.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { ChecksError } from './checks.mjs';
 
 export function changeDir(root, change) {
@@ -49,6 +50,12 @@ export const pct = (pass, total) => (total === 0 ? null : Math.round((pass / tot
 
 // Exit codes shared by the gate CLIs. `fail` is for gates without a cycle.
 export const EXIT = Object.freeze({ pass: 0, retry: 1, fail: 1, stop: 2, error: 3 });
+
+// True when the module is the process entry point, not when it is imported
+// (also safe under `node -e`, where there is no script path).
+export function isMain(moduleUrl) {
+  return Boolean(process.argv[1]) && moduleUrl === pathToFileURL(process.argv[1]).href;
+}
 
 export async function runCli(main) {
   try {

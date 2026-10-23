@@ -137,7 +137,13 @@ claude -p "<prompt que nomeia a skill> <argumento de tarefa>" \
 
 - As permissões vêm de `.claude/settings.json` do projeto (`permissions.allow`). Com `dontAsk`, uma ferramenta fora da lista é negada, em vez de travar esperando resposta.
 - **Verificado na Fatia 5:** o Claude Code ignora o `permissions.allow` de um projeto até o workspace ser marcado como confiável ("this workspace has not been trusted"). Marcar cada diretório do benchmark como confiável exigiria editar o `.claude.json` global do usuário, o que não foi feito. Por isso o runner lê `permissions.allow` do `.claude/settings.json` do projeto e repassa a lista com `--allowedTools`. A lista continua definida no projeto. A sonda confirmou três coisas: a skill nomeada no prompt (`/ping probe-46`) roda; um comando fora da lista (`touch`) é negado; e os hooks disparam no `-p` (26 eventos de hook com `--include-hook-events`).
-- **Lista do template:** git sem `push` e sem `-C`, sem `gh`, sem `rm`, sem Bash irrestrito. Ela também vale nas sessões interativas, então não libera nada destrutivo. O passo `new-project` do benchmark recebe, só para aquele destino, `Bash(rm -rf <target>:*)` e `Bash(git -C <target>:*)`.
+- **Lista do template:** git sem `push` e sem `-C`, sem `gh`, sem `rm`, sem Bash irrestrito. Ela também vale nas sessões interativas, então não libera nada destrutivo. O passo `new-project` do benchmark recebe, só para aquele destino, `Bash(git -C <target>:*)` e `Bash(cd <target>:*)`, mais `ls-tree`/`branch`/`rev-parse` com `git -C` no clone do template. Nunca recebe `git -C <template>:*`, porque o remote desse clone é o repositório local e um `push` o alteraria.
+- **Verificado nos smoke tests da Fatia 6:**
+  - uma regra `Bash(rm -rf <dir>:*)` não casa `rm -rf <dir>/.git`, porque `:*` exige fronteira de palavra;
+  - a forma `Bash(rm -rf <dir>/*)` casa subcaminhos, inclusive ocultos;
+  - mesmo assim, `rm -rf <target>/.git` é negado, porque o Claude Code protege `.git`.
+
+  Por isso o `new-project` deixou de clonar e apagar `.git`. Agora faz `git init` + `git fetch --depth 1` + `git checkout FETCH_HEAD -- .`, e remove arquivos com `git rm -r -f`. O resultado é igual (sem histórico do template), funciona com repo remoto no modo interativo e dispensa liberar `rm`. Ele também pede um comando simples por chamada, porque comandos compostos com variáveis de shell são negados.
 - Nunca usa `--dangerously-skip-permissions`.
 - Nunca usa `--bare`, porque ele desliga hooks. Os hooks do ECC continuam ativos.
 - `--output-format json` traz `total_cost_usd`, `duration_ms`, `num_turns` e `is_error`, que vão para o relatório.
@@ -157,11 +163,13 @@ O `/new-project` ganha `--non-interactive`: todas as entradas vêm dos argumento
 Registradas antes de rodar o benchmark:
 
 - **Greenfield (`greenfield-duration`):** biblioteca ES module `src/duration.mjs`, que converte durações como `"1h30m"` e `"45s"` em segundos e rejeita entradas inválidas com erro. Os checks do projeto gerado são:
-  - `test`: `node --test`;
+  - `test`: `node --test "test/**/*.test.mjs"` (glob explícito para nunca pegar arquivos do toolset);
   - `test_file`: `node --test {file}`;
   - `lint`: `node scripts/gates/lint.mjs`;
   - `typecheck`: `node scripts/gates/syntax-check.mjs src test`;
-  - `coverage`: `node --test --experimental-test-coverage`.
+  - `coverage`: `node --test --experimental-test-coverage "test/**/*.test.mjs"`.
+
+  Definição completa em `scripts/benchmark/tasks/greenfield-duration/` (`task.json` e `brief.md`, registrados na Fatia 6 antes da execução real). A change que o agente deve criar se chama `add-duration-parser`. **N = 5.**
 
   `scoped_paths`: `src/`, `test/`, `openspec/`, `docs/agents/`.
 - **Legado (`legacy-pricing`):** a fixture `scripts/benchmark/fixtures/legacy-pricing/` é um módulo de preços com uma função longa e regras de desconto duplicadas. A refatoração extrai as regras para `src/discounts.js`, sem mudar o comportamento. A variante `with_docs` recebe um `docs/agents/` preenchido com as regras de domínio (`scripts/benchmark/fixtures/legacy-pricing.agents/`). A variante `without_docs` não recebe esse diretório. `scoped_paths`: `src/`, `test/`, `openspec/`, `docs/agents/`.

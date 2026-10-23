@@ -1,7 +1,7 @@
 // Shared helpers for the gates: reads `checks` from template.json, runs
 // commands and turns their output into counts the gates can score.
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
 export const REQUIRED_CHECKS = Object.freeze(['test', 'lint', 'typecheck']);
@@ -114,6 +114,7 @@ export function isTestFile(path) {
 export function walkFiles(root, dir = root) {
   if (!existsSync(dir)) return [];
   if (relative(root, dir).split(sep).some((segment) => IGNORED_DIRS.has(segment))) return [];
+  if (statSync(dir).isFile()) return [relative(root, dir).split(sep).join('/')];
   const files = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.isDirectory()) {

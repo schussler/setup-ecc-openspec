@@ -5,9 +5,8 @@
 // Without --scoped, reads `scoped_paths` from template.json.
 // Exit: 0 pass, 1 fail, 3 error.
 import { execFileSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
 import { ChecksError, readManifest } from './checks.mjs';
-import { parseArgs, runCli } from './gate-store.mjs';
+import { parseArgs, runCli, isMain } from './gate-store.mjs';
 
 const git = (root, args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).split('\n').filter(Boolean);
 
@@ -33,7 +32,7 @@ export function checkScope({ root, base, scoped }) {
   return { base, scoped_paths: scoped, changed: files.length, out_of_scope: outside, verdict: outside.length === 0 ? 'pass' : 'fail' };
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   const { options } = parseArgs(['check', ...process.argv.slice(2)]);
   const root = options.root ?? process.cwd();
   runCli(() => {

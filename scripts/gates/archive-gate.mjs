@@ -6,9 +6,8 @@
 // Exit: 0 pass, 1 retry, 2 stop, 3 error.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { ChecksError, listTestFiles, loadChecks, runCommand, walkFiles } from './checks.mjs';
-import { REQUIRED_PCT, changeDir, decideVerdict, parseArgs, pct, readGates, runCli, writeGates } from './gate-store.mjs';
+import { REQUIRED_PCT, changeDir, decideVerdict, parseArgs, pct, readGates, runCli, writeGates, isMain } from './gate-store.mjs';
 
 const SCENARIO = /^####\s+Scenario:\s*(.+?)\s*$/gm;
 
@@ -22,11 +21,22 @@ export function normalizeName(text) {
 }
 
 export function listScenarios(root, change) {
-  const specsDir = join(changeDir(root, change), 'specs');
+  return scenariosIn(join(changeDir(root, change), 'specs'));
+}
+
+export function scenariosIn(specsDir) {
   if (!existsSync(specsDir)) return [];
   return walkFiles(specsDir)
     .filter((file) => file.endsWith('spec.md'))
     .flatMap((file) => [...readFileSync(join(specsDir, file), 'utf8').matchAll(SCENARIO)].map((m) => m[1]));
+}
+
+// Share of scenario names that appear, normalized, in a project test file.
+export function scenarioCoverage({ root, scenarios }) {
+  const testText = listTestFiles(root).map((file) => normalizeName(readFileSync(join(root, file), 'utf8'))).join('\n');
+  const missing = scenarios.filter((name) => !testText.includes(normalizeName(name)));
+  const covered = scenarios.length - missing.length;
+  return { total: scenarios.length, covered, pct: pct(covered, scenarios.length), missing };
 }
 
 function record(root, change, gates, result) {
@@ -49,25 +59,22 @@ export async function scoreArchive({ root, change, note = '' }) {
   }
 
   const suite = await runCommand(checks.test, { cwd: root });
-  const testText = listTestFiles(root).map((file) => normalizeName(readFileSync(join(root, file), 'utf8'))).join('\n');
-  const scenarios = listScenarios(root, change);
-  const missing = scenarios.filter((name) => !testText.includes(normalizeName(name)));
-  const coverage = pct(scenarios.length - missing.length, scenarios.length);
+  const scenarios = scenarioCoverage({ root, scenarios: listScenarios(root, change) });
   const suitePassed = suite.code === 0;
-  const passed = suitePassed && (coverage === null || coverage >= REQUIRED_PCT);
-  const failures = missing.length + (suitePassed ? 0 : 1);
+  const passed = suitePassed && (scenarios.pct === null || scenarios.pct >= REQUIRED_PCT);
+  const failures = scenarios.missing.length + (suitePassed ? 0 : 1);
   const previous = gates.archive?.attempts ?? [];
 
   return record(root, change, gates, {
     note,
     suite_passed: suitePassed,
-    scenarios: { total: scenarios.length, covered: scenarios.length - missing.length, pct: coverage, missing },
+    scenarios,
     failures,
     verdict: decideVerdict({ passed, failures }, previous),
   });
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   const { options } = parseArgs(['score', ...process.argv.slice(2)]);
   runCli(async () => {
     if (!options.change) throw new ChecksError('uso: archive-gate.mjs --change <nome> [--note <texto>] [--root <dir>]');

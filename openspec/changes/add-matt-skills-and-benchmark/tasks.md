@@ -38,9 +38,9 @@
 
 ## 6. Fatia 6 — runner de benchmark (greenfield)
 
-- [ ] 6.1 Registrar no design a tarefa de referência e N (D13, D14); criar `scripts/benchmark/tasks/greenfield-duration/`
-- [ ] 6.2 Testes (RED) e implementação do orçamento, do cenário greenfield e da verificação independente com `claude` simulado
-- [ ] 6.3 Rodar o greenfield real (N=5) e salvar o relatório
+- [x] 6.1 Registrar no design a tarefa de referência e N (D13, D14); criar `scripts/benchmark/tasks/greenfield-duration/`
+- [x] 6.2 Testes (RED) e implementação do orçamento, do cenário greenfield e da verificação independente com `claude` simulado
+- [x] 6.3 Rodar o greenfield real (N=5) e salvar o relatório
 
 ## 7. Fatia 7 — legado e relatório
 

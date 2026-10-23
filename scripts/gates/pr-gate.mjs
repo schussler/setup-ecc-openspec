@@ -5,9 +5,8 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { loadChecks, runCommand } from './checks.mjs';
-import { parseArgs, runCli } from './gate-store.mjs';
+import { parseArgs, runCli, isMain } from './gate-store.mjs';
 
 export function activeChanges(root) {
   const dir = join(root, 'openspec', 'changes');
@@ -37,7 +36,7 @@ export async function checkPr({ root }) {
   };
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   const { options } = parseArgs(['check', ...process.argv.slice(2)]);
   runCli(() => checkPr({ root: options.root ?? process.cwd() }));
 }

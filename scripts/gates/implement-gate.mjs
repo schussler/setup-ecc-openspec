@@ -6,9 +6,8 @@
 //   node scripts/gates/implement-gate.mjs baseline --change <name> [--root <dir>]
 //   node scripts/gates/implement-gate.mjs score --change <name> [--note "<o que mudou>"] [--root <dir>]
 // Exit: 0 pass, 1 retry, 2 stop, 3 error.
-import { pathToFileURL } from 'node:url';
 import { ChecksError, countErrors, listTestFiles, loadChecks, parseTestCounts, runCommand } from './checks.mjs';
-import { MAX_CORRECTIONS, MAX_ERRORS, REQUIRED_PCT, decideVerdict, parseArgs, pct, readGates, runCli, writeGates } from './gate-store.mjs';
+import { MAX_CORRECTIONS, MAX_ERRORS, REQUIRED_PCT, decideVerdict, parseArgs, pct, readGates, runCli, writeGates, isMain } from './gate-store.mjs';
 
 export { MAX_CORRECTIONS, REQUIRED_PCT, MAX_ERRORS, decideVerdict };
 
@@ -56,18 +55,15 @@ async function scoreWholeSuite(root, command, oldFiles, newFiles) {
 
 const meets = (value) => value === null || value >= REQUIRED_PCT;
 
-export async function scoreImplementation({ root, change, note = '' }) {
+// Measures the gate without recording it. The benchmark uses it to re-check a
+// run independently of what the agent reported.
+export async function measureImplementation({ root, baselineFiles }) {
   const checks = loadChecks(root);
-  const gates = readGates(root, change);
-  const baseline = gates.implement?.baseline;
-  if (!baseline) {
-    throw new ChecksError(`sem baseline para "${change}". Rode: node scripts/gates/implement-gate.mjs baseline --change ${change}`);
-  }
   const current = listTestFiles(root);
-  const baselineSet = new Set(baseline.test_files);
+  const baselineSet = new Set(baselineFiles);
   const oldFiles = current.filter((file) => baselineSet.has(file));
   const newFiles = current.filter((file) => !baselineSet.has(file));
-  const removed = baseline.test_files.filter((file) => !current.includes(file));
+  const removed = baselineFiles.filter((file) => !current.includes(file));
 
   const split = Boolean(checks.test_file);
   const tests = split
@@ -83,12 +79,7 @@ export async function scoreImplementation({ root, change, note = '' }) {
   const oldScore = { ...tests.old, fail: oldFail, pct: pct(tests.old.pass, tests.old.pass + oldFail) };
   const failures = oldFail + tests.new.fail + lintErrors + typeErrors;
   const passed = meets(oldScore.pct) && meets(tests.new.pct) && lintErrors <= MAX_ERRORS && typeErrors <= MAX_ERRORS;
-
-  const previous = gates.implement.attempts;
-  const attempt = {
-    attempt: previous.length + 1,
-    at: new Date().toISOString(),
-    note,
+  return {
     split,
     old: oldScore,
     new: tests.new,
@@ -96,13 +87,30 @@ export async function scoreImplementation({ root, change, note = '' }) {
     lint_errors: lintErrors,
     type_errors: typeErrors,
     failures,
-    verdict: decideVerdict({ passed, failures }, previous),
+    passed,
+  };
+}
+
+export async function scoreImplementation({ root, change, note = '' }) {
+  const gates = readGates(root, change);
+  const baseline = gates.implement?.baseline;
+  if (!baseline) {
+    throw new ChecksError(`sem baseline para "${change}". Rode: node scripts/gates/implement-gate.mjs baseline --change ${change}`);
+  }
+  const { passed, ...measured } = await measureImplementation({ root, baselineFiles: baseline.test_files });
+  const previous = gates.implement.attempts;
+  const attempt = {
+    attempt: previous.length + 1,
+    at: new Date().toISOString(),
+    note,
+    ...measured,
+    verdict: decideVerdict({ passed, failures: measured.failures }, previous),
   };
   writeGates(root, change, { ...gates, implement: { ...gates.implement, attempts: [...previous, attempt] } });
   return attempt;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   const { command, options } = parseArgs(process.argv.slice(2));
   const root = options.root ?? process.cwd();
   runCli(async () => {

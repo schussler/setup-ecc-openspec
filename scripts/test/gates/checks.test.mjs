@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadChecks, parseTestCounts, countErrors, isTestFile, listTestFiles, runCommand } from '../../gates/checks.mjs';
+import { loadChecks, parseTestCounts, countErrors, isTestFile, listTestFiles, runCommand, walkFiles } from '../../gates/checks.mjs';
+import { join } from 'node:path';
 import { makeTempDir, writeTree } from '../helpers.mjs';
 
 test('checks sem comando falha com mensagem clara', () => {
@@ -80,6 +81,11 @@ test('listTestFiles ignora o toolset em .claude e openspec', () => {
     'openspec/changes/c/z.test.mjs': '',
   });
   assert.deepEqual(listTestFiles(root), ['test/a.test.mjs']);
+});
+
+test('walkFiles aceita caminho de arquivo', () => {
+  const root = writeTree(makeTempDir(), { 'a/b.txt': '' });
+  assert.deepEqual(walkFiles(root, join(root, 'a/b.txt')), ['a/b.txt']);
 });
 
 test('runCommand devolve codigo de saida e saida combinada', async () => {

@@ -6,7 +6,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 - **Change ativa:** `add-matt-skills-and-benchmark`
 - **Branch:** `feat/add-matt-skills-and-benchmark`, a partir de `main` em `822f1cf`
-- **Próximo passo:** Fatia 6: confirmar o pré-requisito (`claude -p` e orçamento), depois o runner greenfield (orçamento, verificação independente, relatório) com testes por `claude` simulado, e por fim a execução real N=5. Começar com `implement-gate.mjs baseline`
+- **Próximo passo:** Fatia 7: commitar a fixture `legacy-pricing`, `lib/legacy.mjs` e a comparação no relatório, depois rodar o legado real (N=5 por variante; restam 34 invocações das 60)
 - **Bloqueios:** nenhum
 - **Atualizado em:** 2026-10-23
 
@@ -29,8 +29,31 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 | 2026-10-23 | add-matt-skills-and-benchmark | pré-requisito F5 (`claude -p` + `allowedTools`) | 1 | `permissions.allow` do projeto ignorado: "workspace has not been trusted" (Write e `node` negados) | runner passa a lista do projeto por `--allowedTools`, sem editar a config global | sonda: skill nomeada roda, `touch` negado, 26 eventos de hook | pass |
 | 2026-10-23 | add-matt-skills-and-benchmark | implement (F5) | 1 | — | `.claude/settings.json`, headless nas skills, `new-project --non-interactive`, `lib/claude.mjs` | antigos 100% (62/62), novos 100% (11/11), lint 0, tipo 0 | pass |
 | 2026-10-23 | add-matt-skills-and-benchmark | saída F5 (`validate --all` + `template-check` 1–10) | 1 | — | — | 1/1 válida; READY | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | implement (F6) | 1 | — | runner greenfield, orçamento, verificação independente, relatório | antigos 100% (73/73), novos 100% (11/11), lint 0, tipo 0 | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | benchmark smoke 1 (N=1) | 1 | bootstrap: `rm -rf <target>/.git` negado com a regra `rm -rf <target>:*`; comando com variável de shell negado | regra com glob; `new-project` pede um comando simples por chamada | 0/1, 1 invocação, US$ 0,50 | retry |
+| 2026-10-23 | add-matt-skills-and-benchmark | benchmark smoke 2 (N=1) | 2 | bootstrap: `rm -rf <target>/.git` negado também com glob (o Claude Code protege `.git`) | `new-project` monta o projeto com `git init`/`fetch`/`checkout FETCH_HEAD` e `git rm`, sem `rm`; `verifyBootstrap` ignora diretórios vazios; `walkFiles` aceita arquivo; `isMain` seguro | 0/1, 1 invocação, US$ 0,46 | retry |
+| 2026-10-23 | add-matt-skills-and-benchmark | benchmark smoke 3 (N=1) | 3 | — | — | 1/1, 5 gates ok, 4 invocações, US$ 4,15 | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | benchmark greenfield (N=5) | 1 | — (relatório gravava o caminho do scratchpad e o home: corrigido com placeholders, teste novo) | — | sucesso 5/5 (100%), gates 100%, fora do escopo 0, cobertura 100%, 20 invocações, US$ 20,70 | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | saída F6 (`validate --all` + `template-check` 1–10) | 1 | — | — | 1/1 válida; READY | pass |
 
 ## Log
+
+### 2026-10-23 — Fatia 6
+
+- **Runner** (`scripts/benchmark/run.mjs`, `lib/{budget,claude,pipeline,greenfield,report}.mjs`):
+  - cada execução clona o template da branch (estado commitado);
+  - roda `new-project --non-interactive` → `spec-create --headless` → `spec-implement` → `spec-archive`, sem `pr`;
+  - reavalia os gates no diretório da execução: bootstrap, spec válida com Premissas, implementação (antigos, novos, lint, tipo), arquivamento (cenários 100% e specs sincronizadas) e escopo.
+- **Tarefa de referência:** `greenfield-duration` (D14), N=5, registrada antes da execução.
+- **Execução real:** 5/5 aprovadas, 20–25 testes novos por execução, cobertura de 100%, 0 arquivos fora de `scoped_paths`, ~7–9 min e ~US$ 4,14 por execução. Relatório em `scripts/benchmark/reports/2026-10-23/greenfield/`.
+- **Smoke tests antes do N=5:** 6 invocações, US$ 5,11. Encontraram duas restrições do Claude Code no modo headless: `:*` exige fronteira de palavra, e `.git` é protegido de `rm`. O `new-project` passou a usar só git.
+- **Negações que não impediram gates:**
+  - comandos compostos (`cd …;`, `node …; echo $?`, `for`): 23 nas 20 invocações;
+  - `rmdir`: 5.
+
+  Os agentes contornaram as negações com comandos simples.
+- **Observado:** em execuções do `spec-create`, o agente deixou restos de marcação de ferramenta (`</content>`) nos artefatos. O `openspec validate --strict` aceitou, e o `spec-archive` limpou antes de arquivar. Vale observar em execuções futuras.
+- **Orçamento acumulado:** 26/60 invocações (smoke 6 + greenfield 20). Fora do orçamento: 8 sondas haiku de permissão (< US$ 0,05).
 
 ### 2026-10-23 — Fatia 5
 

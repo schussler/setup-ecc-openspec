@@ -36,7 +36,14 @@ export function loadChecks(root, required = REQUIRED_CHECKS) {
   return { ...checks };
 }
 
-export function runCommand(command, { cwd, timeoutMs = 0, env = process.env } = {}) {
+// A nested `node --test` that inherits NODE_TEST_CONTEXT reports to the parent
+// runner instead of printing its summary, so the gates drop it.
+function isolatedEnv() {
+  const { NODE_TEST_CONTEXT: _ignored, ...env } = process.env;
+  return env;
+}
+
+export function runCommand(command, { cwd, timeoutMs = 0, env = isolatedEnv() } = {}) {
   const started = Date.now();
   return new Promise((resolve) => {
     const child = spawn('sh', ['-c', command], { cwd, env });
@@ -118,6 +125,11 @@ export function walkFiles(root, dir = root) {
   return files.sort();
 }
 
+// The vendored toolset ships its own example tests; they are not project tests.
+const TOOLSET_DIRS = ['.claude/', 'openspec/'];
+
 export function listTestFiles(root) {
-  return walkFiles(root).filter(isTestFile);
+  return walkFiles(root)
+    .filter((file) => !TOOLSET_DIRS.some((dir) => file.startsWith(dir)))
+    .filter(isTestFile);
 }

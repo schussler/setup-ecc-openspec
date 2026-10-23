@@ -1,0 +1,121 @@
+{
+  "implement": {
+    "baseline": {
+      "created_at": "2026-10-23T18:00:00.000Z",
+      "note": "Baseline retroativo: main em 822f1cf não tinha nenhum arquivo de teste (git ls-tree). O gate só existiu a partir da Fatia 3.",
+      "test_files": []
+    },
+    "attempts": [
+      {
+        "attempt": 1,
+        "at": "2026-10-23T18:14:02.816Z",
+        "note": "fim da fatia 3",
+        "split": true,
+        "old": {
+          "files": [],
+          "pass": 0,
+          "fail": 0,
+          "pct": null,
+          "failing": []
+        },
+        "new": {
+          "files": [
+            ".claude/skills/continuous-learning-v2/scripts/test_parse_instinct.py",
+            ".claude/skills/skill-comply/tests/test_classifier.py",
+            ".claude/skills/skill-comply/tests/test_grader.py",
+            ".claude/skills/skill-comply/tests/test_parser.py",
+            ".claude/skills/skill-comply/tests/test_runner.py",
+            "scripts/test/gates/checks.test.mjs",
+            "scripts/test/gates/implement-gate.test.mjs",
+            "scripts/test/gates/lint.test.mjs",
+            "scripts/test/gates/syntax-check.test.mjs",
+            "scripts/test/manifest.test.mjs",
+            "scripts/test/skills-pipeline.test.mjs",
+            "scripts/test/skills-template.test.mjs"
+          ],
+          "pass": 43,
+          "fail": 5,
+          "pct": 89.58,
+          "failing": [
+            ".claude/skills/continuous-learning-v2/scripts/test_parse_instinct.py",
+            ".claude/skills/skill-comply/tests/test_classifier.py",
+            ".claude/skills/skill-comply/tests/test_grader.py",
+            ".claude/skills/skill-comply/tests/test_parser.py",
+            ".claude/skills/skill-comply/tests/test_runner.py"
+          ]
+        },
+        "removed_tests": [],
+        "lint_errors": 0,
+        "type_errors": 0,
+        "failures": 5,
+        "verdict": "retry"
+      },
+      {
+        "attempt": 2,
+        "at": "2026-10-23T18:14:30.262Z",
+        "note": "listTestFiles ignora .claude/ e openspec/ (testes Python vendorizados do ECC entravam como testes do projeto)",
+        "split": true,
+        "old": {
+          "files": [],
+          "pass": 0,
+          "fail": 0,
+          "pct": null,
+          "failing": []
+        },
+        "new": {
+          "files": [
+            "scripts/test/gates/checks.test.mjs",
+            "scripts/test/gates/implement-gate.test.mjs",
+            "scripts/test/gates/lint.test.mjs",
+            "scripts/test/gates/syntax-check.test.mjs",
+            "scripts/test/manifest.test.mjs",
+            "scripts/test/skills-pipeline.test.mjs",
+            "scripts/test/skills-template.test.mjs"
+          ],
+          "pass": 44,
+          "fail": 0,
+          "pct": 100,
+          "failing": []
+        },
+        "removed_tests": [],
+        "lint_errors": 0,
+        "type_errors": 0,
+        "failures": 0,
+        "verdict": "pass"
+      },
+      {
+        "attempt": 3,
+        "at": "2026-10-23T18:14:57.259Z",
+        "note": "recordBaseline preserva sessões anteriores em implement.history",
+        "split": true,
+        "old": {
+          "files": [],
+          "pass": 0,
+          "fail": 0,
+          "pct": null,
+          "failing": []
+        },
+        "new": {
+          "files": [
+            "scripts/test/gates/checks.test.mjs",
+            "scripts/test/gates/implement-gate.test.mjs",
+            "scripts/test/gates/lint.test.mjs",
+            "scripts/test/gates/syntax-check.test.mjs",
+            "scripts/test/manifest.test.mjs",
+            "scripts/test/skills-pipeline.test.mjs",
+            "scripts/test/skills-template.test.mjs"
+          ],
+          "pass": 45,
+          "fail": 0,
+          "pct": 100,
+          "failing": []
+        },
+        "removed_tests": [],
+        "lint_errors": 0,
+        "type_errors": 0,
+        "failures": 0,
+        "verdict": "pass"
+      }
+    ]
+  }
+}

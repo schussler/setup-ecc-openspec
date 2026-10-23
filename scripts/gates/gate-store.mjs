@@ -1,0 +1,46 @@
+// Reads and writes openspec/changes/<change>/gates.json, the per-change log
+// of every gate evaluation. It is archived together with the change.
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { ChecksError } from './checks.mjs';
+
+export function changeDir(root, change) {
+  if (!change || /[\\/]|\.\./.test(change)) throw new ChecksError(`nome de change inválido: "${change ?? ''}"`);
+  const dir = join(root, 'openspec', 'changes', change);
+  if (!existsSync(dir)) throw new ChecksError(`change não encontrada: openspec/changes/${change}/`);
+  return dir;
+}
+
+export function readGates(root, change) {
+  const path = join(changeDir(root, change), 'gates.json');
+  return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {};
+}
+
+export function writeGates(root, change, gates) {
+  writeFileSync(join(changeDir(root, change), 'gates.json'), `${JSON.stringify(gates, null, 2)}\n`);
+}
+
+export function parseArgs(argv) {
+  const [command, ...rest] = argv;
+  const options = {};
+  for (let i = 0; i < rest.length; i += 1) {
+    if (rest[i].startsWith('--')) {
+      options[rest[i].slice(2)] = rest[i + 1] && !rest[i + 1].startsWith('--') ? rest[++i] : true;
+    }
+  }
+  return { command, options };
+}
+
+// Exit codes shared by the gate CLIs.
+export const EXIT = Object.freeze({ pass: 0, retry: 1, stop: 2, error: 3 });
+
+export async function runCli(main) {
+  try {
+    const result = await main();
+    console.log(JSON.stringify(result, null, 2));
+    process.exit(EXIT[result.verdict] ?? EXIT.pass);
+  } catch (err) {
+    console.log(JSON.stringify({ verdict: 'error', error: err.message }, null, 2));
+    process.exit(EXIT.error);
+  }
+}

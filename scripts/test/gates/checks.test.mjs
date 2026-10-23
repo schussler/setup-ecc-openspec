@@ -73,6 +73,15 @@ test('listTestFiles ignora node_modules e .git', () => {
   assert.deepEqual(listTestFiles(root), ['test/a.test.mjs']);
 });
 
+test('listTestFiles ignora o toolset em .claude e openspec', () => {
+  const root = writeTree(makeTempDir(), {
+    'test/a.test.mjs': '',
+    '.claude/skills/x/tests/test_y.py': '',
+    'openspec/changes/c/z.test.mjs': '',
+  });
+  assert.deepEqual(listTestFiles(root), ['test/a.test.mjs']);
+});
+
 test('runCommand devolve codigo de saida e saida combinada', async () => {
   const result = await runCommand('echo out; echo err 1>&2; exit 3', { cwd: makeTempDir() });
   assert.equal(result.code, 3);

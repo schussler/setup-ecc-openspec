@@ -64,7 +64,7 @@ A pontuação vem de scripts determinísticos que imprimem JSON. As skills chama
 
 ### D5. Baseline e "testes novos" vs "antigos"
 
-`implement-gate.mjs baseline --change <c>` grava em `openspec/changes/<c>/gates.json` a lista de arquivos de teste existentes. Arquivo de teste é o que casa com `*.test.*`, `*.spec.*`, `test_*.py`, `*_test.py` ou `*_test.go`. Nas avaliações seguintes:
+`implement-gate.mjs baseline --change <c>` grava em `openspec/changes/<c>/gates.json` a lista de arquivos de teste existentes. Arquivo de teste é o que casa com `*.test.*`, `*.spec.*`, `test_*.py`, `*_test.py` ou `*_test.go`, fora de `.claude/` e `openspec/`. O toolset vendorizado traz testes de exemplo (por exemplo, `skill-comply/tests/test_*.py`) que não são do projeto. Isso foi encontrado na primeira avaliação real do gate, na Fatia 3. Nas avaliações seguintes:
 
 - o que está no baseline é "antigo";
 - o resto é "novo".
@@ -86,7 +86,7 @@ Cada avaliação é gravada em `gates.json`. A pontuação de melhora é `failur
 - `retry`: a avaliação reprovou, ainda há tentativa e houve melhora;
 - `stop`: a avaliação reprovou e já houve 3 correções, ou `failures` não diminuiu em relação à avaliação anterior.
 
-`gates.json` é arquivado junto com a change, o que deixa o histórico de tentativas auditável. A skill também copia cada tentativa (o que falhou, o que mudou e a nova pontuação) para `docs/agents/issue-tracker.md`.
+`gates.json` é arquivado junto com a change, o que deixa o histórico de tentativas auditável. Um baseline novo abre uma sessão nova de gate e move a anterior para `implement.history`. Numa change em fatias, cada fatia tem a própria sessão, e os testes das fatias anteriores contam como antigos. A skill também copia cada tentativa (o que falhou, o que mudou e a nova pontuação) para `docs/agents/issue-tracker.md`.
 
 ### D7. Gate de arquivamento
 

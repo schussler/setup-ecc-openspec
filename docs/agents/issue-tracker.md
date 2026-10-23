@@ -6,7 +6,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 - **Change ativa:** `add-matt-skills-and-benchmark`
 - **Branch:** `feat/add-matt-skills-and-benchmark`, a partir de `main` em `822f1cf`
-- **Próximo passo:** Fatia 3: `implement-gate.mjs`, skills `spec-create` e `spec-implement`
+- **Próximo passo:** Fatia 4: `archive-gate`, `pr-gate`, `scope-check`, skills `spec-archive`, `pr` e `handoff`, e `CLAUDE.md`. Antes de escrever código, rodar `implement-gate.mjs baseline` (sessão nova de gate)
 - **Bloqueios:** nenhum
 - **Atualizado em:** 2026-10-23
 
@@ -19,8 +19,20 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 | 2026-10-23 | add-matt-skills-and-benchmark | suíte do template (TDD F2) | 1 | 15/18 testes falhando (RED esperado) | implementação de checks/lint/syntax-check, manifesto, skills | 19/28 | retry |
 | 2026-10-23 | add-matt-skills-and-benchmark | suíte do template (TDD F2) | 2 | 1 teste: `syntax-check` não ignorava `node_modules` passado como argumento | `walkFiles` ignora segmentos ignorados no caminho de entrada; o teste estava certo e não foi alterado | 28/28, lint 0, sintaxe 0 | pass |
 | 2026-10-23 | add-matt-skills-and-benchmark | saída F2 (`validate --all` + `template-check` 1–10) | 1 | — | — | 1/1 válida; READY | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | implement (F3) | 1 | 5 "testes novos" falhando: `.claude/skills/{skill-comply,continuous-learning-v2}/**/test_*.py` (testes vendorizados do ECC) | — (avaliação inicial) | old n/a, new 89,58% (43/48), lint 0, tipo 0 | retry |
+| 2026-10-23 | add-matt-skills-and-benchmark | implement (F3) | 2 | — | `listTestFiles` ignora `.claude/` e `openspec/`; teste novo `listTestFiles ignora o toolset…` (RED visto antes) | new 100% (44/44), lint 0, tipo 0 | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | implement (F3) | 3 | — | baseline novo preserva sessões em `implement.history` (teste e código no mesmo passo; RED não observado) | new 100% (45/45), lint 0, tipo 0 | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | saída F3 (`validate --all` + `template-check` 1–10) | 1 | — | — | 1/1 válida; READY | pass |
 
 ## Log
+
+### 2026-10-23 — Fatia 3
+
+- **`scripts/gates/implement-gate.mjs`:** `baseline` e `score`. Separa testes novos e antigos pela lista de arquivos do baseline, e um teste removido conta como falha. Lint e tipos entram por código de saída. Os vereditos `pass`/`retry`/`stop` são impostos por constantes (`MAX_CORRECTIONS = 3`, `REQUIRED_PCT = 100`, `MAX_ERRORS = 0`). `gate-store.mjs` grava `gates.json` na change.
+- **Correção encontrada pelo próprio gate:** os testes do ECC em `.claude/` contavam como testes do projeto. Ver a tabela Gates, tentativas 1 e 2.
+- **`runCommand`:** remove `NODE_TEST_CONTEXT`. Sem isso, um `node --test` aninhado não imprime o resumo e a contagem falha.
+- **Skills:** `spec-create` (wrapper de `/opsx:propose`, `grill-me` ou o roteiro embutido `interview.md`) e `spec-implement` (wrapper de `/opsx:apply`, TDD e ciclo do gate). Cada uma tem `NOTICE.md` MIT.
+- **Gate aplicado a esta change:** o baseline retroativo é `test_files: []`, porque `822f1cf` não tinha testes. Ver `openspec/changes/add-matt-skills-and-benchmark/gates.json`.
 
 ### 2026-10-23 — Fatia 2
 

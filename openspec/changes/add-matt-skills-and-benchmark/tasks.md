@@ -19,9 +19,9 @@
 
 ## 3. Fatia 3 — `spec-create` e `spec-implement`
 
-- [ ] 3.1 Testes (RED) e implementação de `implement-gate.mjs` (baseline, score, novos vs antigos, vereditos `pass`/`retry`/`stop`); verificar com `node --test`
-- [ ] 3.2 Criar a skill `spec-create` (wrapper de `/opsx:propose`, `grill-me` com roteiro embutido, `NOTICE.md`); verificar com os testes de contrato
-- [ ] 3.3 Criar a skill `spec-implement` (wrapper de `/opsx:apply`, TDD, ciclo do gate, registro no tracker, `NOTICE.md`); verificar com os testes de contrato
+- [x] 3.1 Testes (RED) e implementação de `implement-gate.mjs` (baseline, score, novos vs antigos, vereditos `pass`/`retry`/`stop`); verificar com `node --test`
+- [x] 3.2 Criar a skill `spec-create` (wrapper de `/opsx:propose`, `grill-me` com roteiro embutido, `NOTICE.md`); verificar com os testes de contrato
+- [x] 3.3 Criar a skill `spec-implement` (wrapper de `/opsx:apply`, TDD, ciclo do gate, registro no tracker, `NOTICE.md`); verificar com os testes de contrato
 
 ## 4. Fatia 4 — `spec-archive`, `pr`, `handoff`, `CLAUDE.md`
 

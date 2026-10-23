@@ -31,10 +31,10 @@
 
 ## 5. Fatia 5 — modo headless
 
-- [ ] 5.1 Verificar que `claude -p` executa uma skill nomeada no prompt com permissões de `.claude/settings.json` e `--permission-mode dontAsk`; registrar o resultado no tracker
-- [ ] 5.2 Criar `.claude/settings.json` com `permissions.allow` e o modo `--headless` nas skills; verificar com os testes de contrato
-- [ ] 5.3 Adicionar `--non-interactive` e `--template-source` ao `new-project`; verificar com o teste de contrato
-- [ ] 5.4 Testes (RED) e implementação de `scripts/benchmark/lib/claude.mjs` (argumentos, timeout, leitura do JSON); verificar com um `claude` simulado
+- [x] 5.1 Verificar que `claude -p` executa uma skill nomeada no prompt com permissões de `.claude/settings.json` e `--permission-mode dontAsk`; registrar o resultado no tracker
+- [x] 5.2 Criar `.claude/settings.json` com `permissions.allow` e o modo `--headless` nas skills; verificar com os testes de contrato
+- [x] 5.3 Adicionar `--non-interactive` e `--template-source` ao `new-project`; verificar com o teste de contrato
+- [x] 5.4 Testes (RED) e implementação de `scripts/benchmark/lib/claude.mjs` (argumentos, timeout, leitura do JSON); verificar com um `claude` simulado
 
 ## 6. Fatia 6 — runner de benchmark (greenfield)
 

@@ -6,7 +6,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 - **Change ativa:** `add-matt-skills-and-benchmark`
 - **Branch:** `feat/add-matt-skills-and-benchmark`, a partir de `main` em `822f1cf`
-- **Próximo passo:** Fatia 5: verificar `claude -p` com skill nomeada e `allowedTools` do projeto (pré-requisito), depois `.claude/settings.json`, `--headless` e `--non-interactive`. Começar com `implement-gate.mjs baseline`
+- **Próximo passo:** Fatia 6: confirmar o pré-requisito (`claude -p` e orçamento), depois o runner greenfield (orçamento, verificação independente, relatório) com testes por `claude` simulado, e por fim a execução real N=5. Começar com `implement-gate.mjs baseline`
 - **Bloqueios:** nenhum
 - **Atualizado em:** 2026-10-23
 
@@ -26,8 +26,22 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 | 2026-10-23 | add-matt-skills-and-benchmark | suíte (TDD F4, contratos) | 1 | 7 falhas RED esperadas; após as skills, 3: `spec-create` sem "cannot be skipped" (defeito real) e 2 testes de ordem que comparavam a 1ª ocorrência no arquivo inteiro | skill `spec-create` corrigida; **testes alterados com justificativa**: `/opsx:archive` e `gh pr create` aparecem na introdução e no frontmatter, que não são passos, então a ordem agora é medida só dentro de `## Steps` | 60/62 (faltava o `CLAUDE.md`) | retry |
 | 2026-10-23 | add-matt-skills-and-benchmark | implement (F4) | 1 | — | gates de arquivamento, PR e escopo; skills `spec-archive`, `pr` e `handoff`; `CLAUDE.md`; README | antigos 100% (49/49), novos 100% (13/13), lint 0, tipo 0 | pass |
 | 2026-10-23 | add-matt-skills-and-benchmark | saída F4 (`validate --all` + `template-check` 1–10) | 1 | — | — | 1/1 válida; READY | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | pré-requisito F5 (`claude -p` + `allowedTools`) | 1 | `permissions.allow` do projeto ignorado: "workspace has not been trusted" (Write e `node` negados) | runner passa a lista do projeto por `--allowedTools`, sem editar a config global | sonda: skill nomeada roda, `touch` negado, 26 eventos de hook | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | implement (F5) | 1 | — | `.claude/settings.json`, headless nas skills, `new-project --non-interactive`, `lib/claude.mjs` | antigos 100% (62/62), novos 100% (11/11), lint 0, tipo 0 | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | saída F5 (`validate --all` + `template-check` 1–10) | 1 | — | — | 1/1 válida; READY | pass |
 
 ## Log
+
+### 2026-10-23 — Fatia 5
+
+- **Pré-requisito verificado (sonda em scratchpad, 5 invocações `claude -p --model haiku`, custo < US$ 0,03, fora do orçamento do benchmark):**
+  - `/ping <arg>` executa a skill nomeada no prompt;
+  - `--permission-mode dontAsk` nega o que não está na lista;
+  - os hooks disparam no `-p`.
+- **Achado:** o Claude Code ignora o `permissions.allow` do projeto em workspace não confiável. A decisão foi passar a lista do `.claude/settings.json` por `--allowedTools`, em vez de marcar diretórios como confiáveis no `.claude.json` global (registrado no design, D12).
+- **`.claude/settings.json`** (`owned`): ferramentas do pipeline, git sem `push`/`-C`, sem `gh`, sem `rm`. `rm` e `git -C` foram tirados porque a lista também vale nas sessões interativas. O `new-project` do benchmark recebe essas regras só para o destino.
+- **Skills:** `spec-create --headless` (premissas em `## Premissas`); `spec-implement` e `spec-archive` sem perguntas, com linha final de status; `new-project --non-interactive` com `--template-source` local.
+- **`scripts/benchmark/lib/claude.mjs`:** argumentos (`-p`, `--output-format json`, `dontAsk`, `--allowedTools`, nunca `--dangerously-skip-permissions`/`--bare`), timeout com SIGTERM→SIGKILL e leitura de custo, turnos e negações.
 
 ### 2026-10-23 — Fatia 4
 

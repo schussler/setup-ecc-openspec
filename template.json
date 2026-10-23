@@ -25,7 +25,8 @@
     "openspec/changes",
     "openspec/specs",
     ".claude/rules/project",
-    "docs/agents"
+    "docs/agents",
+    ".claude/settings.json"
   ],
   "template_only": [
     "templates",

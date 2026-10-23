@@ -38,6 +38,10 @@ The change name. If it is missing, use **Change ativa** from `docs/agents/issue-
 
 7. **Record the restore point.** In `issue-tracker.md`, clear **Change ativa**, set **Próximo passo** to `pr` (only on explicit request) or the next change, and add a log entry with the final scores of both gates.
 
+## Headless mode
+
+Under `claude -p`, or when the input contains `--headless`, run the same steps without asking anything. Archive with `openspec archive <change> --yes`. The gate and its cycle run exactly as above. End with one line: `SPEC-ARCHIVE: <change> <archived|not-archived> <verdict>`.
+
 ## Rules
 
 - Never archive with a gate in any verdict other than `pass`.

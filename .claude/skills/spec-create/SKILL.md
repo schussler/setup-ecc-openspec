@@ -32,6 +32,16 @@ A feature description, and optionally a change name in kebab-case. If the name i
 
 6. **Record the restore point.** In `docs/agents/issue-tracker.md`, set **Change ativa** to the change, **Próximo passo** to `spec-implement <change-name>`, and add a log entry with the decisions taken in the interview.
 
+## Headless mode (`--headless`)
+
+When the input contains `--headless`, or the session runs under `claude -p`, nobody can answer questions. Run the same steps, with these changes:
+
+- **No interview rounds.** Do not call `grill-me` and do not wait for answers. Walk the branches of [interview.md](interview.md) yourself. For each decision that the brief, the code and `docs/agents/` do not settle, take your recommended answer as a premise.
+- **Record every premise.** `proposal.md` must have a `## Premissas` section, with one bullet per premise: the decision, the premise assumed, why, and what would change if it is wrong. If no premise was needed, write `- Nenhuma: o brief resolve todas as decisões.`
+- **Use the CLI when needed.** If `/opsx:propose` is not available, use the CLI fallback from step 3.
+- **Gates stay the same.** Step 5 (`openspec validate --strict`, at most 3 corrections) and step 6 still run.
+- **End with one line:** `SPEC-CREATE: <change-name> <valid|invalid>`.
+
 ## Rules
 
 - No code, no tests, no commits of implementation in this skill.

@@ -54,6 +54,10 @@ After the last task:
    - **stop**: the script stops after 3 corrections, or when the failure count did not drop. Record the failure under **Paradas** with the last score, and stop. Do not try a fourth correction.
    - **error**: a configuration problem, for example an empty `checks` command or a missing baseline. Fix the cause if it is in scope, otherwise stop and report.
 
+## Headless mode
+
+Under `claude -p`, or when the input contains `--headless`, run the same steps without asking anything. When the spec and `docs/agents/` leave a decision open, take the option that changes the least and still satisfies the spec. Record it as a premise in the log of `issue-tracker.md`. The gate and its cycle run exactly as above. End with one line: `SPEC-IMPLEMENT: <change> <verdict>`.
+
 ## Rules
 
 - **Never lower a gate threshold**, and never edit `scripts/gates/` or `checks` to make a gate pass.

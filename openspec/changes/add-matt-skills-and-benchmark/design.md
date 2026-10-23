@@ -136,6 +136,8 @@ claude -p "<prompt que nomeia a skill> <argumento de tarefa>" \
 ```
 
 - As permissões vêm de `.claude/settings.json` do projeto (`permissions.allow`). Com `dontAsk`, uma ferramenta fora da lista é negada, em vez de travar esperando resposta.
+- **Verificado na Fatia 5:** o Claude Code ignora o `permissions.allow` de um projeto até o workspace ser marcado como confiável ("this workspace has not been trusted"). Marcar cada diretório do benchmark como confiável exigiria editar o `.claude.json` global do usuário, o que não foi feito. Por isso o runner lê `permissions.allow` do `.claude/settings.json` do projeto e repassa a lista com `--allowedTools`. A lista continua definida no projeto. A sonda confirmou três coisas: a skill nomeada no prompt (`/ping probe-46`) roda; um comando fora da lista (`touch`) é negado; e os hooks disparam no `-p` (26 eventos de hook com `--include-hook-events`).
+- **Lista do template:** git sem `push` e sem `-C`, sem `gh`, sem `rm`, sem Bash irrestrito. Ela também vale nas sessões interativas, então não libera nada destrutivo. O passo `new-project` do benchmark recebe, só para aquele destino, `Bash(rm -rf <target>:*)` e `Bash(git -C <target>:*)`.
 - Nunca usa `--dangerously-skip-permissions`.
 - Nunca usa `--bare`, porque ele desliga hooks. Os hooks do ECC continuam ativos.
 - `--output-format json` traz `total_cost_usd`, `duration_ms`, `num_turns` e `is_error`, que vão para o relatório.

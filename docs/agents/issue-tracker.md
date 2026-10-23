@@ -43,6 +43,21 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ## Log
 
+### 2026-10-23 — Pendência 1: comandos simples no headless (aprovada na rodada 1 de 10)
+
+- **Change `measure-headless-compound`:** cenário `archive-only`. Parte do snapshot real `legacy-pricing.pre-archive` (de `with_docs-4`, com a implementação aprovada e o `spec-archive` nunca executado), reinstala o toolset atual e roda só o `spec-archive`. O relatório passa a contar `compound_denials` e `stopped_after_denial` e avalia `acceptance`.
+- **Rodada 1 (N=10, 10 invocações, US$ 5,02, ~38 s por execução):**
+
+  | Critério | Limiar | Resultado |
+  |---|---|---|
+  | Arquivamento | 10/10 | 10/10 ✓ |
+  | `stopped_after_denial` | 0 | 0 ✓ |
+  | Média de `compound_denials` | ≤ 1 | 0 ✓ |
+  | Fora de `scoped_paths` | 0 | 0 ✓ |
+
+  Antes da orientação de comando simples, 2 de 6 execuções falhavam nesse passo. Relatório em `scripts/benchmark/reports/2026-10-23/archive-only/`.
+- **Gates da change:** implementação com antigos 126/126 e novos 47/47, lint 0, tipo 0; arquivamento 4/4.
+
 ### 2026-10-23 — Pendência 3: migração de projetos existentes (aprovada na rodada 1 de 10)
 
 - **Change `add-template-migrate`:** skill `template-migrate` com `migrate.mjs` no diretório da skill. Ela chega pelo `/template-update` e roda localmente. `plan` só lê; `apply` aplica só os itens confirmados: `managed`, `docs-agents`, `checks`, `settings` e `claude-md`. O `CLAUDE.md` do template ganhou os marcadores `agents-context` e `pipeline`.

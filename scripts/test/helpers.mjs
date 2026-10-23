@@ -1,4 +1,5 @@
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { cpSync, existsSync, mkdtempSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,4 +26,22 @@ export function readRepoFile(rel) {
 
 export function readManifest() {
   return JSON.parse(readRepoFile('template.json'));
+}
+
+// A committed copy of the current working tree (tracked and new files), so
+// tests that clone the template see uncommitted work too. Cached per process.
+let snapshot;
+export function snapshotRepo() {
+  if (snapshot) return snapshot;
+  const root = join(makeTempDir('template-snapshot-'), 'repo');
+  const files = execFileSync('git', ['ls-files', '-co', '--exclude-standard', '-z'], { cwd: REPO_ROOT, encoding: 'utf8' })
+    .split('\0')
+    .filter((file) => file && existsSync(join(REPO_ROOT, file)));
+  for (const file of files) cpSync(join(REPO_ROOT, file), join(root, file));
+  const git = (...args) => execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...args], { cwd: root });
+  git('init', '-q', '-b', 'main');
+  git('add', '-A');
+  git('commit', '-q', '-m', 'snapshot');
+  snapshot = { source: root, branch: 'main' };
+  return snapshot;
 }

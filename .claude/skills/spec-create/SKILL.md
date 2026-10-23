@@ -42,6 +42,8 @@ When the input contains `--headless`, or the session runs under `claude -p`, nob
 - **Gates stay the same.** Step 5 (`openspec validate --strict`, at most 3 corrections) and step 6 still run.
 - **End with one line:** `SPEC-CREATE: <change-name> <valid|invalid>`.
 
+Permissions in headless mode match each command literally. Run one plain command per Bash call: no `;`, `&&`, `cd`, `$?` or shell variables. The exit status is already in the tool result. If a compound command is denied, retry it as separate plain commands before concluding that a tool is unavailable.
+
 ## Rules
 
 - No code, no tests, no commits of implementation in this skill.

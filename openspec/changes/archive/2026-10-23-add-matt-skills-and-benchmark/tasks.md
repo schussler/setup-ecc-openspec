@@ -44,9 +44,9 @@
 
 ## 7. Fatia 7 — legado e relatório
 
-- [ ] 7.1 Criar a fixture `legacy-pricing` (sem OpenSpec e sem `CLAUDE.md`, com suíte própria), o `docs/agents` da variante e a tarefa; verificar que a suíte da fixture passa
-- [ ] 7.2 Testes (RED) e implementação do cenário de legado (instalação do toolset, variantes `with_docs`/`without_docs`) e do relatório JSON/Markdown
-- [ ] 7.3 Rodar o legado real (N=5 por variante), salvar o relatório e registrar o resumo final no tracker
+- [x] 7.1 Criar a fixture `legacy-pricing` (sem OpenSpec e sem `CLAUDE.md`, com suíte própria), o `docs/agents` da variante e a tarefa; verificar que a suíte da fixture passa
+- [x] 7.2 Testes (RED) e implementação do cenário de legado (instalação do toolset, variantes `with_docs`/`without_docs`) e do relatório JSON/Markdown
+- [x] 7.3 Rodar o legado real (N=5 por variante), salvar o relatório e registrar o resumo final no tracker
 
 ## Workflow follow-up
 

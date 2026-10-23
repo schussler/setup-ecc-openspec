@@ -33,3 +33,11 @@ test('new-project aceita modo nao interativo', () => {
   assert.match(text, /--template-source/);
   assert.match(text, /no questions|without asking/i);
 });
+
+test('skills headless pedem comando simples e nao desistem apos negacao de comando composto', () => {
+  for (const name of ['spec-create', 'spec-implement', 'spec-archive']) {
+    const text = skill(name);
+    assert.match(text, /one plain command per Bash call/, name);
+    assert.match(text, /retry it as separate plain commands/, name);
+  }
+});

@@ -5,7 +5,8 @@
 // Usage:
 //   node scripts/benchmark/run.mjs [--scenario greenfield|legacy|all] [--n 5]
 //     [--max-invocations 60] [--timeout-min 25] [--concurrency 2] [--model <m>]
-//     [--work-dir <dir>] [--out <dir>] [--template-branch <branch>] [--claude-bin "<cmd>"]
+//     [--work-dir <dir>] [--out <dir>] [--template-source <repo>] [--template-branch <branch>]
+//     [--claude-bin "<cmd>"]
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
@@ -15,11 +16,13 @@ import { isMain } from '../gates/gate-store.mjs';
 import { createBudget } from './lib/budget.mjs';
 import { DEFAULT_TIMEOUT_MS } from './lib/claude.mjs';
 import { runGreenfield } from './lib/greenfield.mjs';
-import { buildReport, renderMarkdown } from './lib/report.mjs';
+import { runLegacy } from './lib/legacy.mjs';
+import { buildReport, renderMarkdown, scrubPaths } from './lib/report.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SCENARIOS = {
   greenfield: { task: 'greenfield-duration', run: runGreenfield },
+  legacy: { task: 'legacy-pricing', run: runLegacy },
 };
 
 export function parseOptions(argv) {
@@ -39,6 +42,7 @@ export function parseOptions(argv) {
     model: value('--model', undefined),
     workDir: value('--work-dir', join(tmpdir(), `claude-bench-${stamp}`)),
     out: value('--out', join(ROOT, 'scripts', 'benchmark', 'reports', stamp.slice(0, 10))),
+    templateSource: value('--template-source', ROOT),
     templateBranch: value('--template-branch', execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim()),
     claudeBin: value('--claude-bin', 'claude').split(' '),
   };
@@ -48,7 +52,7 @@ export function parseOptions(argv) {
 // the home directory, which claude's stderr mentions) are replaced by
 // placeholders; template-check fails on either.
 function writeReport(dir, report, workDir) {
-  const scrub = (text) => text.replaceAll(workDir, '<work-dir>').replaceAll(homedir(), '~');
+  const scrub = (text) => scrubPaths(text, { workDir, home: homedir() });
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, 'report.json'), scrub(`${JSON.stringify(report, null, 2)}\n`));
   writeFileSync(join(dir, 'report.md'), scrub(`${renderMarkdown(report)}\n`));
@@ -67,7 +71,7 @@ export async function main(argv) {
     const result = await SCENARIOS[name].run({
       taskDir: join(ROOT, 'scripts', 'benchmark', 'tasks', SCENARIOS[name].task),
       n: options.n, budget, workRoot, claude, concurrency: options.concurrency,
-      templateSource: ROOT, templateBranch: options.templateBranch,
+      templateSource: options.templateSource, templateBranch: options.templateBranch,
     });
     const groups = result.groups ?? { default: result.runs };
     reports[name] = buildReport({

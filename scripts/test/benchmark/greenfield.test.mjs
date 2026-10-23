@@ -5,11 +5,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createBudget } from '../../benchmark/lib/budget.mjs';
 import { runGreenfield } from '../../benchmark/lib/greenfield.mjs';
-import { makeTempDir, REPO_ROOT } from '../helpers.mjs';
+import { makeTempDir, REPO_ROOT, snapshotRepo } from '../helpers.mjs';
 
 const TASK_DIR = join(REPO_ROOT, 'scripts/benchmark/tasks/greenfield-duration');
 const FAKE = [process.execPath, join(REPO_ROOT, 'scripts/test/benchmark/fake-claude.mjs')];
-const BRANCH = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
 
 function setup({ n = 1, max = 60, env = {} } = {}) {
   const work = makeTempDir('bench-');
@@ -19,8 +18,8 @@ function setup({ n = 1, max = 60, env = {} } = {}) {
     n,
     budget: createBudget(max),
     workRoot: work,
-    templateSource: REPO_ROOT,
-    templateBranch: BRANCH,
+    templateSource: snapshotRepo().source,
+    templateBranch: snapshotRepo().branch,
     claude: {
       bin: FAKE,
       env: {

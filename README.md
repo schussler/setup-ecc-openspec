@@ -75,6 +75,15 @@ Cada gate permite até 3 correções e para se a pontuação não melhorar. As t
 
 Partes de `spec-create`, `spec-implement`, `pr` e `handoff` são adaptadas de [`mattpocock/skills`](https://github.com/mattpocock/skills) (MIT; ver o `NOTICE.md` de cada skill).
 
+### Benchmark do pipeline
+
+`node scripts/benchmark/run.mjs` roda o pipeline sem intervenção humana, por `claude -p`. Há dois cenários:
+
+- **greenfield:** `/new-project` → `spec-create --headless` → `spec-implement` → `spec-archive`;
+- **legado:** uma fixture sem OpenSpec, com e sem `docs/agents/`.
+
+O runner reavalia os gates no diretório de cada execução e grava `report.json` e `report.md`. Os padrões são N=5, até 60 invocações e 25 min por invocação. Ele só existe no template (`template_only`). Resultados de 2026-10-23 em `scripts/benchmark/reports/2026-10-23/`.
+
 ## Fluxo de trabalho de uma mudança
 
 O ciclo completo usa os comandos experimentais `/opsx:*` dentro do Claude Code (a CLI `openspec`, estável, serve de apoio em qualquer etapa):
@@ -148,6 +157,7 @@ Agentes especializados (`common/agents.md`) apoiam cada etapa: **planner** (plan
 ├── templates/docs/agents/   # Modelos TBD copiados pelo /new-project
 ├── scripts/
 │   ├── gates/               # Gates do pipeline (vão para os projetos)
+│   ├── benchmark/           # Runner, tarefas, fixtures e relatórios (só no template)
 │   └── test/                # Suíte do template (node --test)
 ├── .claude/
 │   ├── agents/              # Agentes ECC

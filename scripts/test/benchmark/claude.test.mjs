@@ -69,3 +69,10 @@ test('invocacao excede tempo limite', async () => {
   assert.equal(result.reason, 'timeout');
   assert.ok(Date.now() - started < 5000);
 });
+
+test('invokeClaude registra falha de spawn sem derrubar o runner', async () => {
+  const result = await invokeClaude({ bin: ['/nao/existe/claude'], cwd: makeTempDir(), prompt: '/x', allowedTools: ['Read'] });
+  assert.equal(result.status, 'error');
+  assert.match(result.reason, /spawn/);
+  assert.equal(result.cost_usd, null);
+});

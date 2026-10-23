@@ -66,7 +66,17 @@ export function invokeClaude({
     }, timeoutMs);
     child.stdout.on('data', (chunk) => out.push(chunk));
     child.stderr.on('data', (chunk) => err.push(chunk));
+    // A missing binary (seen when `claude` was replaced mid-round) must fail
+    // this step, not crash the whole round and lose the report.
+    // 'close' is not emitted after a failed spawn, so resolve here.
+    let spawnFailed = false;
+    child.on('error', (error) => {
+      spawnFailed = true;
+      clearTimeout(timer);
+      resolve({ status: 'error', reason: `spawn: ${error.code ?? error.message}`, duration_ms: Date.now() - started, cost_usd: null, stderr: '' });
+    });
     child.on('close', (code) => {
+      if (spawnFailed) return;
       clearTimeout(timer);
       const durationMs = Date.now() - started;
       const stderr = Buffer.concat(err).toString('utf8').slice(-2000);

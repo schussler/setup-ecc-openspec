@@ -67,3 +67,28 @@ test('status do relatorio reflete orcamento esgotado sem contar falha de gate', 
   assert.equal(summary.success_rate, 100);
   assert.equal(summary.budget_exhausted, 1);
 });
+
+test('relatorio compara variantes com e sem docs', () => {
+  const report = buildReport({
+    scenario: 'legacy',
+    task: { id: 'legacy-pricing', scoped_paths: ['src/'] },
+    n: 2,
+    budget: { max: 60, used: 12, exhausted: false },
+    groups: { with_docs: [run('passed'), run('passed')], without_docs: [run('passed'), run('failed')] },
+    startedAt: 'a',
+    finishedAt: 'b',
+  });
+  assert.equal(report.comparison.with_docs_success_rate, 100);
+  assert.equal(report.comparison.without_docs_success_rate, 50);
+  assert.equal(report.comparison.difference_pp, 50);
+  assert.match(renderMarkdown(report), /com − sem/);
+});
+
+test('scrubPaths remove caminhos da maquina mesmo truncados', async () => {
+  const { scrubPaths } = await import('../../benchmark/lib/report.mjs');
+  const text = 'em /private/tmp/claude-501/-Users-x-y/abc/project e "/private/tmp/claude-501/-Users-schussler-orca-wor" e /home/u/.claude.json';
+  const out = scrubPaths(text, { workDir: '/private/tmp/claude-501/-Users-x-y/abc', home: '/home/u' });
+  assert.ok(!out.includes('/private/tmp/claude-'), out);
+  assert.ok(!out.includes('/home/u'), out);
+  assert.match(out, /<work-dir>\/project/);
+});

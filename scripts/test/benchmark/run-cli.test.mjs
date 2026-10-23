@@ -4,9 +4,8 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { main, parseOptions } from '../../benchmark/run.mjs';
-import { makeTempDir, REPO_ROOT } from '../helpers.mjs';
+import { makeTempDir, REPO_ROOT, snapshotRepo } from '../helpers.mjs';
 
-const BRANCH = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
 
 test('parseOptions aplica os padroes do orcamento', () => {
   const options = parseOptions([]);
@@ -28,7 +27,7 @@ test('runner grava report json e md', async () => {
   try {
     await main([
       '--scenario', 'greenfield', '--n', '1', '--work-dir', work, '--out', out,
-      '--template-branch', BRANCH, '--claude-bin', `${process.execPath} ${join(REPO_ROOT, 'scripts/test/benchmark/fake-claude.mjs')}`,
+      '--template-branch', snapshotRepo().branch, '--template-source', snapshotRepo().source, '--claude-bin', `${process.execPath} ${join(REPO_ROOT, 'scripts/test/benchmark/fake-claude.mjs')}`,
     ]);
   } finally {
     delete process.env.FAKE_CLAUDE_HOOK;

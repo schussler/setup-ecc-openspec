@@ -4,10 +4,10 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ## Ponto de restauração
 
-- **Change ativa:** `add-matt-skills-and-benchmark`
+- **Change ativa:** nenhuma (`add-matt-skills-and-benchmark` arquivada em `openspec/changes/archive/2026-10-23-add-matt-skills-and-benchmark/`)
 - **Branch:** `feat/add-matt-skills-and-benchmark`, a partir de `main` em `822f1cf`
-- **Próximo passo:** Fatia 7: commitar a fixture `legacy-pricing`, `lib/legacy.mjs` e a comparação no relatório, depois rodar o legado real (N=5 por variante; restam 34 invocações das 60)
-- **Bloqueios:** nenhum
+- **Próximo passo:** revisão humana da branch. A skill `pr` só roda sob pedido explícito. Pendências na entrada da Fatia 7 do Log
+- **Bloqueios:** orçamento de `claude -p` esgotado (60/60). Medir o efeito da orientação de comando simples no headless exige uma rodada nova de legado
 - **Atualizado em:** 2026-10-23
 
 ## Gates
@@ -35,8 +35,35 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 | 2026-10-23 | add-matt-skills-and-benchmark | benchmark smoke 3 (N=1) | 3 | — | — | 1/1, 5 gates ok, 4 invocações, US$ 4,15 | pass |
 | 2026-10-23 | add-matt-skills-and-benchmark | benchmark greenfield (N=5) | 1 | — (relatório gravava o caminho do scratchpad e o home: corrigido com placeholders, teste novo) | — | sucesso 5/5 (100%), gates 100%, fora do escopo 0, cobertura 100%, 20 invocações, US$ 20,70 | pass |
 | 2026-10-23 | add-matt-skills-and-benchmark | saída F6 (`validate --all` + `template-check` 1–10) | 1 | — | — | 1/1 válida; READY | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | implement (F7) | 1 | — | fixture, `lib/legacy.mjs`, comparação, `snapshotRepo` | antigos 100% (89/89), novos 100% (14/14), lint 0, tipo 0 | pass |
+| 2026-10-23 | add-matt-skills-and-benchmark | benchmark legado, rodada 1 | 1 | o runner caiu: `spawn claude ENOENT` (binário trocado no meio da rodada) e `invokeClaude` não tratava o evento `error`; 13 invocações consumidas, sem relatório | `invokeClaude` resolve a falha de spawn como erro do passo; teste novo (RED visto: o processo travou) | 4 execuções completas reavaliadas a partir dos diretórios: as 4 aprovadas em implementação, arquivamento e escopo | retry |
+| 2026-10-23 | add-matt-skills-and-benchmark | benchmark legado, rodada 2 (21 invocações restantes) | 2 | 2 execuções reprovaram no arquivamento: comandos compostos negados levaram o agente a concluir que o Bash estava indisponível | skills `spec-*`: um comando simples por chamada e nova tentativa após negação de comando composto (não medido: orçamento esgotado); `scrubPaths` para caminhos truncados | with_docs 2/3, without_docs 2/3, 0 p.p.; fora do escopo 0; status `budget_exhausted` | pass (parcial) |
+| 2026-10-23 | add-matt-skills-and-benchmark | archive (change) | 1 | cenário sem teste: `upstream-sync-check cobre o terceiro upstream` (a skill não tinha sido atualizada) | — | 41/42 (97,62%), suíte verde | retry |
+| 2026-10-23 | add-matt-skills-and-benchmark | archive (change) | 2 | — | `upstream-sync-check` compara `mattpocock/skills` desde o commit registrado; teste de contrato | 42/42 (100%), suíte verde; implement 107/107, lint 0, tipo 0 | pass |
 
 ## Log
+
+### 2026-10-23 — Fatia 7 e entrega
+
+- **Legado:**
+  - fixture `legacy-pricing` (sem OpenSpec e sem `CLAUDE.md`, 12 testes, cobertura 98,77%);
+  - variante `with_docs` com o `docs/agents/` preenchido (regras de cupom e volume, invariantes);
+  - tarefa `legacy-pricing`: extrair as regras para `src/discounts.js` sem mudar totais nem a fatura.
+- **Rodada 1 (derrubada):** 13 invocações. As 4 execuções completas, reavaliadas com os verificadores do runner, passaram: with_docs 2/2 e without_docs 2/2.
+- **Rodada 2 (21 invocações, `budget_exhausted`):**
+  - with_docs 2/3 e without_docs 2/3, diferença de 0 p.p.;
+  - em todas as execuções completas, a implementação manteve 100% dos testes antigos (regressão zero) e ficou com 0 arquivos fora de `scoped_paths`;
+  - as 2 falhas foram atrito de permissão no arquivamento, não erro de refatoração.
+
+  Relatório em `scripts/benchmark/reports/2026-10-23/legacy/`.
+- **Somando as duas rodadas:** with_docs 4/5 e without_docs 4/5. Com essa amostra, não há evidência de que `docs/agents/` mude a taxa de sucesso nesta tarefa. A fixture é pequena e as regras são legíveis no código, então a tarefa não discrimina bem.
+- **Orçamento total:** 60/60 invocações (smoke 6, greenfield 20, legado 13 + 21). Custo medido: US$ 50,11 (smoke 5,11 + greenfield 20,70 + legado rodada 2 24,30). O custo da rodada 1 do legado se perdeu com o relatório; a estimativa é ~US$ 13–14 (13 invocações × ~US$ 1,05), o que dá ~US$ 63–64 no total. Fora do orçamento: 8 sondas haiku de permissão (< US$ 0,05).
+- **Pendências:**
+  1. Medir o efeito da orientação de comando simples nas skills headless (precisa de orçamento novo).
+  2. Uma tarefa de legado mais difícil, ou com regra de domínio que não esteja explícita no código, para que a comparação com/sem `docs/agents/` discrimine.
+  3. Os projetos derivados existentes só recebem `CLAUDE.md`, `docs/agents/`, `.claude/settings.json` e `checks` por migração explícita, porque são `owned`.
+  4. PR somente sob pedido, com a skill `pr`.
+- **Change arquivada** com `openspec archive --yes` depois do gate de arquivamento (42/42).
 
 ### 2026-10-23 — Fatia 6
 

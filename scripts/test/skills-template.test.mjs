@@ -33,3 +33,11 @@ test('template-update avisa sobre migracao de caminhos owned', () => {
   assert.match(templateUpdate, /docs\/agents/);
   assert.match(templateUpdate, /explicit migration|migração explícita/i);
 });
+
+test('upstream-sync-check cobre o terceiro upstream', () => {
+  const text = readRepoFile('.claude/skills/upstream-sync-check/SKILL.md');
+  assert.match(text, /github\.com\/mattpocock\/skills/);
+  assert.match(text, /upstreams\.mattpocock-skills/);
+  assert.match(text, /git log <commit>\.\.HEAD/);
+  assert.match(text, /NOTICE\.md/);
+});

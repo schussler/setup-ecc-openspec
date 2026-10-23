@@ -42,6 +42,8 @@ The change name. If it is missing, use **Change ativa** from `docs/agents/issue-
 
 Under `claude -p`, or when the input contains `--headless`, run the same steps without asking anything. Archive with `openspec archive <change> --yes`. The gate and its cycle run exactly as above. End with one line: `SPEC-ARCHIVE: <change> <archived|not-archived> <verdict>`.
 
+Permissions in headless mode match each command literally. Run one plain command per Bash call: no `;`, `&&`, `cd`, `$?` or shell variables. The exit status is already in the tool result. If a compound command is denied, retry it as separate plain commands before concluding that a tool is unavailable.
+
 ## Rules
 
 - Never archive with a gate in any verdict other than `pass`.

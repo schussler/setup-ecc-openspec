@@ -58,6 +58,8 @@ After the last task:
 
 Under `claude -p`, or when the input contains `--headless`, run the same steps without asking anything. When the spec and `docs/agents/` leave a decision open, take the option that changes the least and still satisfies the spec. Record it as a premise in the log of `issue-tracker.md`. The gate and its cycle run exactly as above. End with one line: `SPEC-IMPLEMENT: <change> <verdict>`.
 
+Permissions in headless mode match each command literally. Run one plain command per Bash call: no `;`, `&&`, `cd`, `$?` or shell variables. The exit status is already in the tool result. If a compound command is denied, retry it as separate plain commands before concluding that a tool is unavailable.
+
 ## Rules
 
 - **Never lower a gate threshold**, and never edit `scripts/gates/` or `checks` to make a gate pass.

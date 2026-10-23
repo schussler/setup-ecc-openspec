@@ -2,6 +2,17 @@
 export const GATES = Object.freeze(['bootstrap', 'spec', 'implement', 'archive', 'scope']);
 const EXECUTED = new Set(['passed', 'failed']);
 
+// Reports are committed: drop machine-specific paths, including ones cut
+// short inside truncated agent output.
+const SCRATCH_PATH = /\/private\/tmp\/claude-\d+[^\s"'`)]*/g;
+
+export function scrubPaths(text, { workDir, home }) {
+  return text
+    .replaceAll(workDir, '<work-dir>')
+    .replace(SCRATCH_PATH, '<tmp>')
+    .replaceAll(home, '~');
+}
+
 export function parseCoverage(output) {
   const match = output.match(/all files\s*\|\s*([\d.]+)/);
   return match ? Number(match[1]) : null;
@@ -54,9 +65,19 @@ export function buildReport({ scenario, task, n, budget, groups, startedAt, fini
   let status = 'complete';
   if (budget.exhausted && all.some((run) => run.status === 'budget_exhausted' || run.status === 'not_run')) status = 'budget_exhausted';
   else if (interrupted || all.some((run) => run.status === 'not_run')) status = 'partial';
+  const comparison = summarized.with_docs && summarized.without_docs
+    ? {
+      with_docs_success_rate: summarized.with_docs.summary.success_rate,
+      without_docs_success_rate: summarized.without_docs.summary.success_rate,
+      difference_pp: summarized.with_docs.summary.success_rate === null || summarized.without_docs.summary.success_rate === null
+        ? null
+        : round(summarized.with_docs.summary.success_rate - summarized.without_docs.summary.success_rate),
+    }
+    : null;
   return {
     scenario,
     task: task.id,
+    comparison,
     scoped_paths: task.scoped_paths,
     n,
     status,
@@ -121,6 +142,9 @@ export function renderMarkdown(report) {
     `- **\`scoped_paths\`:** ${report.scoped_paths.map((path) => `\`${path}\``).join(', ') || 'n/a'}`,
     `- **Início / fim:** ${report.started_at} / ${report.finished_at}`,
     ...report.notes.map((note) => `- ${note}`),
+    ...(report.comparison
+      ? [`- **Com vs. sem \`docs/agents/\`:** sucesso ${fmt(report.comparison.with_docs_success_rate, '%')} vs. ${fmt(report.comparison.without_docs_success_rate, '%')} (com − sem: ${fmt(report.comparison.difference_pp, ' p.p.')})`]
+      : []),
     '',
     ...Object.entries(report.groups).map(([name, group]) => renderGroup(name, group)),
   ].join('\n');

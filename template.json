@@ -5,7 +5,8 @@
   },
   "upstreams": {
     "ecc": "2.2.3",
-    "openspec": "1.14.3"
+    "openspec": "1.14.3",
+    "mattpocock-skills": "5beb35b040e3de97e54fa9e386d7e42d15c295c2"
   },
   "managed": [
     ".claude/rules/common",
@@ -22,6 +23,10 @@
     "openspec/config.yaml",
     "openspec/changes",
     "openspec/specs",
-    ".claude/rules/project"
+    ".claude/rules/project",
+    "docs/agents"
+  ],
+  "template_only": [
+    "templates"
   ]
 }

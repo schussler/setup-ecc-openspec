@@ -14,12 +14,27 @@ import {
 } from './pipeline.mjs';
 
 export const VARIANTS = Object.freeze(['with_docs', 'without_docs']);
-const TOOLSET = ['.claude', 'scripts/gates', 'openspec/config.yaml'];
+// Only what the pipeline uses. The full .claude/ (~300 skills, ~90 agents)
+// is loaded into every turn of every `claude -p` call and multiplies the cost
+// without changing what the legacy scenarios measure.
+export const LEAN_TOOLSET = Object.freeze({
+  skills: Object.freeze([
+    'spec-create', 'spec-implement', 'spec-archive', 'handoff',
+    'openspec-propose', 'openspec-apply-change', 'openspec-archive-change', 'openspec-sync-specs', 'openspec-explore',
+  ]),
+  paths: Object.freeze([
+    '.claude/settings.json', '.claude/commands/opsx', '.claude/rules/common', '.claude/rules/openspec.md',
+    '.claude/rules/README.md', 'scripts/gates', 'openspec/config.yaml',
+  ]),
+});
 const GIT_USER = ['-c', 'user.email=benchmark@local', '-c', 'user.name=benchmark'];
 
 export function installToolset({ templateDir, target, task, withDocs }) {
   cpSync(join(templateDir, 'scripts', 'benchmark', 'fixtures', task.fixture), target, { recursive: true });
-  for (const path of TOOLSET) cpSync(join(templateDir, path), join(target, path), { recursive: true });
+  for (const path of LEAN_TOOLSET.paths) cpSync(join(templateDir, path), join(target, path), { recursive: true });
+  for (const skill of LEAN_TOOLSET.skills) {
+    cpSync(join(templateDir, '.claude', 'skills', skill), join(target, '.claude', 'skills', skill), { recursive: true });
+  }
   for (const dir of ['openspec/specs', 'openspec/changes']) mkdirSync(join(target, dir), { recursive: true });
   const manifest = JSON.parse(readFileSync(join(templateDir, 'template.json'), 'utf8'));
   const { template, upstreams, managed, owned } = manifest;

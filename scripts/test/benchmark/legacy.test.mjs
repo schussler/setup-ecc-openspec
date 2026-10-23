@@ -50,3 +50,22 @@ test('legado compara com e sem docs agents', async () => {
   assert.ok(!calls.includes('/pr'));
   assert.equal(calls.length, 12);
 });
+
+test('installToolset instala so o toolset enxuto do pipeline', async () => {
+  const { installToolset, LEAN_TOOLSET } = await import('../../benchmark/lib/legacy.mjs');
+  const { readdirSync } = await import('node:fs');
+  const target = join(makeTempDir('lean-'), 'p');
+  const task = JSON.parse(readFileSync(join(TASK_DIR, 'task.json'), 'utf8'));
+  installToolset({ templateDir: REPO_ROOT, target, task, withDocs: false });
+  const skills = readdirSync(join(target, '.claude/skills')).sort();
+  assert.deepEqual(skills, [...LEAN_TOOLSET.skills].sort());
+  for (const name of ['spec-create', 'spec-implement', 'spec-archive', 'openspec-propose', 'openspec-archive-change']) {
+    assert.ok(skills.includes(name), name);
+  }
+  assert.ok(!existsSync(join(target, '.claude/agents')));
+  assert.ok(existsSync(join(target, '.claude/commands/opsx/archive.md')));
+  assert.ok(existsSync(join(target, '.claude/rules/common')));
+  assert.ok(!existsSync(join(target, '.claude/rules/python')));
+  assert.ok(existsSync(join(target, '.claude/settings.json')));
+  assert.ok(existsSync(join(target, 'scripts/gates/implement-gate.mjs')));
+});

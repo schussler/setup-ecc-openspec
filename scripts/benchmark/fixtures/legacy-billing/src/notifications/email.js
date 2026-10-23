@@ -9,7 +9,7 @@ export function sendInvoiceEmail(invoice, customer) {
     to: customer.email,
     subject: `Sua fatura de ${invoice.issuedAt.slice(0, 10)}`,
     body: [
-      `Olá, ${customer.name}.`,
+      `Olá, ${customer.name}. Cliente desde ${customer.contractSignedAt.slice(0, 4)}.`,
       ...invoice.lines.map((line) => `${line.sku} x${line.quantity}: ${formatMoney(line.totalCents)}`),
       `Desconto: ${formatMoney(invoice.discountCents)}`,
       `Total: ${formatMoney(invoice.totalCents)}`,

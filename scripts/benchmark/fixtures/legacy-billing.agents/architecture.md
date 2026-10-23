@@ -17,7 +17,7 @@
 
 ## Fronteiras e regras
 
-- **`src/billing/` é puro.** Ele só importa módulos de dentro de `src/billing/`: nada de `../customers.js` nem `../notifications/`. Não lê o relógio (`Date.now()`, `new Date()`). Tudo o que precisa do cliente (tier, tipo de contrato) chega por parâmetro, e quem busca o cliente é `src/index.js`. A conciliação financeira roda o cálculo da fatura isolado, sem cadastro nem relógio.
+- **`src/billing/` é puro.** Ele só importa módulos de dentro de `src/billing/`: nada de `../customers.js` nem `../notifications/`. Não lê o relógio (`Date.now()`, `new Date()`). Tudo o que precisa do cliente (tier, data do contrato) chega por parâmetro, e quem busca o cliente é `src/index.js`. A conciliação financeira roda o cálculo da fatura isolado, sem cadastro nem relógio.
 - **Contrato público:** `issueInvoice(customerId, items, issuedAt)` e os campos da fatura (`subtotalCents`, `discountCents`, `totalCents`, e os que vierem).
 
 ## Verificação

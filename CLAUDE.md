@@ -23,3 +23,4 @@ Este projeto utiliza **OpenSpec** para gerenciamento de requisitos/tarefas (Spec
 - Validar integridade das specs: `openspec validate`
 - Listar mudanças ativas: `openspec list`
 - Arquivar spec ao concluir: `openspec archive`
+- Testes, lint e tipos: os comandos ficam em `template.json` → `checks` (`test`, `lint`, `typecheck`). Os gates em `scripts/gates/` leem de lá.

@@ -10,12 +10,12 @@
 
 ## 2. Fatia 2 — `checks`, `/new-project`, suíte mínima
 
-- [ ] 2.1 Escrever testes (RED) para `scripts/gates/checks.mjs` (carregar checks, falha clara sem comando, contagem de testes por formato) e implementar até passar
-- [ ] 2.2 Escrever testes (RED) e implementar `lint.mjs` e `syntax-check.mjs`; verificar com `node --test`
-- [ ] 2.3 Adicionar `checks`, `template_only` completo e `scripts/gates` em `managed` no `template.json`; verificar com o teste de manifesto
-- [ ] 2.4 Atualizar `new-project` (copiar modelos, remover `template_only`, preencher `checks`, limpar `openspec/specs` e `archive`); verificar com os testes de contrato da skill
-- [ ] 2.5 Atualizar `template-check` (validar `checks`, `template_only`, rodar a suíte) e `template-update` (aviso sobre migração de `owned`); verificar com os testes de contrato
-- [ ] 2.6 Confirmar que `openspec validate --all` aceita `gates.json` dentro da change; verificar rodando o validate com um `gates.json` presente
+- [x] 2.1 Escrever testes (RED) para `scripts/gates/checks.mjs` (carregar checks, falha clara sem comando, contagem de testes por formato) e implementar até passar
+- [x] 2.2 Escrever testes (RED) e implementar `lint.mjs` e `syntax-check.mjs`; verificar com `node --test`
+- [x] 2.3 Adicionar `checks`, `template_only` completo e `scripts/gates` em `managed` no `template.json`; verificar com o teste de manifesto
+- [x] 2.4 Atualizar `new-project` (copiar modelos, remover `template_only`, preencher `checks`, limpar `openspec/specs` e `archive`); verificar com os testes de contrato da skill
+- [x] 2.5 Atualizar `template-check` (validar `checks`, `template_only`, rodar a suíte) e `template-update` (aviso sobre migração de `owned`); verificar com os testes de contrato
+- [x] 2.6 Confirmar que `openspec validate --all` aceita `gates.json` dentro da change; verificar rodando o validate com um `gates.json` presente
 
 ## 3. Fatia 3 — `spec-create` e `spec-implement`
 

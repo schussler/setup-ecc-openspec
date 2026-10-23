@@ -15,7 +15,8 @@
     ".claude/agents",
     ".claude/skills",
     ".claude/commands/opsx",
-    ".claude/commands/toolset-retro.md"
+    ".claude/commands/toolset-retro.md",
+    "scripts/gates"
   ],
   "owned": [
     "CLAUDE.md",
@@ -27,6 +28,16 @@
     "docs/agents"
   ],
   "template_only": [
-    "templates"
-  ]
+    "templates",
+    "scripts/benchmark",
+    "scripts/test",
+    "openspec/specs",
+    "openspec/changes/archive"
+  ],
+  "checks": {
+    "test": "node --test \"scripts/test/**/*.test.mjs\"",
+    "test_file": "node --test {file}",
+    "lint": "node scripts/gates/lint.mjs",
+    "typecheck": "node scripts/gates/syntax-check.mjs scripts"
+  }
 }

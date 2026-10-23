@@ -119,3 +119,11 @@ test('relatorio avalia os criterios de aceite', () => {
   assert.equal(report.status, 'complete');
   assert.match(renderMarkdown(report), /Critérios de aceite/);
 });
+
+test('relatorio lista os modelos efetivos usados', () => {
+  const runs = [run('passed', { steps: [{ name: 'a', status: 'ok', duration_ms: 1, cost_usd: 0, models: ['claude-haiku-5-5'] }] }),
+    run('passed', { steps: [{ name: 'a', status: 'ok', duration_ms: 1, cost_usd: 0, models: ['claude-opus-5-5', 'claude-haiku-5-5'] }] })];
+  const report = buildReport({ scenario: 's', task: { id: 't', scoped_paths: [] }, n: 2, budget: { max: 2, used: 2, exhausted: false }, groups: { default: runs }, startedAt: 'a', finishedAt: 'b' });
+  assert.deepEqual(report.models, ['claude-haiku-5-5', 'claude-opus-5-5']);
+  assert.match(renderMarkdown(report), /Modelos efetivos:.*claude-haiku-5-5/);
+});

@@ -6,7 +6,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 - **Change ativa:** nenhuma (`add-matt-skills-and-benchmark` arquivada em `openspec/changes/archive/2026-10-23-add-matt-skills-and-benchmark/`)
 - **Branch:** `feat/add-matt-skills-and-benchmark`, a partir de `main` em `822f1cf`
-- **Próximo passo:** pendência 2, rodada 2 (ver o Log). Depois, revisão humana da branch. A skill `pr` só roda sob pedido explícito. Pendências na entrada da Fatia 7 do Log
+- **Próximo passo:** revisão humana da branch `feat/pendencias-pipeline`. As três pendências foram aprovadas. A skill `pr` só roda sob pedido. A skill `pr` só roda sob pedido explícito. Pendências na entrada da Fatia 7 do Log
 - **Bloqueios:** orçamento de `claude -p` esgotado (60/60). Medir o efeito da orientação de comando simples no headless exige uma rodada nova de legado
 - **Atualizado em:** 2026-10-23
 
@@ -43,7 +43,30 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ## Log
 
-### 2026-10-23 — Pendência 2: tarefa legacy-billing (em andamento, rodada 1 de 10 reprovada)
+### 2026-10-23 — Pendência 2: aprovada na rodada 2 de 10
+
+- **A rodada 1 não valeu:** as 8 falhas vieram de "You've hit your session limit" (limite da conta), não da tarefa. O runner passou a tratar o limite como orçamento esgotado (`quota_exhausted`), sem contar falha de gate (commit `7bf7aa7`).
+- **Rodada 2 (N=8 por variante, 46 invocações, US$ 1,71):**
+
+  | Critério | Limiar | Resultado |
+  |---|---|---|
+  | Referência nas regras ocultas | 3/3 | 3/3 ✓ (teste do template) |
+  | Ingênua falha em ≥ 2 regras | ≥ 2 | 2 ✓ (teste do template) |
+  | Melhor variante nos gates normais | ≥ 75% | `without_docs` 87,5% ✓ (`with_docs` 62,5%) |
+  | Diferença no gate `hidden` (conclusivo) | ≥ 25 p.p. | 62,5% vs. 0% = **62,5 p.p.**, conclusivo ✓ |
+  | Fora de `scoped_paths` | — | 0 |
+
+- **Ressalva de modelo:** a rodada 2 rodou com **`claude-haiku-5-5`**. O modelo padrão mudou depois que a conta saiu do limite; as rodadas anteriores usaram Opus. Isso se confirmou depois da rodada: um `claude -p` sem `--model` respondeu com Haiku, e o custo por passo caiu para ~US$ 0,02. O runner passou a registrar o modelo efetivo (`models`) em cada invocação e no relatório.
+- **Falhas de `with_docs` (3):**
+  - 2 com o `spec-implement` parado por "Bash denied" antes do baseline;
+  - 1 em que o `spec-implement` apontou conflito entre "todas as faturas" (brief) e a isenção (docs) e não implementou;
+  - 1 com a spec inválida.
+- **Falha de `without_docs` (1):** o `spec-implement` também foi bloqueado no Bash.
+- **Achado no runner:** a verificação de implementação aceita uma execução sem testes novos (`new_pct` vazio). O arquivamento pega o caso (cenários sem teste), mas o rótulo "implementação ✓" engana. Proposta: exigir pelo menos 1 teste novo quando a change tiver cenários. Não aplicado: muda a semântica do gate e precisa de aval.
+- **Toolset enxuto** nos cenários de legado (commit `7e2712a`), pedido pelo usuário. Vale a partir da próxima rodada; a rodada 2 já usou o completo.
+- **Gates da change:** implementação com antigos 165/165 e novos 13/13, lint 0, tipo 0; arquivamento 7/7. Change arquivada.
+
+### 2026-10-23 — Pendência 2: tarefa legacy-billing (rodada 1 de 10: inválida por limite da conta)
 
 - **Smoke 1 (N=1 por variante, US$ 5,30):** a tarefa tinha três defeitos meus: os testes existentes contradiziam a taxa, o campo `legacyContract` vazava a isenção e "taxa sempre 0" passava no oculto. Corrigidos em commit próprio.
 - **Smoke 2 (US$ 5,40):** gates normais 1/1 nas duas variantes; regras ocultas `with_docs` 3/3, `without_docs` 1/3.

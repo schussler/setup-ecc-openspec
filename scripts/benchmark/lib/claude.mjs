@@ -101,6 +101,8 @@ export function invokeClaude({
         permission_denials: json.permission_denials ?? [],
         result: typeof json.result === 'string' ? json.result.slice(-2000) : null,
         session_id: json.session_id ?? null,
+        // The model that actually answered: the user's default can change between rounds.
+        models: Object.keys(json.modelUsage ?? {}),
         stderr,
       });
     });

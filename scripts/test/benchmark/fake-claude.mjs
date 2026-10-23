@@ -34,5 +34,6 @@ if (mode === 'sleep') {
     permission_denials: JSON.parse(process.env.FAKE_CLAUDE_DENIALS ?? '[]')
       .map((command) => ({ tool_name: 'Bash', tool_input: { command } })),
     session_id: 'fake',
+    modelUsage: { [process.env.FAKE_CLAUDE_MODEL ?? 'fake-model']: {} },
   }));
 }

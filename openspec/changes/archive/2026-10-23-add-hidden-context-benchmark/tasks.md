@@ -7,4 +7,4 @@
 ## 2. Runner
 
 - [x] 2.1 Testes (RED) e implementação do gate `hidden`, da comparação e de `min_best_group_success_rate`; verificar com `node --test`
-- [ ] 2.2 Rodada real N=8 por variante até a tarefa ser válida (limite de 10 rodadas); verificar com `acceptance` e `comparison` no relatório
+- [x] 2.2 Rodada real N=8 por variante até a tarefa ser válida (limite de 10 rodadas); verificar com `acceptance` e `comparison` no relatório

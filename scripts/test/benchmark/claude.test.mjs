@@ -84,3 +84,8 @@ test('invokeClaude marca limite de uso da conta como quota_exhausted', async () 
   });
   assert.equal(result.status, 'quota_exhausted');
 });
+
+test('invokeClaude registra o modelo efetivo da invocacao', async () => {
+  const result = await invokeClaude({ bin: FAKE, cwd: makeTempDir(), prompt: '/x', allowedTools: ['Read'], env: { FAKE_CLAUDE_MODEL: 'claude-haiku-5-5' } });
+  assert.deepEqual(result.models, ['claude-haiku-5-5']);
+});

@@ -25,6 +25,7 @@ const SCENARIOS = {
   greenfield: { task: 'greenfield-duration', run: runGreenfield },
   legacy: { task: 'legacy-pricing', run: runLegacy },
   'archive-only': { task: 'legacy-pricing-archive', run: runArchiveOnly },
+  'legacy-billing': { task: 'legacy-billing', run: runLegacy },
 };
 
 export function parseOptions(argv) {
@@ -64,7 +65,7 @@ export async function main(argv) {
   const options = parseOptions(argv);
   const budget = createBudget(options.maxInvocations);
   const claude = { bin: options.claudeBin, model: options.model, timeoutMs: options.timeoutMin * 60000, env: {} };
-  // `all` runs the full scenarios; partial ones (archive-only) run only on request.
+  // `all` runs the original scenarios; the others run only on request.
   const names = options.scenario === 'all' ? ['greenfield', 'legacy'] : [options.scenario];
   const reports = {};
   for (const name of names) {

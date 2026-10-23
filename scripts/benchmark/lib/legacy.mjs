@@ -7,6 +7,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node
 import { join } from 'node:path';
 import { listTestFiles, runCommand } from '../../gates/checks.mjs';
 import { buildStepPrompt, readAllowedTools } from './claude.mjs';
+import { runHiddenTests } from './hidden.mjs';
 import {
   finish, git, loadTask, measureCoverage, newRun, pool, runStep,
   verifyArchive, verifyImplementation, verifyScope, verifySpec,
@@ -61,6 +62,10 @@ async function legacyRun(run, { task, templateDir, workRoot, budget, claude }) {
   }
   run.gates.scope = verifyScope({ dir: target, base, scoped: task.scoped_paths });
   run.coverage.after = await measureCoverage(target);
+  if (task.hidden_tests) {
+    // After the scope check, so the copied hidden tests never count as agent edits.
+    run.gates.hidden = await runHiddenTests({ dir: target, hiddenDir: join(templateDir, 'scripts', 'benchmark', 'fixtures', task.hidden_tests) });
+  }
   return finish(run, started);
 }
 

@@ -1,0 +1,20 @@
+{
+  "id": "legacy-billing",
+  "scenario": "legacy",
+  "change": "add-service-fee",
+  "fixture": "legacy-billing",
+  "agents_docs": "legacy-billing.agents",
+  "hidden_tests": "legacy-billing.hidden",
+  "checks": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "test_file": "node --test {file}",
+    "lint": "node scripts/gates/lint.mjs",
+    "typecheck": "node scripts/gates/syntax-check.mjs src test",
+    "coverage": "node --test --experimental-test-coverage \"test/**/*.test.js\""
+  },
+  "scoped_paths": ["src/", "test/", "openspec/", "docs/agents/"],
+  "conclusive_min_pp": 25,
+  "acceptance": {
+    "min_best_group_success_rate": 75
+  }
+}

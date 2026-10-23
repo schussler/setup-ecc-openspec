@@ -1,5 +1,5 @@
 // Benchmark report: aggregates runs into report.json and renders report.md.
-export const GATES = Object.freeze(['bootstrap', 'spec', 'implement', 'archive', 'scope']);
+export const GATES = Object.freeze(['bootstrap', 'spec', 'implement', 'archive', 'scope', 'hidden']);
 const EXECUTED = new Set(['passed', 'failed']);
 
 // Reports are committed: drop machine-specific paths, including ones cut
@@ -69,7 +69,25 @@ function summarize(runs) {
   };
 }
 
-function evaluateAcceptance(acceptance, runs) {
+const diff = (a, b) => (a === null || b === null ? null : round(a - b));
+
+function compareVariants(withDocs, withoutDocs, conclusiveMinPp) {
+  const hiddenWith = withDocs.gates.hidden.pass_rate;
+  const hiddenWithout = withoutDocs.gates.hidden.pass_rate;
+  const hiddenDifference = diff(hiddenWith, hiddenWithout);
+  return {
+    with_docs_success_rate: withDocs.success_rate,
+    without_docs_success_rate: withoutDocs.success_rate,
+    difference_pp: diff(withDocs.success_rate, withoutDocs.success_rate),
+    with_docs_hidden_rate: hiddenWith,
+    without_docs_hidden_rate: hiddenWithout,
+    hidden_difference_pp: hiddenDifference,
+    conclusive_min_pp: conclusiveMinPp ?? null,
+    conclusive: conclusiveMinPp !== undefined && hiddenDifference !== null ? Math.abs(hiddenDifference) >= conclusiveMinPp : null,
+  };
+}
+
+function evaluateAcceptance(acceptance, runs, groups) {
   if (!acceptance) return null;
   const executed = runs.filter((run) => EXECUTED.has(run.status));
   const criteria = [];
@@ -85,6 +103,11 @@ function evaluateAcceptance(acceptance, runs) {
     const mean = stats(executed.map((run) => sum(run.steps.map((step) => step.compound_denials ?? 0))))?.mean ?? null;
     max('max_compound_denials_mean', mean, acceptance.max_compound_denials_mean);
   }
+  if ('min_best_group_success_rate' in acceptance) {
+    const rates = Object.values(groups).map((runsOfGroup) => summarize(runsOfGroup).success_rate).filter((rate) => rate !== null);
+    const best = rates.length ? Math.max(...rates) : null;
+    criteria.push({ name: 'min_best_group_success_rate', value: best, threshold: `>= ${acceptance.min_best_group_success_rate}`, passed: best !== null && best >= acceptance.min_best_group_success_rate });
+  }
   if ('max_out_of_scope' in acceptance) {
     max('max_out_of_scope', sum(executed.map((run) => run.gates?.scope?.out_of_scope?.length ?? 0)), acceptance.max_out_of_scope);
   }
@@ -98,19 +121,13 @@ export function buildReport({ scenario, task, n, budget, groups, startedAt, fini
   if (budget.exhausted && all.some((run) => run.status === 'budget_exhausted' || run.status === 'not_run')) status = 'budget_exhausted';
   else if (interrupted || all.some((run) => run.status === 'not_run')) status = 'partial';
   const comparison = summarized.with_docs && summarized.without_docs
-    ? {
-      with_docs_success_rate: summarized.with_docs.summary.success_rate,
-      without_docs_success_rate: summarized.without_docs.summary.success_rate,
-      difference_pp: summarized.with_docs.summary.success_rate === null || summarized.without_docs.summary.success_rate === null
-        ? null
-        : round(summarized.with_docs.summary.success_rate - summarized.without_docs.summary.success_rate),
-    }
+    ? compareVariants(summarized.with_docs.summary, summarized.without_docs.summary, task.conclusive_min_pp)
     : null;
   return {
     scenario,
     task: task.id,
     comparison,
-    acceptance: evaluateAcceptance(task.acceptance, all),
+    acceptance: evaluateAcceptance(task.acceptance, all, groups),
     scoped_paths: task.scoped_paths,
     n,
     status,
@@ -146,10 +163,10 @@ function renderGroup(name, { summary, runs }) {
     '',
     ...Object.entries(summary.step_duration_ms).map(([step, s]) => `- ${step}: ${s ? `${seconds(s.mean)} (${seconds(s.min)}–${seconds(s.max)})` : 'n/a'}`),
     '',
-    '| Execução | Status | Gates (bootstrap/spec/implement/archive/scope) | Fora do escopo | Cobertura depois | Invocações | Custo (US$) | Tempo |',
+    '| Execução | Status | Gates (bootstrap/spec/implement/archive/scope/hidden) | Fora do escopo | Cobertura depois | Invocações | Custo (US$) | Tempo |',
     '|----------|--------|-----------------------------------------------|----------------|------------------|------------|-------------|-------|',
     ...runs.map((run) => {
-      const gates = ['bootstrap', 'spec', 'implement', 'archive', 'scope']
+      const gates = GATES
         .map((gate) => (run.gates?.[gate] === undefined ? '–' : run.gates[gate].passed ? '✓' : '✗'))
         .join(' ');
       return `| ${run.run} | ${run.status} | ${gates} | ${run.gates?.scope?.out_of_scope?.length ?? 'n/a'} | ${fmt(run.coverage?.after, '%')} | ${run.invocations} | ${fmt(round(run.cost_usd ?? 0, 4))} | ${seconds(run.duration_ms)} |`;
@@ -177,7 +194,10 @@ export function renderMarkdown(report) {
     `- **Início / fim:** ${report.started_at} / ${report.finished_at}`,
     ...report.notes.map((note) => `- ${note}`),
     ...(report.comparison
-      ? [`- **Com vs. sem \`docs/agents/\`:** sucesso ${fmt(report.comparison.with_docs_success_rate, '%')} vs. ${fmt(report.comparison.without_docs_success_rate, '%')} (com − sem: ${fmt(report.comparison.difference_pp, ' p.p.')})`]
+      ? [
+        `- **Com vs. sem \`docs/agents/\`:** sucesso ${fmt(report.comparison.with_docs_success_rate, '%')} vs. ${fmt(report.comparison.without_docs_success_rate, '%')} (com − sem: ${fmt(report.comparison.difference_pp, ' p.p.')})`,
+        `- **Gate hidden (regras só nos docs):** ${fmt(report.comparison.with_docs_hidden_rate, '%')} vs. ${fmt(report.comparison.without_docs_hidden_rate, '%')} (com − sem: ${fmt(report.comparison.hidden_difference_pp, ' p.p.')}; conclusivo: ${report.comparison.conclusive === null ? 'n/a' : report.comparison.conclusive ? 'sim' : 'não, sem evidência'})`,
+      ]
       : []),
     '',
     ...(report.acceptance

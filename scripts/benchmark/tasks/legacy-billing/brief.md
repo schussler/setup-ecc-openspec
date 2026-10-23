@@ -1,0 +1,1 @@
+Adicione a taxa de serviço de 2,5% às faturas deste projeto legado. A taxa incide sobre o valor depois do desconto, aparece na fatura como o campo `serviceFeeCents` e entra em `totalCents`. Siga as regras de negócio e as convenções do projeto. Os testes existentes em `test/` continuam passando sem alteração. Adicione em `test/` um teste por cenário da spec, com o nome do cenário.

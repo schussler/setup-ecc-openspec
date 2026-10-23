@@ -1,0 +1,217 @@
+{
+  "implement": {
+    "baseline": {
+      "created_at": "2026-10-23T20:43:00.602Z",
+      "test_files": [
+        "scripts/benchmark/fixtures/legacy-pricing.pre-archive/test/discounts.test.js",
+        "scripts/benchmark/fixtures/legacy-pricing.pre-archive/test/invoice.test.js",
+        "scripts/benchmark/fixtures/legacy-pricing.pre-archive/test/pricing.test.js",
+        "scripts/benchmark/fixtures/legacy-pricing/test/invoice.test.js",
+        "scripts/benchmark/fixtures/legacy-pricing/test/pricing.test.js",
+        "scripts/test/benchmark/archive-only.test.mjs",
+        "scripts/test/benchmark/claude.test.mjs",
+        "scripts/test/benchmark/greenfield.test.mjs",
+        "scripts/test/benchmark/legacy.test.mjs",
+        "scripts/test/benchmark/report.test.mjs",
+        "scripts/test/benchmark/run-cli.test.mjs",
+        "scripts/test/claude-md.test.mjs",
+        "scripts/test/gates/archive-gate.test.mjs",
+        "scripts/test/gates/checks.test.mjs",
+        "scripts/test/gates/implement-gate.test.mjs",
+        "scripts/test/gates/lint.test.mjs",
+        "scripts/test/gates/pr-gate.test.mjs",
+        "scripts/test/gates/scope-check.test.mjs",
+        "scripts/test/gates/syntax-check.test.mjs",
+        "scripts/test/headless.test.mjs",
+        "scripts/test/manifest.test.mjs",
+        "scripts/test/skills-pipeline.test.mjs",
+        "scripts/test/skills-template.test.mjs",
+        "scripts/test/template-migrate.test.mjs"
+      ],
+      "note": "Baseline = testes commitados; a fixture legacy-billing foi escrita antes da sessão."
+    },
+    "attempts": [
+      {
+        "attempt": 1,
+        "at": "2026-10-23T20:47:08.151Z",
+        "note": "fixture legacy-billing, gate hidden, comparação",
+        "split": true,
+        "old": {
+          "files": [
+            "scripts/benchmark/fixtures/legacy-pricing.pre-archive/test/discounts.test.js",
+            "scripts/benchmark/fixtures/legacy-pricing.pre-archive/test/invoice.test.js",
+            "scripts/benchmark/fixtures/legacy-pricing.pre-archive/test/pricing.test.js",
+            "scripts/benchmark/fixtures/legacy-pricing/test/invoice.test.js",
+            "scripts/benchmark/fixtures/legacy-pricing/test/pricing.test.js",
+            "scripts/test/benchmark/archive-only.test.mjs",
+            "scripts/test/benchmark/claude.test.mjs",
+            "scripts/test/benchmark/greenfield.test.mjs",
+            "scripts/test/benchmark/legacy.test.mjs",
+            "scripts/test/benchmark/report.test.mjs",
+            "scripts/test/benchmark/run-cli.test.mjs",
+            "scripts/test/claude-md.test.mjs",
+            "scripts/test/gates/archive-gate.test.mjs",
+            "scripts/test/gates/checks.test.mjs",
+            "scripts/test/gates/implement-gate.test.mjs",
+            "scripts/test/gates/lint.test.mjs",
+            "scripts/test/gates/pr-gate.test.mjs",
+            "scripts/test/gates/scope-check.test.mjs",
+            "scripts/test/gates/syntax-check.test.mjs",
+            "scripts/test/headless.test.mjs",
+            "scripts/test/manifest.test.mjs",
+            "scripts/test/skills-pipeline.test.mjs",
+            "scripts/test/skills-template.test.mjs",
+            "scripts/test/template-migrate.test.mjs"
+          ],
+          "pass": 160,
+          "fail": 0,
+          "pct": 100,
+          "failing": []
+        },
+        "new": {
+          "files": [
+            "scripts/benchmark/fixtures/legacy-billing/test/billing.test.js",
+            "scripts/benchmark/fixtures/legacy-billing/test/issue.test.js",
+            "scripts/test/benchmark/hidden.test.mjs"
+          ],
+          "pass": 13,
+          "fail": 0,
+          "pct": 100,
+          "failing": []
+        },
+        "removed_tests": [],
+        "lint_errors": 0,
+        "type_errors": 0,
+        "failures": 0,
+        "verdict": "pass"
+      },
+      {
+        "attempt": 2,
+        "at": "2026-10-23T21:16:00.723Z",
+        "note": "detecção do limite de uso da conta",
+        "split": true,
+        "old": {
+          "files": [
+            "scripts/benchmark/fixtures/legacy-pricing.pre-archive/test/discounts.test.js",
+            "scripts/benchmark/fixtures/legacy-pricing.pre-archive/test/invoice.test.js",
+            "scripts/benchmark/fixtures/legacy-pricing.pre-archive/test/pricing.test.js",
+            "scripts/benchmark/fixtures/legacy-pricing/test/invoice.test.js",
+            "scripts/benchmark/fixtures/legacy-pricing/test/pricing.test.js",
+            "scripts/test/benchmark/archive-only.test.mjs",
+            "scripts/test/benchmark/claude.test.mjs",
+            "scripts/test/benchmark/greenfield.test.mjs",
+            "scripts/test/benchmark/legacy.test.mjs",
+            "scripts/test/benchmark/report.test.mjs",
+            "scripts/test/benchmark/run-cli.test.mjs",
+            "scripts/test/claude-md.test.mjs",
+            "scripts/test/gates/archive-gate.test.mjs",
+            "scripts/test/gates/checks.test.mjs",
+            "scripts/test/gates/implement-gate.test.mjs",
+            "scripts/test/gates/lint.test.mjs",
+            "scripts/test/gates/pr-gate.test.mjs",
+            "scripts/test/gates/scope-check.test.mjs",
+            "scripts/test/gates/syntax-check.test.mjs",
+            "scripts/test/headless.test.mjs",
+            "scripts/test/manifest.test.mjs",
+            "scripts/test/skills-pipeline.test.mjs",
+            "scripts/test/skills-template.test.mjs",
+            "scripts/test/template-migrate.test.mjs"
+          ],
+          "pass": 162,
+          "fail": 0,
+          "pct": 100,
+          "failing": []
+        },
+        "new": {
+          "files": [
+            "scripts/benchmark/fixtures/legacy-billing/test/billing.test.js",
+            "scripts/benchmark/fixtures/legacy-billing/test/issue.test.js",
+            "scripts/test/benchmark/hidden.test.mjs"
+          ],
+          "pass": 13,
+          "fail": 0,
+          "pct": 100,
+          "failing": []
+        },
+        "removed_tests": [],
+        "lint_errors": 0,
+        "type_errors": 0,
+        "failures": 0,
+        "verdict": "pass"
+      },
+      {
+        "attempt": 3,
+        "at": "2026-10-23T21:32:41.841Z",
+        "note": "rodada 2 aprovada; modelo efetivo registrado",
+        "split": true,
+        "old": {
+          "files": [
+            "scripts/benchmark/fixtures/legacy-pricing.pre-archive/test/discounts.test.js",
+            "scripts/benchmark/fixtures/legacy-pricing.pre-archive/test/invoice.test.js",
+            "scripts/benchmark/fixtures/legacy-pricing.pre-archive/test/pricing.test.js",
+            "scripts/benchmark/fixtures/legacy-pricing/test/invoice.test.js",
+            "scripts/benchmark/fixtures/legacy-pricing/test/pricing.test.js",
+            "scripts/test/benchmark/archive-only.test.mjs",
+            "scripts/test/benchmark/claude.test.mjs",
+            "scripts/test/benchmark/greenfield.test.mjs",
+            "scripts/test/benchmark/legacy.test.mjs",
+            "scripts/test/benchmark/report.test.mjs",
+            "scripts/test/benchmark/run-cli.test.mjs",
+            "scripts/test/claude-md.test.mjs",
+            "scripts/test/gates/archive-gate.test.mjs",
+            "scripts/test/gates/checks.test.mjs",
+            "scripts/test/gates/implement-gate.test.mjs",
+            "scripts/test/gates/lint.test.mjs",
+            "scripts/test/gates/pr-gate.test.mjs",
+            "scripts/test/gates/scope-check.test.mjs",
+            "scripts/test/gates/syntax-check.test.mjs",
+            "scripts/test/headless.test.mjs",
+            "scripts/test/manifest.test.mjs",
+            "scripts/test/skills-pipeline.test.mjs",
+            "scripts/test/skills-template.test.mjs",
+            "scripts/test/template-migrate.test.mjs"
+          ],
+          "pass": 165,
+          "fail": 0,
+          "pct": 100,
+          "failing": []
+        },
+        "new": {
+          "files": [
+            "scripts/benchmark/fixtures/legacy-billing/test/billing.test.js",
+            "scripts/benchmark/fixtures/legacy-billing/test/issue.test.js",
+            "scripts/test/benchmark/hidden.test.mjs"
+          ],
+          "pass": 13,
+          "fail": 0,
+          "pct": 100,
+          "failing": []
+        },
+        "removed_tests": [],
+        "lint_errors": 0,
+        "type_errors": 0,
+        "failures": 0,
+        "verdict": "pass"
+      }
+    ],
+    "history": []
+  },
+  "archive": {
+    "attempts": [
+      {
+        "attempt": 1,
+        "at": "2026-10-23T21:32:58.953Z",
+        "note": "rodada 2",
+        "suite_passed": true,
+        "scenarios": {
+          "total": 7,
+          "covered": 7,
+          "pct": 100,
+          "missing": []
+        },
+        "failures": 0,
+        "verdict": "pass"
+      }
+    ]
+  }
+}

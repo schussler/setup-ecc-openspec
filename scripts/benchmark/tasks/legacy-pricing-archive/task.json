@@ -1,0 +1,21 @@
+{
+  "id": "legacy-pricing-archive",
+  "scenario": "archive-only",
+  "change": "refactor-discount-rules",
+  "fixture": "legacy-pricing.pre-archive",
+  "baseline_tests": ["test/invoice.test.js", "test/pricing.test.js"],
+  "checks": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "test_file": "node --test {file}",
+    "lint": "node scripts/gates/lint.mjs",
+    "typecheck": "node scripts/gates/syntax-check.mjs src test",
+    "coverage": "node --test --experimental-test-coverage \"test/**/*.test.js\""
+  },
+  "scoped_paths": ["src/", "test/", "openspec/", "docs/agents/"],
+  "acceptance": {
+    "gate_pass_count": { "archive": 10 },
+    "max_stopped_after_denial": 0,
+    "max_compound_denials_mean": 1,
+    "max_out_of_scope": 0
+  }
+}

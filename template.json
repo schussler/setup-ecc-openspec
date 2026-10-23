@@ -5,7 +5,8 @@
   },
   "upstreams": {
     "ecc": "2.2.3",
-    "openspec": "1.14.3"
+    "openspec": "1.14.3",
+    "mattpocock-skills": "5beb35b040e3de97e54fa9e386d7e42d15c295c2"
   },
   "managed": [
     ".claude/rules/common",
@@ -14,7 +15,8 @@
     ".claude/agents",
     ".claude/skills",
     ".claude/commands/opsx",
-    ".claude/commands/toolset-retro.md"
+    ".claude/commands/toolset-retro.md",
+    "scripts/gates"
   ],
   "owned": [
     "CLAUDE.md",
@@ -22,6 +24,21 @@
     "openspec/config.yaml",
     "openspec/changes",
     "openspec/specs",
-    ".claude/rules/project"
-  ]
+    ".claude/rules/project",
+    "docs/agents",
+    ".claude/settings.json"
+  ],
+  "template_only": [
+    "templates",
+    "scripts/benchmark",
+    "scripts/test",
+    "openspec/specs",
+    "openspec/changes/archive"
+  ],
+  "checks": {
+    "test": "node --test \"scripts/test/**/*.test.mjs\"",
+    "test_file": "node --test {file}",
+    "lint": "node scripts/gates/lint.mjs",
+    "typecheck": "node scripts/gates/syntax-check.mjs scripts .claude/skills/template-migrate"
+  }
 }

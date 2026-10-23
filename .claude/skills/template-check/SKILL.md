@@ -29,6 +29,10 @@ This skill only reads and reports. Run each check with read-only commands, and n
 
 8. **Template is on the branch that will be used.** Compare the current branch with `template.branch` in `template.json`. Warn, do not fail, if the current branch has commits that the template branch does not have. A new project clones from `template.branch`, so unmerged template work will not reach it.
 
+9. **New manifest fields are sane.** `checks.test`, `checks.lint` and `checks.typecheck` are non-empty strings, and `checks.test_file`, when present, contains `{file}`. No `template_only` entry is in `managed` or a prefix of a `managed` entry. A `template_only` entry that does not exist yet is a `NOTE`, because `openspec/specs` and `openspec/changes/archive` only appear after the first archive. `upstreams.mattpocock-skills` is a 40-character commit hash. Fail on any of these.
+
+10. **Template suite passes.** Run `checks.test`, `checks.lint` and `checks.typecheck` from `template.json`, in the repo root. They only read the repo and write to the system temp directory. Fail on a non-zero exit, and show the failing lines.
+
 ## Report
 
 Print one line per check: `PASS`, `FAIL` or `NOTE`, with the reason. Finish with a single verdict: `READY` if no check failed, or `NOT READY` with the list of failures. Do not print the content of any matched secret.

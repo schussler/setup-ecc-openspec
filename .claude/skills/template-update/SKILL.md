@@ -25,6 +25,8 @@ Only the paths listed in `template.json` as `managed` are updated. Paths listed 
 
 4. **Check owned paths for overlap.** If a managed path would overwrite an owned path, stop and report the conflict.
 
+   Also list what the template changed in owned paths that the project lacks: `CLAUDE.md`, `docs/agents/`, `.claude/settings.json` and the `checks` field of `template.json`. These never update here. They reach an existing project only by explicit migration. Show the template version of each, and say what the project needs to copy or fill in. Do not write them here: point the user to `/template-migrate`, which adds them with confirmation item by item, together with managed paths the template added after the project was created.
+
 5. **Check the tool versions.**
    - Compare `upstreams` in both `template.json` files for ECC and OpenSpec.
    - Run `openspec --version`. If it differs from the template's OpenSpec version, say so. Installing the CLI (`npm i -g @fission-ai/openspec@<version>`) and running `openspec update` both need explicit confirmation.

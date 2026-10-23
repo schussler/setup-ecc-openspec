@@ -1,0 +1,9 @@
+{
+  "name": "legacy-pricing",
+  "version": "1.4.2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\""
+  }
+}

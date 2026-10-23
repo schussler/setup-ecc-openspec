@@ -6,7 +6,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 - **Change ativa:** nenhuma (`add-matt-skills-and-benchmark` arquivada em `openspec/changes/archive/2026-10-23-add-matt-skills-and-benchmark/`)
 - **Branch:** `feat/add-matt-skills-and-benchmark`, a partir de `main` em `822f1cf`
-- **Próximo passo:** revisão humana da branch. A skill `pr` só roda sob pedido explícito. Pendências na entrada da Fatia 7 do Log
+- **Próximo passo:** pendência 2, rodada 2 (ver o Log). Depois, revisão humana da branch. A skill `pr` só roda sob pedido explícito. Pendências na entrada da Fatia 7 do Log
 - **Bloqueios:** orçamento de `claude -p` esgotado (60/60). Medir o efeito da orientação de comando simples no headless exige uma rodada nova de legado
 - **Atualizado em:** 2026-10-23
 
@@ -42,6 +42,17 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 | 2026-10-23 | add-matt-skills-and-benchmark | archive (change) | 2 | — | `upstream-sync-check` compara `mattpocock/skills` desde o commit registrado; teste de contrato | 42/42 (100%), suíte verde; implement 107/107, lint 0, tipo 0 | pass |
 
 ## Log
+
+### 2026-10-23 — Pendência 2: tarefa legacy-billing (em andamento, rodada 1 de 10 reprovada)
+
+- **Smoke 1 (N=1 por variante, US$ 5,30):** a tarefa tinha três defeitos meus: os testes existentes contradiziam a taxa, o campo `legacyContract` vazava a isenção e "taxa sempre 0" passava no oculto. Corrigidos em commit próprio.
+- **Smoke 2 (US$ 5,40):** gates normais 1/1 nas duas variantes; regras ocultas `with_docs` 3/3, `without_docs` 1/3.
+- **Rodada 1 (N=8 por variante, 37 invocações, US$ 26,01):**
+  - **diferença no gate `hidden`:** `with_docs` 50% e `without_docs` 0%, ou seja, 50 p.p., resultado **conclusivo** (limiar 25);
+  - **reprovou na validade:** a melhor variante teve 50% de sucesso nos gates normais, contra o mínimo de 75%.
+  - **Falhas `with_docs`:** 2 no `spec`, 2 no `archive`. **Falhas `without_docs`:** 3 no `spec`, 1 no `implement`.
+  - Relatório em `scripts/benchmark/reports/2026-10-23/legacy-billing-r1/`.
+- **Próximo passo:** investigar por que o gate `spec` reprovou (5 execuções; possivelmente faltou `## Premissas` ou a validação `--strict` falhou) e o `archive` em `with_docs` 5–6. Corrigir a causa e rodar a rodada 2. Restam 9 rodadas.
 
 ### 2026-10-23 — Pendência 1: comandos simples no headless (aprovada na rodada 1 de 10)
 

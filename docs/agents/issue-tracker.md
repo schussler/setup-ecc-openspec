@@ -43,6 +43,23 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ## Log
 
+### 2026-10-23 — Pendência 3: migração de projetos existentes (aprovada na rodada 1 de 10)
+
+- **Change `add-template-migrate`:** skill `template-migrate` com `migrate.mjs` no diretório da skill. Ela chega pelo `/template-update` e roda localmente. `plan` só lê; `apply` aplica só os itens confirmados: `managed`, `docs-agents`, `checks`, `settings` e `claude-md`. O `CLAUDE.md` do template ganhou os marcadores `agents-context` e `pipeline`.
+- **Achado:** o `/template-update` usa a lista `managed` do próprio projeto, então um caminho `managed` novo (como `scripts/gates`) nunca chegava a projetos antigos. O item `managed` da migração resolve isso.
+- **Critérios (todos aprovados):**
+
+  | Critério | Resultado |
+  |---|---|
+  | Nada perdido | Na cópia do `MN_Academy`, toda linha e toda chave original preservadas (teste `nada do projeto e perdido na migracao`) |
+  | Idempotente | A 2ª aplicação não altera nenhum arquivo, e o `plan` mostra tudo `done` |
+  | Gates funcionam | `implement-gate baseline` e `score` rodam sem `error` na cópia migrada |
+  | Sem confirmação, sem escrita | `apply` sem itens: 0 arquivos alterados |
+  | `template-check` | READY (1–10) |
+  | Piloto | Cópia do `MN_Academy` → `/template-update` emulado → migração (14 arquivos) → `spec-create --headless` + `spec-implement` (`add-slugify`): spec válida, implementação com 12/12 testes novos, lint 0, tipo 0, 0 fora do escopo, 0 negações. 2 invocações, US$ 1,97 |
+
+- **Gates da change:** implementação com antigos 109/109 e novos 56/56, lint 0, tipo 0; arquivamento 14/14.
+
 ### 2026-10-23 — Fatia 7 e entrega
 
 - **Legado:**

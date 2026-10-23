@@ -39,6 +39,6 @@
     "test": "node --test \"scripts/test/**/*.test.mjs\"",
     "test_file": "node --test {file}",
     "lint": "node scripts/gates/lint.mjs",
-    "typecheck": "node scripts/gates/syntax-check.mjs scripts"
+    "typecheck": "node scripts/gates/syntax-check.mjs scripts .claude/skills/template-migrate"
   }
 }

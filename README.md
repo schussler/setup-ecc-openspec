@@ -54,9 +54,12 @@ Cada projeto criado a partir do template guarda um `template.json` com a origem 
 | Skill | Onde rodar | O que faz |
 |-------|-----------|-----------|
 | `/template-update` | projeto derivado | Compara os caminhos gerenciados com o template, mostra o que mudaria e aplica só depois da sua confirmação |
+| `/template-migrate` | projeto derivado | Traz o que o `/template-update` não escreve: blocos do pipeline no `CLAUDE.md`, `docs/agents/`, permissões em `.claude/settings.json`, `checks` e caminhos gerenciados novos (como `scripts/gates`). Mostra o plano e aplica item a item, só com confirmação, sem remover nada |
 | `/template-check` | este template | Valida o manifest, os caminhos, as versões e a ausência de caminhos pessoais e segredos |
-| `/upstream-sync-check` | este template | Compara rules, agents, skills e workflows com os upstreams ECC e OpenSpec e lista o que está desatualizado |
+| `/upstream-sync-check` | este template | Compara rules, agents, skills e workflows com os upstreams ECC, OpenSpec e `mattpocock/skills` e lista o que está desatualizado |
 | `/toolset-retro` | qualquer um | Retrospectiva do toolset `.claude/` ao fim de uma sessão |
+
+Em um projeto criado antes do pipeline com gates, rode `/template-update` e depois `/template-migrate`.
 
 Para corrigir uma rule de origem ECC só num projeto, não edite o arquivo de origem: ele é sobrescrito na próxima atualização. Crie a rule local em `.claude/rules/project/`, que é um caminho próprio do projeto.
 

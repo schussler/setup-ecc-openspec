@@ -4,6 +4,7 @@ Este projeto utiliza **OpenSpec** para gerenciamento de requisitos/tarefas (Spec
 
 ---
 
+<!-- template:agents-context:start -->
 ## 0. Leitura Inicial Obrigatória
 Antes de qualquer tarefa, leia nesta ordem:
 1. `docs/agents/issue-tracker.md`: retome do **Ponto de restauração**.
@@ -11,6 +12,7 @@ Antes de qualquer tarefa, leia nesta ordem:
 3. `docs/agents/domain.md`: vocabulário e regras de negócio. Use esses termos em specs, testes e código.
 
 Campo `TBD` é lacuna conhecida. Não invente o valor; registre a lacuna em `issue-tracker.md`.
+<!-- template:agents-context:end -->
 
 ---
 
@@ -21,6 +23,7 @@ Campo `TBD` é lacuna conhecida. Não invente o valor; registre a lacuna em `iss
 
 ---
 
+<!-- template:pipeline:start -->
 ## 2. Pipeline de Entrega
 Quatro passos, nesta ordem. Cada um é uma skill em `.claude/skills/`:
 
@@ -36,6 +39,7 @@ Regras dos gates:
 - Nunca reduza um limiar. Nunca altere um teste para passar sem justificar no `issue-tracker.md`.
 - No modo headless (`claude -p`), as permissões vêm de `.claude/settings.json` (`permissions.allow`) com `--permission-mode dontAsk`. Nunca use `--dangerously-skip-permissions`. Os hooks do ECC continuam ativos: não use `--bare`.
 - Ao encerrar uma sessão, rode `handoff` para gravar o ponto de restauração.
+<!-- template:pipeline:end -->
 
 ---
 

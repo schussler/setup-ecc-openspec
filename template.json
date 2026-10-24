@@ -16,7 +16,9 @@
     ".claude/skills",
     ".claude/commands/opsx",
     ".claude/commands/toolset-retro.md",
-    "scripts/gates"
+    "scripts/gates",
+    ".claude/harness",
+    "scripts/harness"
   ],
   "owned": [
     "CLAUDE.md",
@@ -26,17 +28,29 @@
     "openspec/specs",
     ".claude/rules/project",
     "docs/agents",
-    ".claude/settings.json"
+    ".claude/settings.json",
+    ".harness-project.json"
   ],
   "template_only": [
     "templates",
     "scripts/benchmark",
     "scripts/test",
+    "scripts/test/harness",
     "openspec/specs",
     "openspec/changes/archive"
   ],
   "checks": {
-    "test": "node --test \"scripts/test/**/*.test.mjs\"",
+    "test": {
+      "command": "node --test \"scripts/test/**/*.test.mjs\"",
+      "suite": "template"
+    },
+    "test_report": {
+      "command": "node --test --test-reporter=tap \"scripts/test/**/*.test.mjs\"",
+      "suite": "template",
+      "format": "tap",
+      "file_command": "node --test --test-reporter=tap {file}",
+      "files": "scripts/test/**/*.test.mjs"
+    },
     "test_file": "node --test {file}",
     "lint": "node scripts/gates/lint.mjs",
     "typecheck": "node scripts/gates/syntax-check.mjs scripts .claude/skills/template-migrate"

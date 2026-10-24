@@ -4,11 +4,13 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ## Ponto de restauração
 
-- **Change ativa:** nenhuma (`add-matt-skills-and-benchmark` arquivada em `openspec/changes/archive/2026-10-23-add-matt-skills-and-benchmark/`)
-- **Branch:** `feat/add-matt-skills-and-benchmark`, a partir de `main` em `822f1cf`
-- **Próximo passo:** revisão humana da branch `feat/pendencias-pipeline`. As três pendências foram aprovadas. A skill `pr` só roda sob pedido. A skill `pr` só roda sob pedido explícito. Pendências na entrada da Fatia 7 do Log
+- **Marco de adoção registrado:** 2026-10-24 — aprovador: Douglas. Escopo restrito: uso experimental supervisionado em Node 24.21.0/macOS, uma única fatia (`implement`). Base: aprovação do contrato `336249d1-e8e3-43e3-ac57-a35f8147f22d` (hash `9fc8fe2b…751f7a`, versão 1) e validação final aprovada em 2026-10-24T14:12:58.827Z (828 casos). Limitações mantidas: multifatia, Ctrl+C durante a invocação e caminhos com espaço em `--claude-bin` pendentes; limite de turnos não comprovado (P.2 não autorizada); PB-009 aberto; Node 22 não verificado; isolamento advisory. `--legacy-write` preservado; adoção em projetos reais não autorizada. Não é conformidade integral com o desenho original.
+- **Change ativa:** `add-spec-harness` (F1 a F12, A, B.1 a B.8, C, P.1 e 12.5 concluídos; 13.2, 10.3, 12.4b, B.9, P.2 e P.3 pendentes)
+- **Branch:** `rorqual` (worktree), a partir de `main` em `8401fa1`; sem commit
+- **Próximo passo:** decisão do dono sobre o ajuste mínimo de escopo para arquivar `add-spec-harness` (spec-gates F10, pipeline-benchmark PB-009, run-control limite por fatia). v1 experimental (harness v1.2 `39d7fcac…`) commitada sem arquivar. Trabalho futuro listado no log de 2026-10-24. Evidências do experimento: `~/dev/setup-ecc-openspec-experimentos/2026-10-24-add-kebab-case-helper`.
 - **Bloqueios:** orçamento de `claude -p` esgotado (60/60). Medir o efeito da orientação de comando simples no headless exige uma rodada nova de legado
-- **Atualizado em:** 2026-10-23
+- **Pendente de autorização:** sonda paga de `--max-turns` (tarefa P.2 de `tasks.md`), com orçamento pretendido de US$ 0,05, sem teto exato. Não autorizada e não executada. Sem ela, o limite de turnos não é comprovado.
+- **Atualizado em:** 2026-10-24
 
 ## Gates
 
@@ -39,10 +41,395 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 | 2026-10-23 | add-matt-skills-and-benchmark | benchmark legado, rodada 1 | 1 | o runner caiu: `spawn claude ENOENT` (binário trocado no meio da rodada) e `invokeClaude` não tratava o evento `error`; 13 invocações consumidas, sem relatório | `invokeClaude` resolve a falha de spawn como erro do passo; teste novo (RED visto: o processo travou) | 4 execuções completas reavaliadas a partir dos diretórios: as 4 aprovadas em implementação, arquivamento e escopo | retry |
 | 2026-10-23 | add-matt-skills-and-benchmark | benchmark legado, rodada 2 (21 invocações restantes) | 2 | 2 execuções reprovaram no arquivamento: comandos compostos negados levaram o agente a concluir que o Bash estava indisponível | skills `spec-*`: um comando simples por chamada e nova tentativa após negação de comando composto (não medido: orçamento esgotado); `scrubPaths` para caminhos truncados | with_docs 2/3, without_docs 2/3, 0 p.p.; fora do escopo 0; status `budget_exhausted` | pass (parcial) |
 | 2026-10-23 | add-matt-skills-and-benchmark | archive (change) | 1 | cenário sem teste: `upstream-sync-check cobre o terceiro upstream` (a skill não tinha sido atualizada) | — | 41/42 (97,62%), suíte verde | retry |
+| 2026-10-23 | add-spec-harness | implement (F1–F4) | 1 | 5 arquivos de teste do benchmark (archive-only, greenfield, hidden, legacy, run-cli) falham: replayam snapshots legados sem ID de cenário, exigidos por AC-003 e SG-009 | F1 policy/profile, F2 estado/lock, F3 gates (sem escrita, TAP, identidade), F4 spec-create | antigos 81,48%, novos 100%, lint 0, tipo 0, 5 falhas de saída | retry |
+| 2026-10-23 | add-spec-harness | implement (correções aprovadas) | 2 | — | benchmark com avaliador legado isolado (PB-007, PB-008); identidade por project_id e lock revisado (RS-008 a RS-021); 4.3 validação do contrato; revisões voltam a 1 antes da aprovação | antigos 100%, novos 100%, lint 0, tipo 0, 0 falhas de saída | pass |
 | 2026-10-23 | add-matt-skills-and-benchmark | archive (change) | 2 | — | `upstream-sync-check` compara `mattpocock/skills` desde o commit registrado; teste de contrato | 42/42 (100%), suíte verde; implement 107/107, lint 0, tipo 0 | pass |
+| 2026-10-24 | add-spec-harness | archive (12.5, fluxo legado, `--legacy-write`) | 1 | — | C.1 a C.3 aplicados; nenhuma alteração de código nesta avaliação | cenários 218/218 (100%), suíte verde, `openspec validate --strict` válido | pass |
 
 ## Log
 
+### 2026-10-24 — revisão final do diff, trabalho futuro e arquivamento retido
+
+- **Revisão do diff (208 arquivos):** sem segredos (o único achado é o padrão de teste em `f9-export.test.mjs`); sem arquivos temporários; `console.log` só nos pontos de entrada das CLIs. Saneados caminhos da máquina: `scripts/test/harness/fixtures/tap-node22-mixed.tap` (4 caminhos do scratchpad em linhas YAML de diagnóstico, trocados por `/tmp/tapgen`; o parser ignora essas linhas e `f7-suite.test.mjs` segue 11/11) e este tracker (scratchpad e diretório pessoal trocados por `<scratchpad da sessão>` e `~/dev/`). Alterações rastreadas revisadas: pertencem à entrega.
+- **Concluído no escopo da v1 experimental:** F1 a F12 (exceto 10.3 e 12.4b), A.1 a A.15, B.1 a B.8, C.1 a C.4, P.1, 12.5, 13.1, 13.2 (marco restrito); correções da rodada 1 e de medição (v1.1, v1.2); experimento com uma rodada aprovada (1b).
+- **Trabalho futuro (não entregue):**
+  1. Remoção de `--legacy-write` (10.3), após a decisão de migração.
+  2. Adoção em projetos derivados reais (12.4b).
+  3. Reavaliação de PB-009 (B.9) com log da falha original.
+  4. Sonda paga de `--max-turns` (P.2) e controle condicional (P.3); sem ela, o limite de turnos não é anunciado.
+  5. Execução multifatia: `REQUIRED_SLICES` só tem `implement`; sem encadeamento de fatias por dependência na execução.
+  6. Limite de invocações por fatia (`candidate_invocations_per_slice`): declarado, não aplicado pelo runner.
+  7. Ctrl+C durante a invocação no `run`.
+  8. Caminhos com espaço em `--claude-bin`.
+  9. Node 22 (Docker indisponível) e rodadas 2 e 3 do experimento.
+- **Arquivamento retido:** o contrato ainda exige itens adiados: `spec-gates` (remoção de `--legacy-write` na F10), `pipeline-benchmark` (marco bloqueado por PB-009, em conflito com o marco restrito decidido pelo dono) e `harness-run-control` (limite por fatia). Ajuste mínimo de escopo apresentado ao dono; sem aprovação, a change continua ativa. Sem conformidade integral com o desenho original.
+
+### 2026-10-24 — evidências do experimento preservadas em diretório persistente
+
+- **Local:** `~/dev/setup-ecc-openspec-experimentos/2026-10-24-add-kebab-case-helper` (fora de qualquer repositório; não entra na impressão da evidência). Índice em `README.md`; hashes de todos os arquivos em `MANIFEST.sha256` (47 arquivos, 2,6 MB).
+- **Conteúdo:** contrato e perfil do experimento; testes de referência e oráculo; por rodada (rodada-1, harness original `0471c916…`; rodada-1b, v1.1 `e59e653d…`): relatório, saída do run, tempos, suítes antes e depois, run-state, eventos, report.md/json da versão da rodada, autorizações, resumo durável e checkpoint (1b), entrega do executor e diff da cópia.
+- **Sem segredos:** varredura de padrões de chave, token, senha e e-mail sem achados; só aprovador (Douglas) e usuário local (schussler).
+- **Versões e limitações preservadas no índice:** nenhuma rodada com a v1.2 (`39d7fcac…`); os report.md das rodadas refletem as versões delas. O scratchpad da sessão não é persistente.
+
+### 2026-10-24 — defeitos de medição corrigidos (harness v1.2) e encerramento da v1 experimental
+
+- **Aprovação final e entregas (TE-004, TE-005):** `validateFinal` grava o evento `validacao_final` (`accepted` com a entrega da execução quando aprovada; `failed` caso contrário) com o resultado por cenário do resumo durável. O relatório separa: "Aprovação final do runner" (aprovada, não aprovada ou não medida), "Aceitação interna do runner (cenários obrigatórios)" (N de M, ou não medida sem cenários) e "Avaliação externa de referência: não medida (fora do runner)". `metrics.acceptance` manteve a forma.
+- **Tempo da validação final (RC-026, RC-036):** a duração entra no tempo ativo, na categoria nova `validacao`. Com o limite total já atingido, a validação não roda; se a validação o ultrapassa, a execução não é aprovada, `execution_approval` fica nulo e a parada é `time_limit` (de `approved` passa por `ready`, pela tabela). Limite: menor entre a política e o perfil gravado no estado.
+- **Testes:** `scripts/test/harness/medicao-final.test.mjs` (5, relógio controlado). Suíte 844/844, lint 0, sintaxe 0, `contract.mjs` 0, `openspec validate --strict` válido. Revalidação `add-spec-harness` pass às 15:20:13Z, aprovação `336249d1` mantida. Nenhum teste antigo alterado. Sem chamada paga.
+- **Versões:** harness v1.2 = sha256 `39d7fcac8e9cf313177486970dcee8e88a6d145436202a7e6b6d2cdf4222f943` (mesma regra). A rodada-1b segue como evidência da v1.1 (`e59e653d…`, conferido na cópia, árvore inalterada); a rodada 1, da versão original (`0471c916…`). Nenhuma rodada foi executada com a v1.2.
+- **Encerramento da v1 experimental:** pronta para uso experimental supervisionado em Node 24.21.0/macOS, uma única fatia. Rodadas 2 e 3 adiadas. Pendências conhecidas: multifatia, Ctrl+C durante a invocação, caminhos com espaço em `--claude-bin`; P.2/P.3 (limite de turnos não comprovado); PB-009 aberto; Node 22 não verificado; isolamento advisory; 10.3 e 12.4b adiadas.
+
+### 2026-10-24 — experimento add-kebab-case-helper, rodada 1b (harness v1.1, paga, autorizada)
+
+- **Execução:** `9eb2bc0e` na rodada-1b, orçamento `c7883913`, `claude-sonnet-5-5` (efetivo igual). Resultado: pass, fatia e execução aprovadas, validação final 845/845 às 15:05:28Z, perfil `experimento.json` na impressão.
+- **Entrega:** referência 11/11 (fora da cópia), executor 6/6, regressões 0, aprovação incorreta não, intervenção humana 0. Escopo restrito à change e aos dois arquivos novos.
+- **Consumo:** 1 invocação, 0 correções, 2 avaliações do gate; US$ 0,428784 informado pela CLI; tokens entrada 16, saída 4.176, cache criado 81.199, cache lido 621.963; 665 s de relógio (ativo 429,6 s).
+- **Achados não corrigidos:** `report.md` mostra aceitação 0 de 0 e entregas 0 com execução aprovada (lê só eventos); validação final fora do tempo ativo.
+- **Relatório:** `<scratchpad da sessão>/experimento/rodada-1b-relatorio.md`. Harness não alterado durante a rodada. Rodadas 2 e 3 não autorizadas.
+
+### 2026-10-24 — revalidação do harness v1.1 e preparação da rodada-1b
+
+- **Revalidação:** `validate.mjs add-spec-harness` pass às 14:42:30Z, 839/839, aprovação `336249d1` mantida (hash do contrato inalterado); o resumo registra `profile_path` e `profile_content`.
+- **Versão do harness:** v1.1 = sha256 `e59e653d60fc2f3ce95bdc03943cee6a35dd5b38638def63a742db8afddb873c` sobre `scripts/harness`, `scripts/gates`, `.claude/harness` e `.claude/skills/spec-implement` (arquivos ordenados, sem o perfil do experimento). A base original da rodada 1 tem `0471c916…5bde` pela mesma regra. Resultados das rodadas 1 e 1b pertencem a versões diferentes.
+- **base-1b:** cópia nova da versão corrigida, commit `4ac7d66` só na cópia descartável, com a change `add-kebab-case-helper` da base original (contrato `4864b4c3…cb151`, inalterado; aprovação `7d52fe7e`, orçamento revogado e revogação no histórico), o perfil do experimento e a tag `origem-822f1cf`. A base e a rodada 1 originais não foram alteradas.
+- **rodada-1b:** clone de `4ac7d66`; harness `e59e653d…`; nenhum orçamento ativo; suíte 839/839 sem skip; gate de implementação em seco na cópia intocada: pass, 839 casos lidos por TAP, AC-005 e AC-017 aprovados.
+- **Pendente:** orçamento da rodada 1b registrado pelo dono em `rodada-1b`. Rodadas 2 e 3 não autorizadas.
+
+### 2026-10-24 — encerramento da rodada 1 e correções autorizadas (harness v1.1 do experimento)
+
+- **Rodada 1 encerrada** pelo dono, com resultado, custo (US$ 0,785662) e evidências preservados em `rodada-1` e `rodada-1-relatorio.md`. Saldo do orçamento `39420094` não será usado.
+- **Gate estruturado (SG-001, SG-006, AC-016):** com `checks.test_report`, `implement-gate.mjs` executa cada arquivo de `test_report.files` com `file_command` (ou a suíte com `command`, sem `file_command`) e lê só TAP com `parseTapCases`, o mesmo leitor da validação final. `checks.test_file` (saída legível) não é usado nesse modo. Formato incompatível segue recusado por `validateChecksSchema` com erro de configuração. Sem `test_report`, o modo legado compatível (AC-023) não mudou. Testes: `scripts/test/gates/implement-gate-structured.test.mjs` (5).
+- **Relatório (TE-004):** correções pedidas usam os contadores do estado como piso; paradas por tipo usam o maior entre eventos e `stop_history`; a parada da fatia (`slice.mjs`) passou a gravar `stop_history`. "Total completo" traz `(escopo: execução automatizada medida; preparação interativa não mensurada)` e `cost.total_scope` no JSON.
+- **Impressão (EV-001):** `run` grava `profile` (caminho, sha256, conteúdo) no estado antes da primeira chamada; `fingerprint` usa esse perfil (lido do arquivo bruto, sem validar o estado, para manter EV-002) e registra `profile_path`, `profile_sha256` e `profile_content`; o resumo durável também.
+- **Expectativas de testes novos ajustadas antes do GREEN, com justificativa:** a TAP escapa `#` como `\#` no nome (a identidade segue o leitor da validação final); o perfil padrão é arquivo do projeto e continua na árvore de código da impressão; o total do relatório vem dos eventos. Nenhum teste antigo alterado: a linha do total manteve o prefixo `Total completo: sim|não`.
+- **Verificação:** suíte 839/839, lint 0, sintaxe 0, `contract.mjs` 0, `openspec validate --strict` válido. Hash do contrato inalterado (`9fc8fe2b…751f7a`). Sem chamada paga.
+
+### 2026-10-24 — experimento add-kebab-case-helper, rodada 1 (paga, autorizada)
+
+- **Execução:** `a0a5ebfc` na rodada-1, orçamento `39420094`, `claude-sonnet-5-5` (efetivo igual), Claude Code 2.1.310. Parada: `awaiting_decision`, `human_decision_needed` (RC-015) após 2 invocações, 2 avaliações do gate e 1 correção sem alteração.
+- **Entrega:** referência 11/11 (fora da cópia), testes do executor 6/6, suíte 834/834 sem regressão. Aprovação incorreta: não. **Rejeição indevida por defeito do harness:** o gate por arquivo usa `checks.test_file` (reporter spec), e dois testes antigos com `# SKIP` literal no nome viram `skip`.
+- **Consumo:** US$ 0,785662 informado pela CLI; tokens (main loop) entrada 26, saída 7.391, cache criado 154.330, cache lido 943.801; 453 s (gate 370,6 s).
+- **Achados não corrigidos:** gate ignora `test_report.file_command`; `report.md` não conta correção nem parada; "total completo" sem a preparação interativa; impressão com o perfil padrão.
+- **Relatório:** `<scratchpad da sessão>/experimento/rodada-1-relatorio.md`. Harness não alterado durante a rodada.
+
+### 2026-10-24 — base do experimento fixada e rodada-1 preparada
+
+- **Revogação conferida:** `5507c3d6-fc9c-4401-ac1b-1c3276bcaf35` revoga `55881231`; nenhum orçamento ativo na base; integridade de `authorizations.json` confere.
+- **Base:** commit `5b9f74a` só na cópia descartável (autorizado pelo dono), com a aprovação `7d52fe7e`, o orçamento revogado e a revogação no histórico. Tag `origem-822f1cf` trazida do template: os 3 testes de `template-migrate.test.mjs` que dependem desse commit eram pulados na base de histórico novo, e o gate reprova caso antigo pulado. Nenhum teste ou harness alterado.
+- **rodada-1:** `git clone` da base em `5b9f74a`; contrato `4864b4c3…cb151`, marco reconhecido, nenhum orçamento ativo, árvore limpa. Suíte antes da execução: 828/828, sem skip (`rodada-1-suite-antes.tap`). Perfil do experimento sha256 `cad1ba969865b679cbd3315269388391c57ae80cadcff8ac99ddc46e89aa19f9` (a impressão da evidência registra só o perfil padrão; limitação declarada, harness não alterado).
+- **Pendente:** orçamento da rodada 1 registrado pelo dono em `rodada-1`.
+
+### 2026-10-24 — aprovação registrada, revalidação e marco restrito
+
+- **Aprovações conferidas:** `336249d1-e8e3-43e3-ac57-a35f8147f22d` (`add-spec-harness`, hash `9fc8fe2b…751f7a`, versão 1) e, na base do experimento, `7d52fe7e-57f1-46ce-939d-113628b20db2` (`add-kebab-case-helper`, hash `4864b4c3…cb151`, versão 1). Ambas `origin: human`, `procedure: tty`, aprovador Douglas.
+- **Revalidação:** `validate.mjs add-spec-harness` pass às 14:12:58Z, 828/828, autorização `336249d1` na impressão. 219 s.
+- **Marco 13.2:** registrado no ponto de restauração, com escopo restrito e limitações.
+- **Orçamento gravado no destino errado:** `55881231-c1d0-4b70-9c9b-5f9a9c0af52e` (US$ 3,00 / US$ 1,00) foi gravado na base do experimento porque o `cd` para `rodada-1` falhou (a cópia ainda não existia). Preservado no histórico; revogação pendente pelo dono. A base só recebe commit e `rodada-1` só é criada depois da revogação, para nenhuma cópia herdar orçamento ativo.
+
+### 2026-10-24 — captura de tokens (TE-001) e preparação do experimento
+
+- **Correção autorizada pelo dono (TE-001):** `classify` em `claude.mjs` lê `usage` da saída JSON (`input_tokens`, `output_tokens`, `cache_creation_input_tokens`, `cache_read_input_tokens`) com `scope: main_loop`, porque `usage` não inclui subagentes (documentação do Claude Code). Sem `usage`, ou com contagem inválida, `tokens` fica nulo. `eventFromInvocation` repassa o campo. RED→GREEN: 2 testes em `f9-telemetry.test.mjs`. Suíte 828/828, lint 0, sintaxe 0. Nenhuma outra melhoria. Hash do contrato inalterado.
+- **Experimento (base, sem commit ainda):** cópia descartável em `<scratchpad da sessão>/experimento/base`, com repositório git próprio. Change `add-kebab-case-helper` (contrato aprovado pelo dono na conversa; registro formal pendente), hash `4864b4c34b874ea80dd42d4d14e697ce6b8a5d71afde45ca8dfb1bc7fe4cb151`, `openspec validate --strict` e `contract.mjs` sem erros. Perfil `.claude/harness/profiles/experimento.json` (4 invocações, US$ 1,00 por chamada, US$ 3,00 no total, 900 s por chamada, 2700 s no total), validado contra a política.
+- **Testes de referência fora da cópia:** `<scratchpad da sessão>/experimento/referencia/kebab-case.reference.test.mjs` (11 casos, sha256 `37137f4df88f82524f32e25255f89f4949fed3852c51885949a69f11347cf8d5`), satisfazíveis por uma implementação de controle (`oraculo.mjs`), também fora da cópia.
+- **Pendente:** registro da aprovação de `add-spec-harness` pelo dono; depois revalidação, marco e commit da base.
+
+### 2026-10-24 — encerramento da rodada e pendências conhecidas do uso experimental
+
+- **Decisão do dono:** encerrar a rodada sem novos ajustes. Uso experimental supervisionado com uma change pequena, tratada como uma única fatia (`implement`). Isso não é conformidade integral com o desenho original.
+- **Pendências conhecidas (não implementadas):**
+  1. **Execução multifatia:** `REQUIRED_SLICES` contém só `implement`; cada invocação do `run` recebe todas as tarefas abertas da change, sem divisão por fatia nem dependências entre fatias na execução.
+  2. **Ctrl+C durante a invocação:** o `run` não trata o sinal; o processo morre, o lock fica e a retomada exige lock vencido (`lock_stale_seconds`), `lock_release` humano e reconciliação da reserva. Durante o gate, o sinal já é tratado (D8).
+  3. **Caminhos com espaços em `--claude-bin`:** o comando é dividido por espaço; caminho com espaço não é aceito.
+- **Sem alteração de contrato, código ou testes nesta entrada.** Hash do contrato para aprovação: `9fc8fe2b46abac559642481ccb2a1bb4d6321cd8430ee0d9dd680fe97f751f7a`.
+
+### 2026-10-24 — entrada pública da execução headless (C.4)
+
+- **Lacuna:** o ciclo executar → avaliar → corrigir → parar ou concluir existia só como função interna (`runSlice`, usada nos testes). Nenhuma CLI nem skill o expunha.
+- **Entregue:** `node scripts/harness/cli.mjs run --change <change>` (`scripts/harness/cli-run.mjs`). Liga `runSlice` ao gate de implementação real e à validação final. Prompt `/spec-implement <change> --runner-step`; correção com `--correction` e os casos que falharam. `spec-implement` documenta `run` e o passo `--runner-step`. Decisão reversível registrada no design. Sem arquitetura nova.
+- **Ajustes em código existente:** `runSlice` aceita prompt de correção como função do veredito e grava impressão, casos e tentativa na aprovação da fatia, quando a avaliação os traz. `withLock` exportado de `cli-actions.mjs`.
+- **Bug corrigido (RC-021):** a parada `authorization_required` (e `config_error` da sonda) não era gravada no estado, porque `runHarnessStep` recusa antes do lock. O `run` grava a parada com o lock.
+- **Teste novo com expectativa corrigida antes do GREEN:** eu esperava `repeated_symptom` para a correção sem efeito, mas a RC-015 para antes, na segunda correção com o mesmo descritor (`human_decision_needed`). O código segue o contrato; mudou só a expectativa do teste novo.
+- **Simulador:** `fake-claude.mjs` ganhou `FAKE_CLAUDE_TOUCH` e `FAKE_CLAUDE_TOUCH_ON_CALL`, que criam um arquivo na n-ésima chamada (correção simulada).
+- **Verificação:** `cli-run.test.mjs` (7 testes, pelo mesmo comando do usuário, simulador em `--claude-bin`). Suíte 826/826, lint 0, sintaxe 0, `contract.mjs` 0, `openspec validate --strict` válido. `validate.mjs add-spec-harness`: pass às 12:57:06Z, 826 casos, autorizações 0. Sem chamada paga.
+- **Hash do contrato mudou** (design.md): `9fc8fe2b46abac559642481ccb2a1bb4d6321cd8430ee0d9dd680fe97f751f7a`. A aprovação pendente do dono deve conferir este hash.
+
+### 2026-10-24 — conferência da aprovação, validação legada 12.5 e classificação das tarefas
+
+- **Registro de aprovação do contrato: não encontrado.** `openspec/changes/add-spec-harness/authorizations.json` não existe neste worktree nem no checkout principal; nenhum outro `authorizations.json` recente fora das fixtures do scratchpad. `evidence-summary.json` continua com `authorizations: []` (validação de 05:14:44Z). Hipóteses: o comando rodou em outro diretório, ou foi encerrado antes da confirmação por código. Sem o registro, a revalidação com autorizações não foi feita.
+- **12.5 (validação pelo fluxo atual):** `archive-gate.mjs --change add-spec-harness` sem gravar: pass, 218/218, 42 s; depois com `--legacy-write`: tentativa 1 de archive em `gates.json`, pass. `openspec validate add-spec-harness --strict`: válido. Cópia anterior de `gates.json` no scratchpad. Local, sem custo.
+- **Classificação:** concluídas 2.9 (RS-019 e RS-023 testados: renew-id, new-project, clone, template-update), 12.5 e 13.1 (819/819 com simuladores, sem chamada real). Bloqueada 13.2 (marco autorizado pelo dono só como "pronto para uso experimental supervisionado em Node 24.21.0/macOS", mas depende do registro de aprovação do contrato, ausente). Adiadas pelo dono: 10.3 (remoção de `--legacy-write`) e 12.4b (adoção real). Bloqueadas: P.2 (sonda paga não autorizada) e P.3 (condicional a P.2). Aberta: B.9 (PB-009 sem log da falha original; não marcar por passagens posteriores).
+- **Change não concluída:** 13.2, 10.3, 12.4b, B.9, P.2 e P.3 pendentes. Runner não declarado operacional; `--legacy-write` preservado.
+
+### 2026-10-24 — ajustes finais da v1 para uso experimental supervisionado
+
+- **Tracker fora da impressão:** docs/agents/issue-tracker.md em excluded_paths (autorização do dono). Requisitos e decisões que afetam a execução ficam no contrato ou em configuração versionada; o tracker é narrativa (D14).
+- **Identidade dos testes:** checks.test_report.file_command e files declarados pelo projeto; identidade "<arquivo>::<nome>"; soma por arquivo confere com a suíte; sem file_command e com nomes repetidos, inventory_ambiguous. Nenhuma colisão silenciosa.
+- **Interrupção em gate:** awaiting_gate ↔ interrupted; timeout encerra a árvore; término não confirmado bloqueia; parcial descartado; retomada reexecuta o gate do início.
+- **Lock nos testes:** relógio injetado; nenhuma espera real.
+- **Ambiente verificado:** Node 24.21.0, macOS. Node 22 não verificado e não bloqueia a v1.
+- **PB-009:** ocorrência e incerteza preservadas; impede declarar confiabilidade comprovada; permite avaliar uso experimental supervisionado limitado.
+- **Sonda P.2:** não autorizada; perfis que exigem limite de turnos comprovado continuam bloqueados.
+- **--legacy-write:** preservado até a decisão de migração.
+
+
+### 2026-10-24 — resumo durável corrigido (inventário completo); revalidação final em seguida
+
+- **Defeito encontrado na aprovação anterior:** o resumo tinha 212 entradas, uma por cenário, enquanto a suíte capturada tinha 795 casos. Faltavam 583 regressões sem vínculo, e o ID do cenário estava no lugar da identidade do caso. Isso descumpria EV-012 e a decisão do dono. O "212 de 212 casos" relatado antes eram cenários, não casos.
+- **Suspeita retirada:** a captura TAP não era reaproveitada. Cada validação gera execution_id e captura próprios; a da aprovação batia com approved_at.
+- **Correção:** cases = inventário completo {case_id, name, status, scenario_ids}; scenarios por cenário; case_counts com total, tap_total, por status, com e sem vínculo. Inventário divergente da TAP → inventory_mismatch, sem aprovação. Limitação: case_id fora do manifesto usa o caminho de subteste, e nomes iguais em arquivos diferentes podem colidir.
+- **Suíte:** 797/797; lint, sintaxe, contrato e openspec em 0.
+- **Próximo:** revalidação final da change, que regrava o resumo.
+
+
+### 2026-10-24 — B.5, B.6 e B.8 concluídos; validação final da change aprovada pelo caminho novo
+
+- **B.6:** gate oculto com classificação declarada por regra (obrigatória ou informativa); sem classificação = obrigatória; só obrigatória reprovada reprova a aceitação.
+- **B.5:** manual_rollback via legacy-run.mjs restore: TTY, hash da cópia pré-migração, evento restore, campo restored com hashes, consumo e reservas preservados, reconciliação exigida com reserva aberta. Sem reversão transparente. Design atualizado para citar o comando.
+- **Vínculos:** PM-010 e SG-015 por tag em teste existente que já provava o cenário; SG-018 por teste de caracterização (passou de primeira); SP-001 por teste novo com RED (as skills ganharam a declaração do runner).
+- **B.8:** tentativas 1 e 2 reprovaram por regressão do agente (skill citava authorize.mjs, RC-029); corrigida no código. Tentativas 3 e 4 aprovaram com 212/212 casos. evidence-summary.json gravado.
+- **Achado:** docs/agents/issue-tracker.md entra na impressão da evidência. Cada entrada nova no tracker invalida a aprovação até nova validação. Não alterei a política (policy.json é protegido); decisão do dono.
+- **Esta entrada** é seguida de nova rodada da suíte e da validação, para que o resumo reflita o estado final.
+
+
+### 2026-10-24 — add-spec-harness: B.5 (manual_rollback), B.6 (gate oculto classificado), vínculos e B.8
+
+- **B.6:** cada regra oculta tem classificação declarada na tarefa (`hidden_rules` em `task.json`, `obrigatória` ou `informativa`); regra sem classificação é obrigatória; classificação inválida ou de regra inexistente é recusada. O gate `hidden` traz `results` (regra, resultado, classificação), `failed_mandatory` e `failed_informative`. Só regra obrigatória reprovada reprova a aceitação; diagnóstico informativo reprovado mantém `passed` (PB-010, PB-011, PB-012). `legacy-billing` declara as três regras como obrigatórias (comportamento anterior preservado).
+- **Teste antigo alterado por B.6 (justificativa):** `gate hidden roda os testes ocultos depois do pipeline` ganhou a tag `[PB-010]` e uma asserção de classificação por regra, porque o THEN revisado de PB-010 exige "o resultado de cada regra com a classificação declarada na tarefa". As asserções antigas ficaram. A regra não foi alterada para passar.
+- **B.5:** `rollbackLegacyRun` implementa D32 nesta ordem: terminal interativo (sem TTY recusa sem alterar arquivos), aprovador e motivo, pré-condição de hash (`pre_migration_sha256` gravado agora no checkpoint de migração; hash divergente ou ausente recusa sem alterar arquivos), confirmação por código, lock da change, evento `kind: "restore"` em `events.jsonl`, restauração de `gates.json` e `issue-tracker.md`, campo `restored` (origem, hash anterior, hash restaurado, `transparent: false`) com consumo e reservas preservados, e `awaiting_decision` + `reconciliation_required` quando há reserva aberta. O relatório declara que a restauração não é transparente. Comando humano: `legacy-run.mjs restore --change <c> --approver <n> --reason <m>`. Nada em `authorizations.json`.
+- **Interpretações (sem mudar o contrato):** (1) o `run-state.json` legado da cópia não volta, porque o modo é imutável (RS-008) e a reconciliação D26 só existe no modo runner; (2) D32 pede "comando humano", então `legacy-run.mjs` ganhou o subcomando `restore`; a nota de design.md "A recuperação não tem comando" e a questão aberta 10 ficaram desatualizadas e não foram editadas (o contrato não foi tocado); (3) a skill não importa `authorize.mjs` (RC-029): a confirmação por TTY é local, no mesmo padrão.
+- **Testes antigos alterados por B.5:** PM-005 e os dois PM-009 de `migration-legacy.test.mjs` passaram a chamar a nova assinatura (decisão humana em TTY simulado, em vez de registro `kind: manual_rollback`, que contradizia D32).
+- **Vínculos:** SG-015 e PM-010 (5 casos) receberam a tag no nome, sem mudar comportamento; SG-018 tem teste novo de caracterização (passou de primeira); SP-001 tem teste novo (RED: as skills não declaravam o runner na execução autônoma) e as três skills `spec-*` ganharam uma frase.
+- **B.8:** tentativas 1 e 2 reprovaram em RC-029 por regressão minha (a skill citava `authorize.mjs`); corrigida no código, sem mudar o teste. Tentativa 3 aprovada: 212/212 casos, `evidence-summary.json` gravado. Esta entrada foi escrita depois da tentativa 3 e exige nova validação para o resumo continuar válido.
+- **Não feito:** commit, push, PR, chamada ao modelo, sonda, benchmark pago, adoção. B.9, P.2, 10.3, 12.4b, 12.5 e 13.x continuam abertos. Não declarado operacional.
+
+### 2026-10-24 — percurso integrado (execução 2) aprovado na fixture; validação final da change reprovada (B.8)
+
+- **Correções:** C1 (gate pass aprova a fatia; a execução só aprova com todas as fatias e a validação final); C2 (evento de interrupção só após transição aceita e persistida; recusa grava transition_refused). Extras: liberação de lock vencido agora chamada pela CLI e pelo runner com lock_release humano; relatório passa a contar chamada morta e exposição pelo estado.
+- **Interrupção durante gate:** não implementada; o design não prevê awaiting_gate → interrupted. RC-046 coberto por interrupção sem reserva a partir de invoking.
+- **Percurso 2 (fixture, simulador, CLIs das skills):** start, falha, retry, correção, pass (fatia aprovada, execução não), runner morto com reserva 2,50 de custo desconhecido, lock_held, espera de 900 s, stale_lock, lock_release em pty (TTY simulado, não prova autoria), interrupt com reconciliation_required, reconcile closed_unknown (balance_effect conferido), reconcile repetido = duplicate, resume com mesmo execution_id, validate-final pass, checkpoint archived, report. Execução da fixture aprovada.
+- **Evidência:** scratchpad/e2e-run1 (preservada) e scratchpad/e2e-run2.
+- **Suíte:** 779/779; lint, sintaxe, contrato e openspec em 0.
+- **B.8 (validação final da change real), tentativa 1:** reprovada em 34753 ms. 7 cenários sem caso [ID]: PB-010, PB-011, PB-012, PM-010, SG-015, SG-018, SP-001. Nenhum resumo gravado. Não há run-state persistido para a change real; nenhuma execução atribuída ao runner.
+- **Em andamento:** B.5 (manual_rollback), B.6 (classificação do gate oculto), vínculo dos 4 cenários restantes, e nova tentativa de B.8. B.9 permanece pendente.
+
+
+### 2026-10-24 — add-spec-harness: CLI do runner, reconciliação D26 e conexão das skills
+
+- **Entregue:** `scripts/harness/cli.mjs` (subcomandos start, gate-implement, gate-archive, validate-final, checkpoint, fail, interrupt, resume, reconcile, report, summary) sobre `cli-actions.mjs`, que só chama funções existentes e não importa o adaptador do claude. Reconciliação D26 integrada ao runner: saldo calculado com os nove campos, sem truncamento, `closed_unknown` mantém a exposição. Reserva de chamada interrompida ou de checkpoint importado sem registro D26 bloqueia a próxima chamada paga. P.1: classificador puro da sonda (`scripts/harness/probe.mjs`), sem chamada.
+- **Decisões reversíveis** (design.md, "Decisões reversíveis da CLI do runner"): `kept` não contabiliza custo; custo acima da reserva gera efeito negativo com aviso; evento de restauração como `kind: "restore"` em `events.jsonl`; legacy-run ganhou o ponto de entrada `migrate` (a dependência não foi eliminada, pois as funções têm testes PM-001 a PM-009); recuperação não tem comando, é o procedimento `manual_rollback`.
+- **Registro formal D26:** continua pendente em `authorizations.json`. Enquanto isso, a CLI guarda os registros em `run-state.json` (`reconciliations`, `reconciliation_base`).
+- **Marco de adoção:** `start --mode runner` exige a linha `Marco de adoção registrado: <data> — aprovador: <nome>` nesta página. Ela ainda não existe; por isso nenhuma execução foi atribuída ao runner.
+- **Testes antigos alterados:** ver o registro em `scratchpad/cli-test-changes.md` (d26-reconciliation, f6-fixes, skills-runner). Nenhum teste foi removido.
+- **Verificado:** suíte 767/767 (Node 24.21.0); lint 0; sintaxe 0; contrato 0; `openspec validate add-spec-harness --strict` válido.
+- **Itens marcados em tasks.md:** B.1, B.2, B.3, B.4 e P.1. Abertos: B.5 (código de restauração), B.6, B.7 (faltam validação, checkpoint e relatório no percurso), B.8, B.9, P.2, 10.3, 12.4b, 12.5 e 13.x.
+- **Não feito nesta etapa:** nenhuma chamada ao modelo, sonda paga, benchmark, commit, push ou PR.
+
+### 2026-10-24 — decisões do dono do projeto: fechamento das lacunas da v1 (sem marco)
+
+- **Marco de adoção:** NÃO autorizado ainda.
+- **Node 22:** pendente até Docker estar disponível. Validação vale só para Node 24.21.0.
+- **closed_unknown:** exposição no comprometido, reserve_released_usd 0; continuidade exige extensão explícita; não é custo conhecido.
+- **Gate oculto:** regras obrigatórias de domínio participam da aceitação funcional; "oculto" é visibilidade. Diagnósticos classificados podem ser informativos.
+- **D26:** aprovado pelo dono em 2026-10-24. Registro formal em authorizations.json pendente do comando authorize.mjs record com TTY, a executar pelo dono. Efeitos separados: valor reservado, reserva encerrada, custo contabilizado, saldo disponível. Exemplo: reserva 2,50 e custo 0,42 → liberação 2,50, custo 0,42, efeito líquido 2,08.
+- **Pedidos de implementação:** CLI dos gates e checkpoint de arquivamento; reconciliação integrada ao runner; P.1 com fixtures; identidade owned e migração/recuperação; legacy-run; manual_rollback com procedimento real; percurso integrado com simulador; validação final desta change pelo caminho novo; avaliação do PB-009.
+- **--legacy-write:** preservado até o marco e a confirmação de ausência de execução legada ativa.
+
+
+### 2026-10-24 — add-spec-harness: revisão de prontidão para o marco de adoção
+
+- **Estado verificado:** suíte 705/705 (Node 24.21.0); lint 0; sintaxe 0; contrato 0; openspec válida. 95 itens marcados, 10 abertos.
+- **Pronto:** estado e lock; identidade (project_id, local_id, execution_id); gates sem escrita; invocação com reservas e autorização; invalidação transitiva; validação final e resumo durável; manifesto e CLI; distribuição com módulos do harness; telemetria ligada ao runner; retenção por datas registradas; skills para o runner; benchmark em três níveis; fixtures de migração (12.4a).
+- **Bloqueios para o marco:** (1) PB-008/PB-009 sem causa; 18 reexecuções sem reprodução; a ocorrência original segue aberta. (2) Node 22 não verificado: Docker sem daemon; Homebrew não autorizado. (3) D26 pendente; conflito de closed_unknown entre o pedido e o contrato. (4) Hidden: PB-004 contradiz a regra "informativo" da spec original; dois testes foram alterados. (5) P.1 (classificador da sonda com fixtures) não implementado; P.2 não autorizada. (6) 2.9 (identidade owned) pendente. (7) 10.3 depende do marco. (8) 12.4b sem projetos identificados. (9) 12.5 não executada. (10) 13.1 e 13.2 dependem dos anteriores.
+- **Lacunas de implementação:** CLI do runner para gate de implementação e checkpoint archived ainda não existe; legacy-run.mjs sem ponto de entrada; manual_rollback não existe em D32; reconcileRecord não integrado ao runner.
+- **Não declarado operacional.**
+
+
+### 2026-10-24 — Node 22: verificação via Docker indisponível (pendência mantida)
+
+- **Verificado:** o cliente Docker existe, mas o daemon não responde (socket do Colima ausente). Nenhuma imagem baixada.
+- **Decisão aplicada:** a pendência do Node 22 permanece. Não instalei Homebrew nem iniciei serviço. Quando o daemon estiver disponível, a autorização aprovada cobre: imagem oficial node:22, testes sem credenciais, repositório de origem preservado, escrita em cópia temporária, registro de versão e digest. A comprovação vale só para o ambiente Linux testado.
+- **Até lá:** a declaração de compatibilidade com Node 22 fica bloqueada.
+
+
+### 2026-10-24 — add-spec-harness: F9 entregue; parada para decisões
+
+- **F9 (9.1 a 9.3):** telemetria append-only em .harness-local (custo unknown nunca zero), retenção sem apagar estado, report.json/report.md com custo separado e declarações de independência e isolamento, exportação sem segredos, marcação de Node >= 22 não verificado. Gitignore com .harness-local/.
+- **Verificado por mim:** 614/614; lint 0; sintaxe 0; contrato 0; openspec válida. 82 itens [x], 21 [ ] (pendências de adoção e marco).
+- **Dúvidas da F9:** (1) eventos de diagnóstico do lock no mesmo events.jsonl; (2) ligação ao runner não listada no 9.3; (3) retenção de relatórios por mtime não está na spec.
+- **Pendências:** Node 22 (aguarda método escolhido); D26 (aguarda aprovação, esquema colado na resposta); 12.3 e 12.4a/b; PB-008/PB-009 com risco residual; sonda P.2 não autorizada.
+- **Runner:** não declarado operacional. Próxima fatia: F10 (skills), depois F11, F12 e marco.
+
+
+### 2026-10-24 — add-spec-harness: pendências F7/F8 fechadas; F9 iniciada
+
+- **A.3 (EV-007, HI-014):** invalidação transitiva por cenário, interface, regra e fatia; referência inválida recusada; marcas no resumo; validação final completa continua obrigatória. Itens A.8 a A.15 marcados.
+- **Vínculos por caso, hash de arquivo, mock como aviso, finalidades de autorização:** implementados conforme aprovação. Nome do campo no contrato alterado de case_body_hash para file_hash (design e spec).
+- **CLI do manifesto:** generate (candidato, nunca aprovação; recusa sobrescrever) e validate (sem escrita).
+- **Distribuição:** new-project e template-update copiam scripts/harness e .claude/harness; migrate e check-update recusam destino sem os módulos; template-check reconhece os dois formatos de checks.
+- **Node 22:** não verificado. Nenhum Node 22 instalado; opções (Homebrew node@22 keg-only ou Docker) aguardam aprovação.
+- **Suíte:** 592/592; lint 0; sintaxe 0; contrato 0; openspec válida (Node 24.21.0).
+- **Pendentes:** 12.3 (inclui test_report na migração) e 12.4a/b; D26 pendente de aprovação; PB-008/PB-009 aberto com risco residual; sonda P.2 não autorizada.
+
+
+### 2026-10-24 — PB-008/PB-009: 18 reexecuções sem reprodução (risco residual)
+
+- **Reexecuções:** 15 sequenciais e 3 paralelas do arquivo de teste indicado. Total 18. Todas passaram pelo conteúdo da saída (o código de saída da espera paralela falhou no script; a evidência é o conteúdo).
+- **Resultado:** não reproduzida. A ocorrência original (PB-009) não tem mensagem de erro registrada e permanece aberta. Não é encerrada por verde.
+- **Hipóteses não testadas:** carga alta durante a suíte completa; edição concorrente do fixture durante cópia; variáveis de ambiente diferentes da sessão original; subprocesso encerrado por sinal reportado como saída 1; nested node --test sem timeout.
+- **Risco residual para a revisão de adoção:** uma falha intermitente sem causa pode voltar e reprovar ou aprovar indevidamente. Antes do marco de adoção, a evidência deve ser apresentada com este risco explícito.
+- **Relatório:** scratchpad/pb008/relatorio.md.
+
+
+### 2026-10-24 — add-spec-harness: F8 entregue (spec-accept e RED); parada autorizada
+
+- **Entregue:** `scripts/harness/red.mjs` (classificação behavioral × environment; mock inválido; pré-existente); skill `.claude/skills/spec-accept/SKILL.md` (não edita specs; gera testes com [ID]); testes f8-*. Itens 8.1 a 8.4 marcados.
+- **Verificado por mim:** 524/524; lint 0; sintaxe 0; contrato 0; openspec válida.
+- **RED:** a primeira rodada teve RED inválido (módulo ausente = environment); corrigido antes de seguir. Três testes de AC-008 passaram no stub (âncoras de regressão).
+- **Dúvidas abertas:** (1) caminhos protegidos de policy.json não cobrem testes de aceitação de projetos; checkAcceptanceChange usa os hashes de D28; (2) nenhum módulo grava acceptance-manifest.json (falta CLI de escrita); (3) classificação de mock é heurística (mensagem "of undefined" ou marcador mock: true), sem marcador definido no contrato.
+- **Não resolvido por verde:** A.3 (propagação para fatias, EV-007); PB-008/PB-009; D26 pendente; Node 22 pendente; sonda P.2 não autorizada.
+- **Próximo passo:** decidir o que segue da lista acima. F9 a F12 e marco 13 ficam para nova autorização. O runner não está declarado operacional.
+
+
+### 2026-10-24 — add-spec-harness: caminho novo do contrato (A.1–A.7), A.3 aberta
+
+- **Aprovado e implementado:** checks.test como {command, suite} (string legada mantida); checks.test_report {command, suite, format} com tap; manifesto de aceitação (D28) com identidade do caso, hash com helpers, 1..n casos por cenário; reaceitação em três verificações; condições suportadas (formato, chamada paga) e "condição não avaliada" explícita; impressão com derivados e checkbox operacional; template.json com o caminho novo.
+- **Suíte:** 505/505; lint 0; sintaxe 0; contrato 0; openspec válida.
+- **Aberto:** A.3 (propagação de invalidação para fatias, EV-007): sem teste nem implementação.
+- **Escolhas técnicas sem decisão explícita (revisar):** purpose das autorizações revision (test_adequacy, sufficiency, exception); tag [ID] por cenário em casos com vários cenários; case_body_hash no nível de arquivo; carimbo de autorizações como confiança no primeiro uso; invalidação de dependentes exige test_adequacy.
+- **Pendências:** Node 22 (decisão sua, sem comprovação aqui); D26 pendente de aprovação; PB-008/PB-009 aberto; sonda P.2 não autorizada; skill template-check ainda exige checks.test string; authorize record --data substitui scope.
+- **Investigação PB-008:** não reproduzida (15/15 sequencial, paralela ok); PB-009 segue aberto.
+
+
+### 2026-10-24 — PB-008 investigado: não reproduzido, PB-009 continua aberto
+
+- **Repetição sequencial:** 15/15 passaram (3 testes por execução). **Paralela:** 3 processos, todos com 3 passes pelo conteúdo da saída (o registro de código de saída falhou no script de espera, então a evidência é o conteúdo).
+- **Hipóteses não testadas:** carga alta durante a suíte completa; edição concorrente do fixture durante cpSync; variáveis de ambiente diferentes da sessão original; subprocesso morto por sinal reportado como saída 1. O teste aninha node --test sem timeout, ponto plausível para lentidão sob carga. Hipótese, não achado.
+- **Estado:** PB-008 e PB-009 permanecem abertos. A falha original não tem mensagem de erro registrada. Passar a suíte não fecha o não determinismo.
+- **Relatório:** scratchpad/pb008/relatorio.md.
+
+
+### 2026-10-24 — add-spec-harness: F7 entregue (validade e validação final), dúvidas de contrato
+
+- **Entregue:** `evidence.mjs` (impressão, caminhos protegidos, [ ]→[x]), `test-report.mjs` (TAP por caso, captura em .harness-local), `validate.mjs` (validação final, resumo durável, archiveApproval). Opção `protect` no runner e no slice (protected_change). 36 testes novos.
+- **Verificado por mim:** 465/465, lint 0, sintaxe 0, contrato 0, openspec válida. Itens 5.5 e 7.1 a 7.9 marcados.
+- **Limitações declaradas:** fixtures TAP foram capturadas no Node 24, não no 22. Não há checks.test_report no template.json: a própria change para com config_error ao validar até a decisão 1.
+- **Dúvidas de contrato (decisão pendente):**
+  1. `checks.test` precisa ser objeto `{command, suite}` para carregar a suíte; hoje o loadChecks legado aceita só string.
+  2. Manifesto de aceitação (`acceptance-manifest.json`) não está definido na spec; usado `{entries: [{id, file, scenario_revision, case_body_hash}]}`, a ser gerado na F8.
+  3. EV-007 fala em dependências, mas D21b não tem campo para isso; usado `Depende de:` opcional.
+  4. EV-011 fala em gravar o resumo no arquivamento; D16 diz nos marcos. Gravado na aprovação da validação final.
+  5. Revisão invalida a evidência até reaceitação confirmada no manifesto: concilia EV-007 e AC-020, precisa de aprovação.
+  6. Só "quando houver formato X" e "quando houver chamada paga" são avaliadas; outras condições são tratadas como exigidas.
+  7. A impressão exclui tasks.md, evidence-summary.json e checkpoint.json; authorizations.json tem hash próprio.
+- **Não resolvido por verde:** PB-008 (PB-009); esquema de reconciliação (D26, pendente); sonda P.2 (não autorizada); distribuição de scripts/harness pelo new-project (F12).
+
+
+### 2026-10-24 — add-spec-harness: regressão do benchmark, causa e correção
+
+- **Sintoma:** 7 falhas no benchmark (greenfield x2, archive-only, hidden, legado, runner report, execução após negação, orçamento esgotado) depois da correção da F6.
+- **Controle:** clone limpo do HEAD passou 9 de 9 no greenfield. A regressão era da sessão, não pré-existente.
+- **Causa:** os gates passaram a importar `scripts/harness/process-group.mjs` e `scripts/harness/identity.mjs`. O simulador de `new-project` e o instalador do toolset copiavam só `scripts/gates`. No alvo, o gate não conseguia importar o módulo.
+- **Ponto de adoção (F12):** `scripts/harness` é `managed` no template.json, então o `new-project` real e o `template-update` também precisam copiá-lo. Sem isso, um projeto derivado recebe gates que não importam. Pendente para F12.
+- **Correção:** simuladores espelham `scripts/harness` como o manifesto declara; `verifyBootstrap` reprova alvo sem `process-group.mjs`; fixture de bootstrap ganhou o arquivo. Testes de benchmark não foram enfraquecidos.
+- **Resultado:** suíte 429/429, lint 0, sintaxe 0, contrato 0, openspec válida.
+- **Não resolvido por verde:** PB-008 (PB-009) continua aberto; pendências contratuais continuam abertas; sonda P.2 não autorizada; origem `human` + `procedure: tty` aprovada.
+
+
+### 2026-10-24 — add-spec-harness: decisões aprovadas (RC-014, estados, reconciliação, tempo, origem)
+
+- **Aprovado:** runner novo sem parada por contagem de falhas (RC-041); SG-018 só no legado; três ocorrências seguidas da mesma assinatura continuam param (RC-014); `diagnosing` com motivo opcional; `reconciliation_required` só com consumo ou reserva a reconciliar (RC-046); `lock_sha256` como identificação do conteúdo, não prova de autoria; tempo ativo por categoria, gates com timeout `max_seconds_per_gate` (1500, provisório); `origin: human` com `procedure: tty`.
+- **Pendente de aprovação:** esquema de registro de reconciliação (D26), com exemplo sem dados sensíveis. Implementado só como proposta; não considerado aprovado.
+- **Incidente das tentativas 3 e 4:** causa observada em D25. O comando de avaliação excedeu o tempo da ferramenta de shell, que o moveu para segundo plano em vez de encerrá-lo; o `score` continuou e registrou a tentativa 3. O script do gate não tinha timeout próprio. Não é causa confirmada de outra natureza. Tentativas 3 e 4 preservadas.
+- **Não resolvido por verde:** PB-008 (não determinismo, PB-009) continua aberto. Pendências contratuais continuam abertas até decisão humana registrada. Sonda P.2 continua não autorizada.
+
+
+### 2026-10-23 — add-spec-harness: F5 ajustes e F6 entregues; parada por contrato (6.2)
+
+- **Gate:** tentativas 3 e 4 registradas com `pass` sobre o mesmo código. A tentativa 3 saiu de um comando com tempo estourado que também chegou ao `score`; a 4 foi registrada de propósito. Nenhuma foi apagada. Antigos 100%, novos 100%, lint 0, tipo 0. Baseline original preservada.
+- **Suíte:** 413/413. Lint 0, sintaxe 0, `contract.mjs` 0, `openspec validate --strict` válida.
+- **F5 ajustes:** orçamento em `total_usd` e `per_call_usd`; revogação própria; `probe_result` com referência; preservação de registros; regra de rascunho; motivos distintos. 15 testes antigos alterados com registro.
+- **F6:** máquina de estados (tabela em `machine.mjs`), contadores, sintomas, relatório de parada, retomada, checkpoint nos marcos, limites de invocação e tempo ativo, identidade de execução e invocação, lock ilegível. Itens 2.8, 6.1, 6.3 a 6.9 marcados. 6.2 aberto.
+- **Pendências de decisão:**
+  1. **RC-014 × SG-018 (6.2):** RC-014 para com `repeated_symptom` após três ocorrências seguidas do mesmo sintoma. SG-018 para após a segunda avaliação sem queda de falhas. As duas regras valem ao mesmo tempo? Recomendo: SG-018 vale para a correção (sem melhora), RC-014 para o sintoma repetido, com a ordem de precedência escrita no contrato.
+  2. **Motivos não definidos em D8:** `diagnosing` não tem motivo (propõe-se `null`); `interrupted` usa `reconciliation_required`. Confirmar.
+  3. **Registro de reconciliação de chamada interrompida e `lock_sha256`:** definidos pelo agente, sem contrato. Confirmar o formato.
+  4. **Gate fora do tempo ativo:** o tempo das avaliações de gate não entra no tempo ativo. Confirmar se é execução ativa do runner.
+  5. **`origin: human-tty` (5.12):** opção (a) manter `origin: human` com `procedure: tty`. Recomendo (a).
+- **Bloqueios para declarar o runner operacional:** F7 a F12, marco 13, decisões 1 a 5, pendência 2.9 e sonda P.2 (não autorizada).
+- **Próximo passo:** decidir 1 a 5. Depois F7 (validade e `test_report`), F8, F9, F10, F11 (incluindo PB-009, não determinismo), F12.
+
+
+### 2026-10-23 — add-spec-harness: não determinismo registrado (PB-008) e contrato de orçamento
+
+- **PB-008 (não determinismo observado, sem causa identificada):** na suíte de 2026-10-23 a falha de `PB-008` (`benchmark-evaluator.test.mjs`) apareceu uma vez e passou nas execuções seguintes. Registrada como PB-009. Passagens posteriores não apagam a falha. Investigação pendente: sem ela, esta evidência não serve ao marco de adoção.
+- **Contrato:** orçamento em `total_usd` e `per_call_usd` (D23); revogação como registro próprio; `probe_result` referenciando sonda e evidência; TTY como condição do procedimento, não prova de autoria; motivos `authorization_required` e `budget_reserve_insufficient` distintos; tempo total conta só execução ativa; limite de invocações por change; execução retomada preserva `execution_id`, nova referencia a anterior; `invocation_id` por invocação; lock ilegível preservado com hash de diagnóstico (D24).
+- **Revisões de cenário:** os 21 cenários que tinham `Revisão: 2` voltaram a 2, conforme pedido. O contrato está `rascunho` (proposal.md), então essas revisões não exigem autorização. Quando o contrato for aprovado, qualquer mudança semântica exige autorização `revision`.
+- **Identidade:** `.harness-project.json` agora em `owned` no `template.json`.
+- **Contagens:** 174 cenários com IDs únicos.
+
+### 2026-10-23 — add-spec-harness: F5 entregue, parada por decisão de contrato
+
+- **F5 (5.1 a 5.4, 5.6, 5.7):** `claude.mjs` (argumentos sem fallback nem --bare, classificação por causa), `budget.mjs` (reserva, comprometido, reconciliação), `runner.mjs` (portões na ordem PO-013, lock, modo, orçamento, reserva antes da invocação), `authorize.mjs record` (exige TTY, confirmação por código curto, gravação atômica), simulador `fake-claude.mjs`. 328/328 na suíte, lint 0, sintaxe 0, contrato 0.
+- **5.5 aberta:** detecção de alteração protegida (EV-003) é da F7.
+- **Parada para decisão** (sem avançar para F6):
+  1. **Semântica de `amount_usd` em `budget`:** o agente usou o mesmo campo como total da change e como teto por chamada. O RC-022 do contrato usa a autorização como teto por chamada. Recomendação: campos separados `per_call_usd` e `total_usd`, com o limite efetivo por chamada = min(política, candidato, per_call_usd) e o total = min(política, candidato, total_usd).
+  2. **Formato de `authorizations.json`:** lista JSON canônica; `probe_result` com `result`; revogação como registro `budget` com `revokes`. Aprovar ou ajustar.
+  3. **Tarefa 5.6:** dizia "estender `scripts/benchmark/lib/claude.mjs`", mas a restrição de não tocar o benchmark valia para esta fatia. Foi feito um módulo novo e independente. Recomendação: manter e reescrever o texto da 5.6.
+  4. **Motivo para RC-021 (sem autorização):** foi usado `budget_reserve_insufficient`. Recomendação: manter.
+  5. **`execution_id`:** o runner reaproveita o id do estado existente, porque `saveState` exige identidade fixa. Revisar na F6.
+  6. **Limites de invocações e de tempo total** não entraram na F5. Ficam para a F6.
+- **Próximo passo:** decidir 1 a 6. Depois F6 (estados, paradas, repetição, retomada, checkpoint), com simuladores.
+
+### 2026-10-23 — add-spec-harness: correções aprovadas, gate passa (tentativa 2)
+
+- **Benchmark (3.9, PB-007, PB-008):** avaliador legado (nome normalizado) só para change sem nenhum `**ID:**` e sem run-state de modo runner. Formato novo sem ID reprova sem fallback. Relatório registra `archive_evaluator` e limitações. Snapshots e testes antigos intactos. 3 testes novos.
+- **Identidade e lock (2.7, RS-008 a RS-021):** `project_id` em `.harness-project.json` (versionado, template com id próprio); `local_id` em `<git-common-dir>/harness/local-id`; `execution_id` por execução. `lock_held` é motivo, sem estado novo. Vencimento só por heartbeat. Liberação em etapas com conferência de conteúdo antes da remoção.
+- **Contrato (4.3, D21b):** `contract.mjs` valida `Aprovação` como `auth:<id>` referenciando autorização `revision` humana. Validação completa = `openspec validate --strict` + `contract.mjs`. 19 testes novos, 4 testes antigos de `spec-create` atualizados com registro.
+- **Revisões de cenário:** 21 cenários estavam em `Revisão: 2` sem autorização, o que o validador recusou. Voltaram a `1`, conforme a premissa da proposta (o contrato ainda não foi aprovado). Declarado `**Comportamento novo:** sim` na proposta.
+- **Testes antigos alterados (identidade):** dois testes de `project_key` por caminho foram removidos e um de lock por host foi substituído, pelos cenários aprovados. Registro: `scratchpad/identity-test-changes.md`.
+- **Gate:** tentativa 1 `retry` (81,48%); tentativa 2 `pass` (100%/100%). Baseline original preservada, sem reinício de contadores. Suíte: 280/280, lint 0, sintaxe 0, `contract.mjs` 0, `openspec validate --strict` válida.
+- **Observação:** `PB-008` falhou uma vez numa execução da suíte e passou nas duas seguintes. Não reproduzido; registrar se voltar.
+- **Pendências de contrato:** formato de `authorizations.json` (a definir na F5, com `authorize.mjs`); `.harness-project.json` ainda não está em `managed`/`owned` (checar na F1.4/F12); lock ilegível tratado como `lock_held` sem caminho de liberação ainda.
+- **Próximo passo:** F5 (invocação, orçamento, autorização com TTY, reconciliação), somente com simuladores.
+
+### 2026-10-23 — add-spec-harness: implementação F1 a F4 e parada
+
+- **F1 (política e perfil):** `.claude/harness/policy.json`, `policy.md`, `profiles/default.json`, `scripts/harness/policy.mjs`. 149/149 na suíte. Tetos `max_*` iguais aos candidatos, provisórios e sem autorizar gasto (registrado em `policy.md`). Tarefas 1.1 a 1.4.
+- **F2 (estado, lock, checkpoint):** `scripts/harness/{identity,state,lock,views,checkpoint}.mjs`. 38/38 nas suítes da fatia. Tarefas 2.1 a 2.6.
+- **F3 (gates):** gates retornam resultado estruturado e não gravam sem `--legacy-write`. Falsos positivos corrigidos. Testes antigos alterados com prova no commit de implementação: `implement-gate`, `archive-gate`, `template-migrate`. Tarefas 3.1 a 3.8.
+- **F4 (spec-create):** skill ampliada e `scripts/harness/contract.mjs`. 19/19. Tarefa 4.1 e 4.2 marcadas; **4.3 aberta**: pede que `openspec validate` recuse `check:` sem justificativa, o que o OpenSpec não faz.
+- **Parada:** a suíte completa tem 5 arquivos de teste do benchmark falhando (`archive-only`, `greenfield`, `hidden`, `legacy`, `run-cli`). Causa: os snapshots replayados vêm de execuções legadas sem `**ID:**` nem `[ID]`, e o gate de arquivamento novo (AC-003, SG-009) os reprova. Não alterei snapshots nem testes antigos sem decisão.
+- **Decisões pendentes:**
+  1. Comportamento do arquivamento em modo `legacy`: manter a comparação por nome até o marco (D20), o que preserva a substring como falso positivo conhecido nesse modo, ou exigir ID já agora e aceitar a reprovação dos snapshots?
+  2. Identidade de checkpoint (D19 × D1): `project_key` deriva do caminho absoluto do diretório comum do Git, então um checkpoint de outra máquina nunca bate. Recomendação: identidade estável gravada no contrato.
+  3. Tarefa 4.3: reescrever para apontar para `contract.mjs`, ou manter e aceitar que o OpenSpec não cobre essa regra.
+  4. Campos do contrato usados por `contract.mjs` (`Verificação`, `Justificativa`, `Aprovação`, `Condição de disparo`): confirmar nomes.
+- **Próximo passo:** aguardar as decisões 1 a 4. F5 e F6 dependem de identidade (decisão 2) e de F3 verde. F7 depende de F3 e de F4 (decisão 3). Nenhuma implementação do runner novo foi declarada operacional; o marco de adoção (tarefa 13) não foi atingido.
+
+### 2026-10-23 — add-spec-harness: contagem de cenários e ajustes finais de contrato
+
+- **Contagem corrigida:** 158 cenários antes da revisão → 153 depois. Removidos efetivos: 11 (AC-004, AC-006, RC-006, RS-001, PO-004, PO-010, PB-006, HI-006, HI-012, EV-009, EV-014). Restaurado: TE-002 (removido por engano e restabelecido; efeito líquido zero). Acrescentados: 6 (RC-029, RC-030, RS-016, RS-017, PO-013, SP-009). Reescritos: 5 (AC-014, AC-017, PO-002, PO-007, EV-012). Conta: 158 − 11 + 6 = 153. O resumo anterior dizia "reescritos (4)"; o correto é 5.
+- **Resumo durável:** inventário completo dos casos da suíte obrigatória (ID, nome, resultado e cenário vinculado quando existir, incluindo regressões sem vínculo). Sem TAP bruto no Git.
+- **Autorizações:** persistidas somente pelo comando `authorize.mjs record`, com TTY e confirmação. Skills e runner não concedem autorização.
+- **HI-001 e HI-002:** verificações estáticas de conteúdo, identificadas como tal. A avaliação comportamental da entrevista fica para validação posterior.
+- **Baseline do gate de implementação** registrada para add-spec-harness (legado): 130 testes existentes, lint 0, sintaxe 0.
+
+### 2026-10-23 — add-spec-harness: revisão aplicada (D-A a D-H)
+
+- **Aplicado:** `design.md` reescrito com D1–D22 e configuração proposta separada de autorização; `proposal.md` atualizado com BREAKING 1 e 2, recuperação e premissas; specs revisadas (158 cenários, IDs únicos, todos cobertos por tarefa); `tasks.md` com 12 fatias e a seção P (sonda, separada).
+- **Sonda:** nenhuma chamada paga. `--version` não distingue flag reconhecida de inventada. O binário contém a definição `--max-turns <turns>`; isso prova reconhecimento, não funcionamento.
+- **Validação:** `openspec validate add-spec-harness --strict` válida, sem avisos.
+- **Bloqueios reais:** (1) autorização da sonda P.2, que não bloqueia as fatias. (2) Adoção nos projetos derivados (tarefa 12.4b): a lista de projetos e o stack de teste ainda não foram identificados. Não bloqueia o núcleo nem significa adoção concluída.
+
+### 2026-10-23 — spec-create: add-spec-harness
+
+- **Insumo:** o pedido consolida as decisões aprovadas. Não houve rodada de entrevista: o agente verificou o repositório e a documentação (`openspec` 1.14.3, specs existentes, gates, skills) e levou só as lacunas ao design.
+- **Evidência de falso positivo (sonda local, sem API):** com a suíte saindo com código `1` e a saída `# pass 3` / `# fail 0`, `measureImplementation` retornou `passed: true`. Outros casos no código atual: contagem antes do código de saída (`scoreWholeSuite`, `runTestFile`); `skip` invisível; `new_pct` nulo aprova; cenário por substring no arquivo inteiro; change sem cenário aprova no arquivamento.
+- **Verificação da CLI:** `--max-budget-usd` existe em 2.1.309 (estimativa do cliente; pode passar do teto; totais de `--resume` não contam). `--max-turns` está na documentação, mas não na `--help` local: tratado como não garantido. `--effort`, `--model`, `--fallback-model`, `--session-id` existem. Node 24.21.0 com TAP por caso (`# SKIP`) e JUnit.
+- **Incompatibilidades com o estado atual (intencionais, não reabrem decisão):** gates gravam `gates.json` hoje; a tabela de gates do `issue-tracker.md` é manual; o gate de implementação exige arquivos novos de teste. Tudo isso muda na v1, marcado como BREAKING em `proposal.md`.
+- **Premissas (não são decisões aprovadas):** `.harness-local/` fora do Git; `run-state.json` versionado dentro da change; skill `spec-accept`; valores do perfil padrão provisórios (60 invocações, US$ 2,00 por chamada, margem 25%, US$ 30,00 por change).
+- **Validação:** `openspec validate add-spec-harness --strict` válida, sem avisos.
+- **Pendências para o humano:** (1) confirmar as premissas acima; (2) autorizar a sonda de `--max-turns`; (3) aprovar o contrato antes de `spec-implement`.
 ### 2026-10-23 — Correção: caminho da máquina no teste da migração
 
 - O `template-check` reprovou no check 6, porque `scripts/test/template-migrate.test.mjs` tinha o caminho absoluto do `MN_Academy`. O "READY" registrado ao fechar a pendência 3 não valia: o check só olha arquivos rastreados, e o teste ainda não estava commitado naquele momento. O commit `913d75f` entrou com a falha.

@@ -1,0 +1,84 @@
+// Migração recusa destino que ficaria com scripts/gates sem scripts/harness (distribuicao).
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { apply } from '../../../.claude/skills/template-migrate/migrate.mjs';
+import { makeTempDir, writeTree } from '../helpers.mjs';
+
+const GATE = "import { x } from '../harness/process-group.mjs';\nexport const gate = x;\n";
+const HARNESS = 'export const x = 1;\n';
+const POLICY = '{}\n';
+const ALL_MANAGED = ['scripts/gates', 'scripts/harness', '.claude/harness'];
+
+function manifest(managed) {
+  return { template: { repo: 'https://example.invalid/t.git', branch: 'main' }, upstreams: { ecc: '1', openspec: '1' }, managed, owned: ['CLAUDE.md'] };
+}
+
+// Template de fixture: traz os arquivos de todos os caminhos; `managed` define o que é distribuído.
+function template(managed) {
+  return writeTree(makeTempDir('distribution-template-'), {
+    'template.json': manifest(managed),
+    'CLAUDE.md': '# Template\n',
+    'scripts/gates/checks.mjs': GATE,
+    'scripts/harness/process-group.mjs': HARNESS,
+    '.claude/harness/policy.json': POLICY,
+  });
+}
+
+// Projeto derivado com scripts/gates e sem scripts/harness (o estado que o problema descreve).
+function projectWithGatesOnly(managed = ['scripts/gates']) {
+  return writeTree(makeTempDir('distribution-project-'), {
+    'template.json': manifest(managed),
+    'CLAUDE.md': '# Projeto\n',
+    'scripts/gates/checks.mjs': GATE,
+  });
+}
+
+function snapshot(root) {
+  const out = {};
+  const walk = (dir) => {
+    for (const entry of readdirSync(join(root, dir), { withFileTypes: true })) {
+      const rel = dir ? `${dir}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(rel);
+      else out[rel] = readFileSync(join(root, rel), 'utf8');
+    }
+  };
+  walk('');
+  return out;
+}
+
+test('distribuicao: migrate recusa projeto com scripts/gates sem scripts/harness e nao escreve nada', () => {
+  const tpl = template(['scripts/gates']);
+  const project = projectWithGatesOnly();
+  const before = snapshot(project);
+  assert.throws(() => apply({ template: tpl, project, items: ['managed'] }), (err) => {
+    assert.match(err.message, /scripts\/harness/);
+    assert.match(err.message, /\.claude\/harness/);
+    assert.match(err.message, /--items managed/);
+    return true;
+  });
+  assert.deepEqual(snapshot(project), before);
+});
+
+test('distribuicao: migrate copia scripts/harness e .claude/harness junto com scripts/gates', () => {
+  const project = projectWithGatesOnly();
+  apply({ template: template(ALL_MANAGED), project, items: ['managed'] });
+  assert.ok(existsSync(join(project, 'scripts/harness/process-group.mjs')));
+  assert.ok(existsSync(join(project, '.claude/harness/policy.json')));
+  const manifestNow = JSON.parse(readFileSync(join(project, 'template.json'), 'utf8'));
+  assert.ok(manifestNow.managed.includes('scripts/harness'));
+  assert.ok(manifestNow.managed.includes('.claude/harness'));
+});
+
+test('distribuicao: migrate aceita projeto com scripts/gates e os dois outros caminhos presentes', () => {
+  const project = writeTree(makeTempDir('distribution-project-'), {
+    'template.json': manifest(ALL_MANAGED),
+    'CLAUDE.md': '# Projeto\n',
+    'scripts/gates/checks.mjs': GATE,
+    'scripts/harness/process-group.mjs': HARNESS,
+    '.claude/harness/policy.json': POLICY,
+  });
+  assert.doesNotThrow(() => apply({ template: template(ALL_MANAGED), project, items: ['managed'] }));
+});
+

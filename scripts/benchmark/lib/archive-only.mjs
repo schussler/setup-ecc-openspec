@@ -21,7 +21,7 @@ async function archiveRun(run, { task, templateDir, workRoot, budget, claude }) 
     cwd: target, allowedTools: readAllowedTools(target), budget, claude,
   });
   if (step.status === 'budget_exhausted') return finish(run, started);
-  run.gates.archive = verifyArchive({ dir: target, change: task.change });
+  run.gates.archive = await verifyArchive({ dir: target, change: task.change });
   run.gates.scope = verifyScope({ dir: target, base, scoped: task.scoped_paths });
   return finish(run, started);
 }

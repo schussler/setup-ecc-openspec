@@ -11,7 +11,7 @@ test('outOfScope aceita prefixo de diretorio e arquivo exato', () => {
   );
 });
 
-test('arquivos fora de scoped_paths sao listados', () => {
+test('[SG-015] arquivos fora de scoped_paths sao listados', () => {
   const root = writeTree(makeTempDir(), { 'src/a.js': '1', 'README.md': 'x' });
   const git = (...args) => execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...args], { cwd: root, encoding: 'utf8' });
   git('init', '-q', '-b', 'main');

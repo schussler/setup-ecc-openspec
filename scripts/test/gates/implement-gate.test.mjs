@@ -20,57 +20,61 @@ const gates = (root) => JSON.parse(readFileSync(join(root, 'openspec/changes/c/g
 
 test('gate de implementacao aprova com tres condicoes', async () => {
   const root = project({ files: { 'test/antigo.test.mjs': PASSING } });
-  recordBaseline({ root, change: 'c' });
+  await recordBaseline({ root, change: 'c', legacyWrite: true });
   writeTree(root, { 'test/novo.test.mjs': PASSING });
-  const result = await scoreImplementation({ root, change: 'c' });
+  const result = await scoreImplementation({ root, change: 'c', legacyWrite: true });
   assert.equal(result.verdict, 'pass');
-  assert.equal(result.old.pct, 100);
-  assert.equal(result.new.pct, 100);
-  assert.equal(result.lint_errors + result.type_errors, 0);
+  assert.equal(result.passed, true);
+  assert.equal(result.evidence.old_pct, 100);
+  assert.equal(result.evidence.new_pct, 100, 'new_pct e informativo: aparece, mas nao e exigido');
+  assert.equal(result.evidence.lint_errors + result.evidence.type_errors, 0);
   assert.equal(gates(root).implement.attempts.length, 1);
 });
 
 test('gate de implementacao reprova teste antigo falhando', async () => {
   const root = project({ files: { 'test/antigo.test.mjs': FAILING, 'test/outro.test.mjs': PASSING } });
-  recordBaseline({ root, change: 'c' });
-  const result = await scoreImplementation({ root, change: 'c' });
+  await recordBaseline({ root, change: 'c', legacyWrite: true });
+  const result = await scoreImplementation({ root, change: 'c', legacyWrite: true });
   assert.notEqual(result.verdict, 'pass');
-  assert.equal(result.old.pct, 50);
+  assert.equal(result.passed, false);
+  assert.equal(result.evidence.old_pct, 50);
 });
 
 test('gate de implementacao reprova erro de lint', async () => {
   const root = project({ lint: 'echo "error: x"; exit 1', files: { 'test/a.test.mjs': PASSING } });
-  recordBaseline({ root, change: 'c' });
-  const result = await scoreImplementation({ root, change: 'c' });
+  await recordBaseline({ root, change: 'c', legacyWrite: true });
+  const result = await scoreImplementation({ root, change: 'c', legacyWrite: true });
   assert.notEqual(result.verdict, 'pass');
-  assert.ok(result.lint_errors > 0);
+  assert.equal(result.passed, false);
+  assert.ok(result.evidence.lint_errors > 0);
 });
 
 test('testes novos separados dos antigos pelo baseline', async () => {
   const root = project({ files: { 'test/antigo.test.mjs': PASSING } });
-  recordBaseline({ root, change: 'c' });
+  await recordBaseline({ root, change: 'c', legacyWrite: true });
   writeTree(root, { 'test/novo.test.mjs': FAILING });
-  const result = await scoreImplementation({ root, change: 'c' });
-  assert.deepEqual(result.old.files, ['test/antigo.test.mjs']);
-  assert.deepEqual(result.new.files, ['test/novo.test.mjs']);
-  assert.equal(result.old.pct, 100);
-  assert.equal(result.new.pct, 0);
+  const result = await scoreImplementation({ root, change: 'c', legacyWrite: true });
+  assert.equal(result.evidence.old_pct, 100);
+  assert.equal(result.evidence.new_pct, 0);
+  assert.equal(result.passed, false, 'arquivo novo com saida 1 reprova pelo codigo de saida (SG-005)');
 });
 
 test('teste antigo removido conta como falha', async () => {
   const root = project({ files: { 'test/antigo.test.mjs': PASSING } });
-  recordBaseline({ root, change: 'c' });
+  await recordBaseline({ root, change: 'c', legacyWrite: true });
   rmSync(join(root, 'test/antigo.test.mjs'));
-  const result = await scoreImplementation({ root, change: 'c' });
-  assert.deepEqual(result.removed_tests, ['test/antigo.test.mjs']);
+  const result = await scoreImplementation({ root, change: 'c', legacyWrite: true });
+  assert.deepEqual(result.evidence.removed_tests, ['test/antigo.test.mjs']);
+  assert.equal(result.passed, false);
   assert.notEqual(result.verdict, 'pass');
 });
 
 test('sem test_file roda a suite inteira e nao separa', async () => {
   const root = project({ testFile: null, files: { 'test/a.test.mjs': PASSING } });
-  recordBaseline({ root, change: 'c' });
-  const result = await scoreImplementation({ root, change: 'c' });
-  assert.equal(result.split, false);
+  await recordBaseline({ root, change: 'c', legacyWrite: true });
+  const result = await scoreImplementation({ root, change: 'c', legacyWrite: true });
+  assert.equal(result.evidence.split, false);
+  assert.equal(result.passed, true);
   assert.equal(result.verdict, 'pass');
 });
 
@@ -95,17 +99,17 @@ test('ciclo para sem melhora entre tentativas', () => {
 
 test('baseline novo reinicia as tentativas', async () => {
   const root = project({ files: { 'test/a.test.mjs': PASSING } });
-  recordBaseline({ root, change: 'c' });
-  await scoreImplementation({ root, change: 'c' });
-  recordBaseline({ root, change: 'c' });
+  await recordBaseline({ root, change: 'c', legacyWrite: true });
+  await scoreImplementation({ root, change: 'c', legacyWrite: true });
+  await recordBaseline({ root, change: 'c', legacyWrite: true });
   assert.equal(gates(root).implement.attempts.length, 0);
 });
 
 test('baseline novo preserva as sessoes anteriores no historico', async () => {
   const root = project({ files: { 'test/a.test.mjs': PASSING } });
-  recordBaseline({ root, change: 'c' });
-  await scoreImplementation({ root, change: 'c' });
-  recordBaseline({ root, change: 'c' });
+  await recordBaseline({ root, change: 'c', legacyWrite: true });
+  await scoreImplementation({ root, change: 'c', legacyWrite: true });
+  await recordBaseline({ root, change: 'c', legacyWrite: true });
   const { history } = gates(root).implement;
   assert.equal(history.length, 1);
   assert.equal(history[0].attempts.length, 1);

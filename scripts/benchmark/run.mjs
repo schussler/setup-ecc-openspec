@@ -9,6 +9,8 @@
 //     [--claude-bin "<cmd>"]
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,6 +23,31 @@ import { runArchiveOnly } from './lib/archive-only.mjs';
 import { buildReport, renderMarkdown, scrubPaths } from './lib/report.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+// Configuração efetiva do relatório (PB-003). Os limites vêm do padrão da CLI, que
+// coincide com os candidatos de .claude/harness/policy.json e não estão calibrados.
+export function buildConfig(options, { root = ROOT, budget = null } = {}) {
+  const policy = JSON.parse(readFileSync(join(root, '.claude', 'harness', 'policy.json'), 'utf8'));
+  return {
+    model_requested: options.model ?? 'padrão do usuário',
+    n: options.n,
+    concurrency: options.concurrency,
+    max_invocations: { value: options.maxInvocations, candidate: true, policy_key: 'max_invocations_per_change' },
+    timeout_min: { value: options.timeoutMin, candidate: true, policy_key: 'max_seconds_per_call' },
+    authorizations: [{ kind: 'invocation_budget', max: options.maxInvocations, used: budget?.used ?? null }],
+    environment: { node: process.version, platform: process.platform },
+    harness_policy_version: policy.version,
+  };
+}
+
+// Contrato da tarefa: identidade e impressão dos checks usados no benchmark.
+export function contractOf(task) {
+  return {
+    task: task.id,
+    change: task.change ?? null,
+    checks_sha256: createHash('sha256').update(JSON.stringify(task.checks ?? {})).digest('hex'),
+  };
+}
 const SCENARIOS = {
   greenfield: { task: 'greenfield-duration', run: runGreenfield },
   legacy: { task: 'legacy-pricing', run: runLegacy },
@@ -78,9 +105,10 @@ export async function main(argv) {
       templateSource: options.templateSource, templateBranch: options.templateBranch,
     });
     const groups = result.groups ?? { default: result.runs };
+    const config = { ...buildConfig(options, { budget }), contract: contractOf(result.task) };
     reports[name] = buildReport({
       scenario: name, task: result.task, n: options.n, budget, groups, startedAt,
-      finishedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(), config,
       notes: [`work dir: ${workRoot}`, `modelo: ${options.model ?? 'padrão do usuário'}`, `timeout por invocação: ${options.timeoutMin} min`],
     });
     writeReport(join(options.out, name), reports[name], options.workDir);

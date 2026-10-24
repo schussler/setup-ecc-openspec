@@ -39,6 +39,16 @@ Regras dos gates:
 - Nunca reduza um limiar. Nunca altere um teste para passar sem justificar no `issue-tracker.md`.
 - No modo headless (`claude -p`), as permissões vêm de `.claude/settings.json` (`permissions.allow`) com `--permission-mode dontAsk`. Nunca use `--dangerously-skip-permissions`. Os hooks do ECC continuam ativos: não use `--bare`.
 - Ao encerrar uma sessão, rode `handoff` para gravar o ponto de restauração.
+
+Tabela de gates (derivada dos scripts e do modo da execução; não é editada à mão):
+
+| Gate | Script | Modo `legacy` (em uso) | Modo `runner` (após o marco) |
+|------|--------|------------------------|------------------------------|
+| Implementação | `scripts/gates/implement-gate.mjs` | `score` e `baseline` com `--legacy-write` gravam `gates.json` | avaliação pedida ao runner |
+| Arquivamento | `scripts/gates/archive-gate.mjs` | com `--legacy-write` grava `gates.json` | validação final pelo `scripts/harness/validate.mjs` |
+| PR | `scripts/gates/pr-gate.mjs` | só leitura | só leitura |
+
+Limite de isolamento: a v1 não isola o executor do avaliador. A separação de papéis não é isolamento; o bloqueio de execução é advisory; um executor com a mesma conta pode alterar arquivos e hashes.
 <!-- template:pipeline:end -->
 
 ---

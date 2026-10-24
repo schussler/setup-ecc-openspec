@@ -12,7 +12,7 @@ Log de trabalho dos agentes neste repositório. Toda sessão lê este arquivo pr
 
 ## Gates
 
-Uma linha por avaliação. O detalhe completo fica em `openspec/changes/<change>/gates.json`.
+Tabela derivada do estado: `openspec/changes/<change>/gates.json` no modo `legacy` e `.harness-local/<change>/run-state.json` no modo `runner`. Não a edite à mão; as skills escrevem só o contexto narrativo. Uma linha por avaliação.
 
 | Data | Change | Gate | Tentativa | O que falhou | O que mudou | Pontuação | Veredito |
 |------|--------|------|-----------|--------------|-------------|-----------|----------|

@@ -1,0 +1,9 @@
+{
+  "type": "result",
+  "subtype": "success",
+  "is_error": true,
+  "num_turns": 1,
+  "result": "",
+  "session_id": "fixture-sintetica-erro",
+  "total_cost_usd": 0.01
+}

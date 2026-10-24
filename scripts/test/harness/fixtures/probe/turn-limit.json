@@ -1,0 +1,9 @@
+{
+  "type": "result",
+  "subtype": "error_max_turns",
+  "is_error": true,
+  "num_turns": 1,
+  "stop_reason": "max_turns",
+  "session_id": "fixture-sintetica-turnos",
+  "total_cost_usd": 0.01
+}

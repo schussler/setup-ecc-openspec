@@ -1,4 +1,6 @@
 // Benchmark report: aggregates runs into report.json and renders report.md.
+import { CALIBRATION, levelsOf, maxCostPerCall, NONDETERMINISM } from './levels.mjs';
+
 export const GATES = Object.freeze(['bootstrap', 'spec', 'implement', 'archive', 'scope', 'hidden']);
 const EXECUTED = new Set(['passed', 'failed']);
 
@@ -66,6 +68,12 @@ function summarize(runs) {
     invocations: sum(runs.map((run) => run.invocations)),
     compound_denials_mean: stats(executed.map((run) => sum(run.steps.map((step) => step.compound_denials ?? 0))))?.mean ?? null,
     stopped_after_denial: executed.filter((run) => run.stopped_after_denial).length,
+    // Três níveis (PB-001 a PB-002): falhas do runner ficam fora da taxa funcional.
+    runner_failed: runs.filter((run) => run.status === 'runner_failed').length,
+    functional_failed: executed.filter((run) => run.status === 'failed').length,
+    accepted: executed.filter((run) => run.status === 'passed').length,
+    gates_approved: runs.filter((run) => levelsOf(run).gates === 'approved').length,
+    gates_rejected: runs.filter((run) => levelsOf(run).gates === 'rejected').length,
   };
 }
 
@@ -114,7 +122,19 @@ function evaluateAcceptance(acceptance, runs, groups) {
   return { criteria, accepted: criteria.every((criterion) => criterion.passed) };
 }
 
-export function buildReport({ scenario, task, n, budget, groups, startedAt, finishedAt, interrupted = false, notes = [] }) {
+// Avaliador de arquivamento das execuções (PB-008): o nome, se todas concordam; 'mixed' caso
+// contrário; null se nenhuma execução chegou ao arquivamento.
+function archiveEvaluatorOf(runs) {
+  const names = [...new Set(runs.map((run) => run.gates?.archive?.evaluator).filter(Boolean))];
+  if (names.length === 0) return null;
+  return names.length === 1 ? names[0] : 'mixed';
+}
+
+function archiveLimitsOf(runs) {
+  return [...new Set(runs.flatMap((run) => run.gates?.archive?.evaluator_limits ?? []))];
+}
+
+export function buildReport({ scenario, task, n, budget, groups, startedAt, finishedAt, interrupted = false, notes = [], config = null }) {
   const summarized = Object.fromEntries(Object.entries(groups).map(([name, runs]) => [name, { summary: summarize(runs), runs }]));
   const all = Object.values(groups).flat();
   let status = 'complete';
@@ -129,6 +149,8 @@ export function buildReport({ scenario, task, n, budget, groups, startedAt, fini
     comparison,
     acceptance: evaluateAcceptance(task.acceptance, all, groups),
     models: [...new Set(all.flatMap((run) => run.steps.flatMap((step) => step.models ?? [])))].sort(),
+    archive_evaluator: archiveEvaluatorOf(all),
+    archive_evaluator_limits: archiveLimitsOf(all),
     scoped_paths: task.scoped_paths,
     n,
     status,
@@ -138,6 +160,13 @@ export function buildReport({ scenario, task, n, budget, groups, startedAt, fini
     invocations: sum(all.map((run) => run.invocations)),
     cost_usd: round(sum(all.map((run) => run.cost_usd)), 4),
     notes,
+    // PB-003: configuração efetiva, autorizações, contrato e ambiente, com o plano de calibração.
+    config,
+    calibration: { ...CALIBRATION },
+    // PB-005: máximo observado, com origem e declaração.
+    max_cost_per_call: maxCostPerCall(all),
+    // PB-009: ocorrências abertas, sem marca de resolvido.
+    nondeterminism: NONDETERMINISM.map((item) => ({ ...item })),
     groups: summarized,
   };
 }
@@ -151,6 +180,7 @@ function renderGroup(name, { summary, runs }) {
     `## Grupo \`${name}\``,
     '',
     `- **Taxa de sucesso:** ${fmt(summary.success_rate, '%')} (${summary.passed}/${summary.executed} execuções completas; ${summary.budget_exhausted} interrompidas por orçamento; ${summary.not_run} não iniciadas)`,
+    `- **Níveis:** Execução concluída ${summary.runs - summary.runner_failed - summary.budget_exhausted - summary.not_run} de ${summary.runs}; Falhas do runner ${summary.runner_failed} (fora da taxa de sucesso, não são falha funcional); Gates aprovados ${summary.gates_approved}; Gates reprovados ${summary.gates_rejected}; Aceitação funcional ${summary.accepted} de ${summary.executed}`,
     `- **Arquivos fora de \`scoped_paths\`:** ${summary.out_of_scope_files}`,
     `- **Cobertura:** antes ${fmtStats(summary.coverage_before, '%')}; depois ${fmtStats(summary.coverage_after, '%')}`,
     `- **Custo:** US$ ${fmt(summary.cost_usd)} em ${summary.invocations} invocações`,
@@ -176,11 +206,43 @@ function renderGroup(name, { summary, runs }) {
   ];
   const failures = runs.filter((run) => run.status === 'failed');
   if (failures.length > 0) {
-    lines.push('**Falhas:**', '');
+    lines.push('**Falhas funcionais (execução concluída):**', '');
     for (const run of failures) lines.push(`- Execução ${run.run}: ${run.failure ?? 'ver report.json'}`);
     lines.push('');
   }
+  const runnerFailures = runs.filter((run) => run.status === 'runner_failed');
+  if (runnerFailures.length > 0) {
+    lines.push('**Falhas do runner (não são falha funcional):**', '');
+    for (const run of runnerFailures) lines.push(`- Execução ${run.run}: ${run.failure ?? 'ver report.json'}`);
+    lines.push('');
+  }
   return lines.join('\n');
+}
+
+const candidate = (item) => (item.candidate ? `candidato (política \`${item.policy_key}\`, sem calibração)` : 'fixo');
+
+// Configuração efetiva e autorizações (PB-003). Limites candidatos vêm marcados.
+function renderConfig(config, calibration) {
+  const calibrationLine = `- **Plano de calibração:** ${calibration.section} em \`${calibration.source}\``;
+  if (!config) return ['- **Configuração:** não informada', calibrationLine];
+  return [
+    `- **Modelo solicitado:** ${config.model_requested}`,
+    `- **Limite de invocações:** ${config.max_invocations.value} (${candidate(config.max_invocations)})`,
+    `- **Timeout por invocação:** ${config.timeout_min.value} min (${candidate(config.timeout_min)})`,
+    `- **Autorizações usadas:** ${config.authorizations.map((auth) => `${auth.kind} (máximo ${auth.max}, usado ${auth.used ?? 'n/a'})`).join('; ')}`,
+    `- **Contrato:** tarefa \`${config.contract.task}\`, change \`${config.contract.change}\`, checks sha256 \`${config.contract.checks_sha256}\``,
+    `- **Ambiente:** Node ${config.environment.node}, ${config.environment.platform}; versão da política ${config.harness_policy_version}`,
+    calibrationLine,
+  ];
+}
+
+function renderNondeterminism(items) {
+  return [
+    '## Não determinismo registrado',
+    '',
+    ...items.map((item) => `- **${item.ref}** (sobre ${item.case}): ${item.status}; causa: ${item.cause}; evidência: ${item.evidence}. ${item.note}`),
+    '',
+  ];
 }
 
 export function renderMarkdown(report) {
@@ -192,9 +254,15 @@ export function renderMarkdown(report) {
     `- **Invocações de \`claude -p\`:** ${report.invocations} (orçamento ${report.budget.used}/${report.budget.max})`,
     `- **Custo total:** US$ ${fmt(report.cost_usd)}`,
     `- **Modelos efetivos:** ${report.models?.length ? report.models.join(', ') : 'n/a'}`,
+    `- **Avaliador de arquivamento:** ${fmt(report.archive_evaluator)}`,
+    ...(report.archive_evaluator_limits ?? []).map((limit) => `- Limite do avaliador: ${limit}`),
     `- **\`scoped_paths\`:** ${report.scoped_paths.map((path) => `\`${path}\``).join(', ') || 'n/a'}`,
     `- **Início / fim:** ${report.started_at} / ${report.finished_at}`,
     ...report.notes.map((note) => `- ${note}`),
+    ...renderConfig(report.config, report.calibration ?? CALIBRATION),
+    ...(report.max_cost_per_call
+      ? [`- **Maior custo por chamada observado:** US$ ${report.max_cost_per_call.usd} (origem: ${report.max_cost_per_call.origin}). ${report.max_cost_per_call.declaration}`]
+      : []),
     ...(report.comparison
       ? [
         `- **Com vs. sem \`docs/agents/\`:** sucesso ${fmt(report.comparison.with_docs_success_rate, '%')} vs. ${fmt(report.comparison.without_docs_success_rate, '%')} (com − sem: ${fmt(report.comparison.difference_pp, ' p.p.')})`,
@@ -212,6 +280,7 @@ export function renderMarkdown(report) {
         '',
       ]
       : []),
+    ...(report.nondeterminism?.length ? renderNondeterminism(report.nondeterminism) : []),
     ...Object.entries(report.groups).map(([name, group]) => renderGroup(name, group)),
   ].join('\n');
 }

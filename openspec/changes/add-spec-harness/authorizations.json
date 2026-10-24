@@ -1,0 +1,20 @@
+[
+  {
+    "id": "336249d1-e8e3-43e3-ac57-a35f8147f22d",
+    "kind": "revision",
+    "origin": "human",
+    "procedure": "tty",
+    "purpose": "contract_approval",
+    "scope": {
+      "contract_approval": true,
+      "change": "add-spec-harness"
+    },
+    "reason": "Aprovo o contrato add-spec-harness (sha256 9fc8fe2b...751f7a), incluindo D26, para uso experimental supervisionado em Node 24.21.0/macOS com uma única fatia; pendências conhecidas: multifatia, Ctrl+C e caminhos com espaço",
+    "approver": "Douglas",
+    "author": "schussler",
+    "recorded_at": "2026-10-24T14:06:58.119Z",
+    "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
+    "contract_hash": "9fc8fe2b46abac559642481ccb2a1bb4d6321cd8430ee0d9dd680fe97f751f7a",
+    "contract_version": 1
+  }
+]

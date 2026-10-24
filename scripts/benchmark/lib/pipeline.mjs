@@ -5,11 +5,12 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadChecks, runCommand } from '../../gates/checks.mjs';
-import { measureImplementation } from '../../gates/implement-gate.mjs';
-import { scenarioCoverage, scenariosIn } from '../../gates/archive-gate.mjs';
+import { evaluateImplementation } from '../../gates/implement-gate.mjs';
+import { evaluateArchive } from '../../gates/archive-gate.mjs';
 import { checkScope } from '../../gates/scope-check.mjs';
 import { invokeClaude } from './claude.mjs';
 import { countCompoundDenials, parseCoverage } from './report.mjs';
+import { failureOf, levelsOf } from './levels.mjs';
 
 export function loadTask(taskDir) {
   const task = JSON.parse(readFileSync(join(taskDir, 'task.json'), 'utf8'));
@@ -61,40 +62,43 @@ export function verifySpec({ dir, change }) {
 
 export async function verifyImplementation({ dir, baselineFiles }) {
   try {
-    const m = await measureImplementation({ root: dir, baselineFiles });
+    const m = await evaluateImplementation({ root: dir, baseline: { test_files: baselineFiles } });
     return {
       passed: m.passed,
-      old_pct: m.old.pct,
-      new_pct: m.new.pct,
-      new_tests: m.new.pass + m.new.fail,
-      failing: [...m.old.failing, ...m.new.failing],
-      removed_tests: m.removed_tests,
-      lint_errors: m.lint_errors,
-      type_errors: m.type_errors,
+      old_pct: m.evidence.old_pct,
+      new_pct: m.evidence.new_pct,
+      new_tests: m.cases.filter((c) => c.group === 'new').length,
+      failing: m.cases.filter((c) => c.status !== 'pass').map((c) => c.id),
+      removed_tests: m.evidence.removed_tests,
+      lint_errors: m.evidence.lint_errors,
+      type_errors: m.evidence.type_errors,
     };
   } catch (err) {
     return { passed: false, error: err.message };
   }
 }
 
-export function verifyArchive({ dir, change }) {
+export async function verifyArchive({ dir, change }) {
   const changes = join(dir, 'openspec', 'changes');
   const active = existsSync(join(changes, change));
   const archiveRoot = join(changes, 'archive');
   const archived = existsSync(archiveRoot) ? readdirSync(archiveRoot).find((entry) => entry.endsWith(`-${change}`)) : undefined;
   if (!archived) return { passed: false, archived: false, active };
   const specsDir = join(archiveRoot, archived, 'specs');
-  const coverage = scenarioCoverage({ root: dir, scenarios: scenariosIn(specsDir) });
+  const result = await evaluateArchive({ root: dir, change, specsDir, implementationApproved: true });
+  const scenarios = result.evidence.scenarios;
   const capabilities = existsSync(specsDir) ? readdirSync(specsDir) : [];
   const unsynced = capabilities.filter((capability) => !existsSync(join(dir, 'openspec', 'specs', capability, 'spec.md')));
   return {
-    passed: !active && coverage.total > 0 && coverage.pct === 100 && unsynced.length === 0,
+    passed: !active && scenarios.total > 0 && result.passed && unsynced.length === 0,
     archived: true,
     active,
     path: `openspec/changes/archive/${archived}`,
-    scenarios_pct: coverage.pct,
-    scenarios_missing: coverage.missing,
+    scenarios_pct: scenarios.pct,
+    scenarios_missing: result.evidence.missing,
     unsynced_specs: unsynced,
+    evaluator: result.evaluator,
+    evaluator_limits: result.evaluator_limits,
   };
 }
 
@@ -132,20 +136,26 @@ export async function pool(items, limit, worker) {
   await Promise.all(lanes);
 }
 
-// Gates reported but left out of a run's pass/fail (the hidden acceptance
-// tests measure the context, not the pipeline).
-export const INFORMATIONAL_GATES = new Set(['hidden']);
-
+// Fecha uma execução e classifica seus três níveis (PB-001 a PB-004). status:
+// budget_exhausted (orçamento), runner_failed (falha do runner, fora da taxa
+// funcional), passed (aceitação funcional) ou failed (execução concluída com
+// gate ou regra obrigatória reprovada).
 export function finish(run, started) {
   run.duration_ms = Date.now() - started;
   run.cost_usd = Math.round(run.cost_usd * 10000) / 10000;
-  if (run.steps.some((step) => step.status === 'budget_exhausted')) {
+  run.levels = levelsOf(run);
+  if (run.levels.execution === 'budget_exhausted') {
     run.status = 'budget_exhausted';
     return run;
   }
-  const failed = Object.entries(run.gates).find(([name, gate]) => !gate.passed && !INFORMATIONAL_GATES.has(name));
-  run.status = failed ? 'failed' : 'passed';
-  run.stopped_after_denial = Boolean(failed) && run.steps.some((step) => (step.permission_denials ?? []).length > 0);
-  if (failed && !run.failure) run.failure = `gate ${failed[0]} reprovado`;
+  if (run.levels.execution === 'runner_failed') {
+    run.status = 'runner_failed';
+    const broken = run.steps.find((step) => ['error', 'timeout'].includes(step.status));
+    if (!run.failure) run.failure = `falha do runner${broken ? ` no passo ${broken.name} (${broken.status})` : ''}`;
+    return run;
+  }
+  run.status = run.levels.acceptance === 'accepted' ? 'passed' : 'failed';
+  run.stopped_after_denial = run.status === 'failed' && run.steps.some((step) => (step.permission_denials ?? []).length > 0);
+  if (run.status === 'failed' && !run.failure) run.failure = failureOf(run.levels);
   return run;
 }

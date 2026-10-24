@@ -1,0 +1,10 @@
+{
+  "type": "result",
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 2,
+  "stop_reason": "end_turn",
+  "result": "valor-sintetico",
+  "session_id": "fixture-sintetica-controle",
+  "total_cost_usd": 0.02
+}

@@ -9,7 +9,9 @@ metadata:
 
 Bring a repo derived from `setup-ecc-openspec` up to date with its template. This is for downstream repos. The template itself is checked with `upstream-sync-check`, not this skill.
 
-Only the paths listed in `template.json` as `managed` are updated. Paths listed as `owned` are never written.
+Only the paths listed in `template.json` as `managed` are updated. Paths listed as `owned` are never written. `.harness-project.json` is owned: it is never overwritten, so the project keeps its `project_id` (RS-023).
+
+The gates in `scripts/gates` import modules from `scripts/harness`, and they read `.claude/harness` (policy). Copy all managed paths together, including `scripts/harness` and `.claude/harness`. Copying `scripts/gates` alone leaves gates that do not import.
 
 ## Steps
 
@@ -22,6 +24,8 @@ Only the paths listed in `template.json` as `managed` are updated. Paths listed 
    - A directory entry is compared file by file.
    - A `.claude/skills` entry is compared per skill directory: only skill directories that exist in the template are managed. A skill directory that exists only in the project is project-owned, and it is never removed or changed.
    - Report three groups: files to update, files the template added, and files the template removed. Do not delete anything for the removed group. Ask about it.
+
+3a. **Check the distribution.** Run `node .claude/skills/template-migrate/migrate.mjs check-update --template <clone>` in the repo root. It copies the managed paths into a temporary copy, never into the repo, and checks that `scripts/gates` has `scripts/harness` and `.claude/harness` and that every gate import resolves to a managed path. If it fails, refuse the update: show the message, which names the missing paths, and point to `/template-migrate` (item `managed`). Do not write anything.
 
 4. **Check owned paths for overlap.** If a managed path would overwrite an owned path, stop and report the conflict.
 
@@ -47,6 +51,7 @@ Only the paths listed in `template.json` as `managed` are updated. Paths listed 
 ## Rules
 
 - Never write to a managed path before the user confirms the list from step 6.
-- Never write to an owned path.
+- Never write to an owned path. `.harness-project.json` is owned: never overwrite it, not even when the template changes its `project_id` (RS-023).
+- Never write when `check-update` refuses. A managed update that leaves `scripts/gates` without `scripts/harness` or `.claude/harness` is refused.
 - Never run template scripts, hooks or installers from the clone.
 - Keep the report short: list files and versions, not full diffs.

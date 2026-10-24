@@ -10,9 +10,18 @@ metadata:
 
 Leave the work so a fresh session can pick it up from `docs/agents/issue-tracker.md` alone.
 
+## Modo da execução
+
+The handoff writes context only. Counters and verdicts come from the state and are never typed by hand:
+
+- **runner**: `.harness-local/<change>/run-state.json` holds the counters and verdicts. Read them with `node scripts/harness/cli.mjs summary --change <change>`, which writes the handoff view (`summary.json`) from the state. A step that stopped mid-way is recorded with `node scripts/harness/cli.mjs fail` or `interrupt`; the next session continues with `node scripts/harness/cli.mjs resume --change <change>`.
+- **legacy** (the mode in use today): `openspec/changes/<change>/gates.json`, written by the gate CLIs with `--legacy-write`, holds them.
+
+Without the adoption milestone (marco de adoção) recorded in `docs/agents/issue-tracker.md` by a human decision, no execution is assigned to the runner. Every execution stays `legacy`, whatever else exists on disk. Read `run-state.json` only to report what it says, and never to decide the mode.
+
 ## Steps
 
-1. **Collect the state.** Run `git status`, `git log --oneline -10` and `openspec list`. Read the active change's `tasks.md` and `gates.json`.
+1. **Collect the state.** Run `git status`, `git log --oneline -10` and `openspec list`. Read the active change's `tasks.md`, and its counters and verdicts from the state of its mode (see **Modo da execução**).
 
 2. **Update the restore point.** In `docs/agents/issue-tracker.md`, rewrite the **Ponto de restauração** section:
    - **Change ativa**: the change, or `nenhuma`;

@@ -22,6 +22,8 @@ function newProject(prompt) {
   const task = JSON.parse(readFileSync(process.env.FAKE_AGENT_TASK, 'utf8'));
   mkdirSync(target, { recursive: true });
   cpSync(join(REPO_ROOT, 'scripts/gates'), join(target, 'scripts/gates'), { recursive: true });
+  // scripts/harness é managed no template.json: os gates importam dele (process-group, identity).
+  cpSync(join(REPO_ROOT, 'scripts/harness'), join(target, 'scripts/harness'), { recursive: true });
   cpSync(join(REPO_ROOT, 'templates/docs/agents'), join(target, 'docs/agents'), { recursive: true });
   cpSync(join(REPO_ROOT, '.claude/settings.json'), join(target, '.claude/settings.json'));
   write(target, 'template.json', JSON.stringify({ checks: task.checks }, null, 2));

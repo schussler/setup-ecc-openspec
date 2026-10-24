@@ -24,7 +24,7 @@ export const LEAN_TOOLSET = Object.freeze({
   ]),
   paths: Object.freeze([
     '.claude/settings.json', '.claude/commands/opsx', '.claude/rules/common', '.claude/rules/openspec.md',
-    '.claude/rules/README.md', 'scripts/gates', 'openspec/config.yaml',
+    '.claude/rules/README.md', 'scripts/gates', 'scripts/harness', 'openspec/config.yaml',
   ]),
 });
 const GIT_USER = ['-c', 'user.email=benchmark@local', '-c', 'user.name=benchmark'];
@@ -72,14 +72,18 @@ async function legacyRun(run, { task, templateDir, workRoot, budget, claude }) {
     run.gates.implement = await verifyImplementation({ dir: target, baselineFiles });
     if (run.gates.implement.passed) {
       if ((await step('spec-archive', `--headless ${task.change}`)).status === 'budget_exhausted') return finish(run, started);
-      run.gates.archive = verifyArchive({ dir: target, change: task.change });
+      run.gates.archive = await verifyArchive({ dir: target, change: task.change });
     }
   }
   run.gates.scope = verifyScope({ dir: target, base, scoped: task.scoped_paths });
   run.coverage.after = await measureCoverage(target);
   if (task.hidden_tests) {
     // After the scope check, so the copied hidden tests never count as agent edits.
-    run.gates.hidden = await runHiddenTests({ dir: target, hiddenDir: join(templateDir, 'scripts', 'benchmark', 'fixtures', task.hidden_tests) });
+    run.gates.hidden = await runHiddenTests({
+      dir: target,
+      hiddenDir: join(templateDir, 'scripts', 'benchmark', 'fixtures', task.hidden_tests),
+      classification: task.hidden_rules ?? {},
+    });
   }
   return finish(run, started);
 }

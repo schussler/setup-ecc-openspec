@@ -6,8 +6,8 @@ import { join } from 'node:path';
 import { runHiddenTests } from '../../benchmark/lib/hidden.mjs';
 import { createBudget } from '../../benchmark/lib/budget.mjs';
 import { runLegacy } from '../../benchmark/lib/legacy.mjs';
-import { finish, newRun } from '../../benchmark/lib/pipeline.mjs';
-import { buildReport } from '../../benchmark/lib/report.mjs';
+import { finish, loadTask, newRun } from '../../benchmark/lib/pipeline.mjs';
+import { buildReport, renderMarkdown } from '../../benchmark/lib/report.mjs';
 import { makeTempDir, REPO_ROOT, snapshotRepo } from '../helpers.mjs';
 
 const FIXTURES = join(REPO_ROOT, 'scripts/benchmark/fixtures');
@@ -52,13 +52,16 @@ test('fixture sem alteracao falha nas regras de taxa', async () => {
   assert.equal(result.rules['rule-rounding'], false);
 });
 
-test('gate hidden nao muda o status da execucao', () => {
+test('[PB-004] regra de dominio obrigatoria reprovada reprova a aceitacao com gates aprovados', () => {
   const run = newRun(1);
-  run.gates = { bootstrap: { passed: true }, scope: { passed: true }, hidden: { passed: false } };
-  assert.equal(finish(run, Date.now()).status, 'passed');
+  run.gates = { bootstrap: { passed: true }, scope: { passed: true }, hidden: { passed: false, rules: { 'rule-rounding': false } } };
+  finish(run, Date.now());
+  assert.equal(run.levels.gates, 'approved');
+  assert.equal(run.levels.acceptance, 'rejected');
+  assert.equal(run.status, 'failed');
 });
 
-test('gate hidden roda os testes ocultos depois do pipeline', async () => {
+test('[PB-010] gate hidden roda os testes ocultos depois do pipeline', async () => {
   const work = makeTempDir('bench-hidden-');
   const { groups } = await runLegacy({
     taskDir: join(REPO_ROOT, 'scripts/benchmark/tasks/legacy-billing'),
@@ -69,8 +72,16 @@ test('gate hidden roda os testes ocultos depois do pipeline', async () => {
   for (const runs of Object.values(groups)) {
     const [run] = runs;
     assert.deepEqual(Object.keys(run.gates.hidden.rules).sort(), ['rule-architecture', 'rule-exemption', 'rule-rounding']);
+    // PB-010: cada regra traz a classificação declarada na tarefa (task.json, hidden_rules).
+    assert.deepEqual(
+      run.gates.hidden.results.map(({ rule, classification }) => [rule, classification]),
+      [['rule-architecture', 'obrigatória'], ['rule-exemption', 'obrigatória'], ['rule-rounding', 'obrigatória']],
+    );
     assert.ok(!run.gates.scope.out_of_scope.some((file) => file.includes('hidden')));
-    assert.equal(run.status, 'passed', JSON.stringify(run.gates));
+    // PB-004: o agente fake não implementa as regras ocultas; gates aprovados não bastam para aceitar.
+    assert.equal(run.levels.gates, 'approved', JSON.stringify(run.gates));
+    assert.equal(run.levels.acceptance, 'rejected', JSON.stringify(run.gates));
+    assert.equal(run.status, 'failed', JSON.stringify(run.gates));
   }
 });
 
@@ -110,4 +121,89 @@ test('acceptance avalia a melhor taxa de sucesso entre grupos', () => {
   assert.equal(criterion.value, 75);
   assert.equal(criterion.passed, true);
   assert.equal(report.acceptance.accepted, true);
+});
+
+// B.6 (requisito "Testes ocultos" MODIFIED): classificação obrigatória ou informativa
+// declarada por regra na tarefa; regra sem classificação é obrigatória.
+const PIPELINE_PASS = { bootstrap: { passed: true }, spec: { passed: true }, implement: { passed: true }, archive: { passed: true }, scope: { passed: true, out_of_scope: [] } };
+
+function rawFixture() {
+  const dir = makeTempDir('billing-raw-class-');
+  cpSync(join(FIXTURES, 'legacy-billing'), dir, { recursive: true });
+  return dir;
+}
+
+function closedRun(hidden) {
+  const run = newRun(1);
+  run.gates = { ...PIPELINE_PASS, hidden };
+  return finish(run, Date.now());
+}
+
+test('[PB-010] resultado por regra traz a classificação declarada e regra sem classificação é obrigatória', async () => {
+  const result = await runHiddenTests({ dir: rawFixture(), hiddenDir: HIDDEN, classification: { 'rule-exemption': 'informativa' } });
+  assert.deepEqual(result.results, [
+    { rule: 'rule-architecture', passed: true, classification: 'obrigatória' },
+    { rule: 'rule-exemption', passed: false, classification: 'informativa' },
+    { rule: 'rule-rounding', passed: false, classification: 'obrigatória' },
+  ]);
+  assert.equal(result.passed, false);
+  assert.deepEqual(result.failed_mandatory, ['rule-rounding']);
+  assert.deepEqual(result.failed_informative, ['rule-exemption']);
+});
+
+test('[PB-010] tarefa legacy-billing declara a classificação de cada regra oculta', () => {
+  const task = loadTask(join(REPO_ROOT, 'scripts/benchmark/tasks/legacy-billing'));
+  assert.deepEqual(task.hidden_rules, { 'rule-architecture': 'obrigatória', 'rule-exemption': 'obrigatória', 'rule-rounding': 'obrigatória' });
+});
+
+test('[PB-010] classificação fora de obrigatória ou informativa é recusada', async () => {
+  await assert.rejects(
+    runHiddenTests({ dir: rawFixture(), hiddenDir: HIDDEN, classification: { 'rule-rounding': 'opcional' } }),
+    /classificação inválida.*rule-rounding/,
+  );
+  await assert.rejects(
+    runHiddenTests({ dir: rawFixture(), hiddenDir: HIDDEN, classification: { 'rule-inexistente': 'informativa' } }),
+    /regra.*rule-inexistente.*não existe/,
+  );
+});
+
+test('[PB-011] gate hidden reprovado só por diagnóstico informativo mantém o status passed', async () => {
+  const hidden = await runHiddenTests({
+    dir: rawFixture(), hiddenDir: HIDDEN,
+    classification: { 'rule-architecture': 'obrigatória', 'rule-exemption': 'informativa', 'rule-rounding': 'informativa' },
+  });
+  assert.equal(hidden.passed, false);
+  const run = closedRun(hidden);
+  assert.equal(run.levels.gates, 'approved');
+  assert.equal(run.levels.acceptance, 'accepted');
+  assert.deepEqual(run.levels.failed_rules, []);
+  assert.deepEqual(run.levels.failed_informative, ['rule-exemption', 'rule-rounding']);
+  assert.equal(run.status, 'passed');
+});
+
+test('[PB-011] gate hidden reprovado por regra obrigatória reprova a aceitação funcional', async () => {
+  const hidden = await runHiddenTests({ dir: rawFixture(), hiddenDir: HIDDEN, classification: { 'rule-exemption': 'informativa' } });
+  const run = closedRun(hidden);
+  assert.equal(run.levels.acceptance, 'rejected');
+  assert.deepEqual(run.levels.failed_rules, ['rule-rounding']);
+  assert.equal(run.status, 'failed');
+});
+
+test('[PB-012] regra obrigatória reprovada no gate hidden reprova a aceitação e o relatório cita a regra', async () => {
+  const hidden = await runHiddenTests({
+    dir: rawFixture(), hiddenDir: HIDDEN,
+    classification: { 'rule-architecture': 'informativa', 'rule-exemption': 'informativa', 'rule-rounding': 'obrigatória' },
+  });
+  const run = closedRun(hidden);
+  assert.equal(run.levels.gates, 'approved');
+  assert.equal(run.levels.acceptance, 'rejected');
+  assert.notEqual(run.status, 'passed');
+  assert.deepEqual(run.levels.failed_rules, ['rule-rounding']);
+  const report = buildReport({
+    scenario: 'legacy', task: { id: 'legacy-billing', scoped_paths: [] }, n: 1,
+    budget: { max: 6, used: 3, exhausted: false }, groups: { default: [run] }, startedAt: 'a', finishedAt: 'b',
+  });
+  const md = renderMarkdown(report);
+  assert.match(md, /regra obrigatória reprovada: rule-rounding/);
+  assert.doesNotMatch(md, /regra obrigatória reprovada:[^\n]*rule-exemption/);
 });

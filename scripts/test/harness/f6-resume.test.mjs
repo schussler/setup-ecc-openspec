@@ -13,7 +13,7 @@ import { grant, paidOutput, patchState, step, writeAuthorizations, OK_OUTPUT, HU
 // Testes de reserva e consumo exercitam o modo financeiro, que é explícito desde add-silent-consumption-observability.
 const FINANCIAL = { provisional: true, modo_financeiro: true };
 
-const ROUND_RECORD = { id: 'round-1', kind: 'round', reason: 'nova rodada após correção', approver: 'Douglas', ...HUMAN };
+const ROUND_RECORD = { id: 'round-1', kind: 'round', reason: 'nova rodada após correção', approver: 'mantenedor', ...HUMAN };
 
 test('[RC-017] retomada com chamada interrompida mantém a reserva aberta e marca a chamada como interrompida', async () => {
   const root = makeRepo();

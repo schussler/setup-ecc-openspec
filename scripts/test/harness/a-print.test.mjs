@@ -18,7 +18,7 @@ async function record(root, input) {
     isInteractive: () => true,
     confirm: async (_summary, code) => code,
     now: new Date('2026-10-23T12:00:00.000Z'),
-    author: 'douglas',
+    author: 'mantenedor',
   });
 }
 
@@ -52,7 +52,7 @@ test('[EV-015] acrescentar ou remover uma tarefa em tasks.md é alteração prot
 
 test('[D31] registro acrescentado em authorizations.json fora de authorize record vira protected_change', async () => {
   const root = setupRepo({ scenarios: [scenario('AC-011')], tap: tapOf(['ok 1 - [AC-011] caso']) });
-  await record(root, { kind: 'reconciliation', reason: 'registro legítimo', approver: 'Douglas' });
+  await record(root, { kind: 'reconciliation', reason: 'registro legítimo', approver: 'mantenedor' });
   assert.equal((await validate(root)).approved, true, 'registro feito por authorize record é aceito');
 
   const path = join(root, CHANGE_DIR, 'authorizations.json');

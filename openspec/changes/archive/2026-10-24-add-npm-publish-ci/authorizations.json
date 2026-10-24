@@ -1,0 +1,42 @@
+[
+  {
+    "id": "b545907e-8fae-4f25-aeef-35aa9759829e",
+    "kind": "revision",
+    "origin": "human",
+    "procedure": "conversa",
+    "purpose": "contract_approval",
+    "scope": {
+      "contract_approval": true,
+      "path": 3,
+      "change": "add-npm-publish-ci"
+    },
+    "reason": "consolidação de add-npm-publish-ci, com environment npm, SHA e sem pull_request_target, aprovada na conversa",
+    "approver": "mantenedor",
+    "author": "schussler",
+    "recorded_at": "2026-10-24T22:54:09.610Z",
+    "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
+    "contract_hash": "b4191c10f6d9073dfd1ba685122dfb7be0295df1a531984dfde6569dd14c2336",
+    "contract_version": 1,
+    "instruction": "aprovado"
+  },
+  {
+    "id": "6577e17c-988f-4ba8-9a25-0bcb4f52b51d",
+    "kind": "revision",
+    "origin": "human",
+    "procedure": "conversa",
+    "purpose": "contract_approval",
+    "scope": {
+      "contract_approval": true,
+      "path": 3,
+      "change": "add-npm-publish-ci"
+    },
+    "reason": "versão 2 após correção editorial do nome do repositório no design.md",
+    "approver": "mantenedor",
+    "author": "schussler",
+    "recorded_at": "2026-10-24T23:00:04.449Z",
+    "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
+    "contract_hash": "99202f145cec55ccd9d6bf32c621ca6c965f0978b2b2d83fc721b37dd7e5ecac",
+    "contract_version": 2,
+    "instruction": "aprovado"
+  }
+]

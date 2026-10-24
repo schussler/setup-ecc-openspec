@@ -19,7 +19,7 @@ const ORIGINAL_GATES = `${JSON.stringify({ implement: { attempts: [{ attempt: 1,
 const TRACKER = '# Issue tracker\n\n## Gates\n\n| Data | Change | Gate | Tentativa | O que falhou | O que mudou | Pontuação | Veredito |\n|---|---|---|---|---|---|---|---|\n';
 const CONSUMPTION = { known_usd: 1.25, estimated_usd: 0, unknown_calls: 1 };
 const RESERVATION = { session_id: 'sessao-aberta', reserved_usd: 2.5, status: 'open', invocation_id: 'inv-1', attempt_id: 1, opened_at: '2026-10-24T11:00:00.000Z' };
-const HUMAN_DECISION = { approver: 'Douglas', reason: 'migração reprovada pelo dono' };
+const HUMAN_DECISION = { approver: 'mantenedor', reason: 'migração reprovada pelo dono' };
 
 // Terminal interativo simulado: confirma digitando o código mostrado.
 const tty = { isInteractive: () => true, confirm: async (_summary, code) => code };
@@ -128,7 +128,7 @@ test('[PM-011] restauração manual marca o estado e reconcilia antes de continu
   // Evento kind restore com aprovador, data, motivo, origem e hash anterior.
   const restore = eventsOf(root).filter((event) => event.kind === 'restore');
   assert.equal(restore.length, 1);
-  assert.equal(restore[0].approver, 'Douglas');
+  assert.equal(restore[0].approver, 'mantenedor');
   assert.equal(restore[0].reason, HUMAN_DECISION.reason);
   assert.equal(restore[0].at, NOW.toISOString());
   assert.equal(restore[0].source.sha256, preHash);

@@ -4,10 +4,12 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ## Ponto de restauração
 
-- **Marco de adoção registrado:** 2026-10-24 — aprovador: Douglas. Escopo restrito: uso experimental supervisionado em Node 24.21.0/macOS, uma única fatia (`implement`). Base: aprovação do contrato `336249d1-e8e3-43e3-ac57-a35f8147f22d` (hash `9fc8fe2b…751f7a`, versão 1) e validação final aprovada em 2026-10-24T14:12:58.827Z (828 casos). Limitações mantidas: multifatia, Ctrl+C durante a invocação e caminhos com espaço em `--claude-bin` pendentes; limite de turnos não comprovado (P.2 não autorizada); PB-009 aberto; Node 22 não verificado; isolamento advisory. `--legacy-write` preservado; adoção em projetos reais não autorizada. Não é conformidade integral com o desenho original.
+- **Arquivada (rename-to-specloop-npx, 2026-10-24):** gates de implementação e arquivamento em `pass` (ver `gates.json` da change arquivada). F5 adiada: publicação pela CI em `add-npm-publish-ci`. Sem commit.
+- **Arquivada (add-npm-publish-ci, 2026-10-24):** gates de implementação e arquivamento em `pass` (ver `gates.json` da change arquivada); spec `release-ci` criada. F4 aberta: sete passos do dono (README → Publicação) e primeira PR real. **Próximo passo:** `pr` (pedido pelo usuário em 2026-10-24).
+- **Marco de adoção registrado:** 2026-10-24 — aprovador: mantenedor. Escopo restrito: uso experimental supervisionado em Node 24.21.0/macOS, uma única fatia (`implement`). Base: aprovação do contrato `336249d1-e8e3-43e3-ac57-a35f8147f22d` (hash `9fc8fe2b…751f7a`, versão 1) e validação final aprovada em 2026-10-24T14:12:58.827Z (828 casos). Limitações mantidas: multifatia, Ctrl+C durante a invocação e caminhos com espaço em `--claude-bin` pendentes; limite de turnos não comprovado (P.2 não autorizada); PB-009 aberto; Node 22 não verificado; isolamento advisory. `--legacy-write` preservado; adoção em projetos reais não autorizada. Não é conformidade integral com o desenho original.
 - **Change ativa:** `add-proportional-change-flow` (implementação supervisionada concluída; arquivamento bloqueado pelo fluxo atual: o gate de implementação do runner não está em pass; change mantida aberta). `add-spec-harness` continua aberta e também bloqueia o `pr-gate`, porque o gate reprova qualquer diretório fora de `archive/`. Estado de `add-spec-harness`: (F1 a F12, A, B.1 a B.8, C, P.1 e 12.5 concluídos; 13.2, 10.3, 12.4b, B.9, P.2 e P.3 pendentes)
 - **Branch:** `rorqual` (worktree), a partir de `main` em `8401fa1`; sem commit
-- **Próximo passo (2026-10-24, `add-silent-consumption-observability`):** change `add-silent-consumption-observability` com implementação supervisionada concluída e arquivamento bloqueado pelo gate de implementação (não passou por `spec-implement`). Para arquivar, decidir como concluir esse gate (execução headless paga do `spec-implement`, ou outro caminho aprovado) e depois rodar `spec-archive`. Aprovações registradas: `add-spec-harness` v3 e `add-silent-consumption-observability` v2. Anterior: decisão sobre como fechar o gate de implementação de `add-proportional-change-flow` pelo runner (a execução está em `awaiting_decision`); arquivamento depende disso. Pendências documentais do log de 2026-10-24. Separadamente, decisão do dono sobre o ajuste mínimo de escopo para arquivar `add-spec-harness` (spec-gates F10, pipeline-benchmark PB-009, run-control limite por fatia). v1 experimental (harness v1.2 `39d7fcac…`) commitada sem arquivar. Trabalho futuro listado no log de 2026-10-24. Evidências do experimento: `~/dev/setup-ecc-openspec-experimentos/2026-10-24-add-kebab-case-helper`.
+- **Próximo passo (2026-10-24, `add-silent-consumption-observability`):** change `add-silent-consumption-observability` com implementação supervisionada concluída e arquivamento bloqueado pelo gate de implementação (não passou por `spec-implement`). Para arquivar, decidir como concluir esse gate (execução headless paga do `spec-implement`, ou outro caminho aprovado) e depois rodar `spec-archive`. Aprovações registradas: `add-spec-harness` v3 e `add-silent-consumption-observability` v2. Anterior: decisão sobre como fechar o gate de implementação de `add-proportional-change-flow` pelo runner (a execução está em `awaiting_decision`); arquivamento depende disso. Pendências documentais do log de 2026-10-24. Separadamente, decisão do dono sobre o ajuste mínimo de escopo para arquivar `add-spec-harness` (spec-gates F10, pipeline-benchmark PB-009, run-control limite por fatia). v1 experimental (harness v1.2 `39d7fcac…`) commitada sem arquivar. Trabalho futuro listado no log de 2026-10-24. Evidências do experimento: `~/dev/specloop-experimentos/2026-10-24-add-kebab-case-helper`.
 - **Bloqueios:** orçamento de `claude -p` esgotado (60/60). Medir o efeito da orientação de comando simples no headless exige uma rodada nova de legado
 - **Pendente de autorização:** sonda paga de `--max-turns` (tarefa P.2 de `tasks.md`), com orçamento pretendido de US$ 0,05, sem teto exato. Não autorizada e não executada. Sem ela, o limite de turnos não é comprovado.
 - **Change ativa (simplify-approval-and-execution, 2026-10-24):** implementada e testada (suíte 924/924 após o ajuste). O ajuste de consolidação foi feito, mas o contrato mudou e a aprovação anterior (versão 1) não vale mais. Próximo passo: confirmação única do usuário para registrar a versão 2 pela conversa (caminho 3, frase "aprovado"); depois regerar `supervised-completion.json` e arquivar. Itens de saída preservada e interrupção não fazem parte desta change (são de `add-spec-harness`, já arquivada). Sem commit, push ou PR.
@@ -50,10 +52,67 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ## Log
 
+### 2026-10-24 — add-npm-publish-ci: arquivada
+
+- **Gate de arquivamento:** `pass` na tentativa 1 (resultado em `gates.json` da change arquivada). Arquivamento por `openspec archive --yes`; spec `release-ci` em `openspec/specs/`; `openspec validate --all` ok.
+- **F4 aberta:** depende do merge e de permissões de administrador no GitHub e de dono no npm.
+
+### 2026-10-24 — add-npm-publish-ci: F1 a F3
+
+- **Feito:** `scripts/ci/run-checks.mjs` (sobre `loadChecks` e `runCommand`); `scripts/ci/should-publish.mjs` (`decide` com quatro saídas, CLI com `$GITHUB_OUTPUT`); `.github/workflows/ci.yml` (PR para `main`, job `ci`, Node 22, `contents: read`); `.github/workflows/publish.yml` (push na `main`, environment `npm`, Node 24, `id-token: write`, checks → decisão → `npm publish --provenance --access public` só com `publish == 'true'`); `.github/rulesets/main.json` (PR, check `ci` estrito, sem force push, sem exclusão, `bypass_actors` vazio); README → Publicação com os sete passos; `.github` e `scripts/ci` em `template_only`.
+- **Actions fixadas:** `actions/checkout` v6.1.0 (`d23441a4…f803`, publicada em 2026-07-20) e `actions/setup-node` v6.5.0 (`24997072…9c38`, 2026-07-14), conferidas por `gh api`.
+- **Decisões internas:** `decide` aceita resposta de versão única como texto (o npm não devolve lista quando só há uma versão; teste próprio); `persist-credentials: false` no checkout; `concurrency` sem cancelamento no `publish`; a regra exige `strict_required_status_checks_policy` (branch atualizada antes do merge).
+- **Correção durante o RED/GREEN:** CI-008 reprovou um comentário de `ci.yml` que citava o nome do evento proibido; o comentário foi reescrito (o teste segue a spec). CI-014 reprovou "Environment" com maiúscula; o README foi ajustado.
+- **Evidência local:** `should-publish` contra o registro real respondeu "pacote não existe no npm: a primeira publicação é manual" (saída 0, sem decisão de publicar).
+- **Não verificado aqui:** execução dos workflows no GitHub, comando `npm trust` (npm 11 recente) e as chamadas `gh api` de environment e ruleset; a prova é a F4.
+
+### 2026-10-24 — add-npm-publish-ci: contrato criado
+
+- **Decisões aprovadas:** CI em todo PR (job `ci`); publicação no push da `main` só com versão nova; trusted publishing (OIDC) com proveniência, sem token; `main` só por PR, check `ci` obrigatório, sem force push, sem exclusão e sem exceção; primeira publicação manual; passos externos executados pelo dono.
+- **Acréscimos de segurança aprovados (pergunta do usuário sobre publicação forçada):** environment `npm` restrito à `main` exigido pelo trusted publisher (o npm não confere a branch); nenhum `pull_request_target` e `ci` sem `id-token`; actions fixadas por SHA; README com bloqueio de tokens no npm e aprovação de workflows de colaboradores externos. Lacuna aceita: merge de PR maliciosa pelo dono publica; a revisão humana é a defesa.
+- **Premissas:** `ci` em Node 22 e `publish` em Node 24; check chamado `ci`; actions v6 por SHA; workflows comprovados só na primeira PR real (F4).
+- **Fallback:** artefatos criados com `openspec new change` e escritos à mão.
+- **Não feito:** implementação, commit, push, configurações no GitHub e no npm.
+
+### 2026-10-24 — rename-to-specloop-npx: arquivada
+
+- **Gate de arquivamento:** `pass` na tentativa 1 (resultado em `gates.json` da change arquivada). Arquivamento por `openspec archive --yes`; specs `framework-cli` e `framework-identity` criadas em `openspec/specs/`; `openspec validate --all` ok.
+- **Decisões do usuário:** licença MIT ("defina mit"); publicação pela CI da `main` em vez de `npm publish` manual recorrente; `main` só por PR, sem exceção para administrador ("sem exceção, pode seguir").
+- **F5 adiada:** tarefas 5.1 a 5.3 ficam abertas na change arquivada e passam para `add-npm-publish-ci`.
+- **Restrição observada:** o `gh` desta máquina tem só leitura (`viewerPermission: READ`) no repositório atual, ainda com o nome antigo; renomear o repositório, criar a regra da `main` e configurar o trusted publisher ficam com o dono.
+
+### 2026-10-24 — rename-to-specloop-npx: F2 a F4 (CLI e pacote)
+
+- **Feito:** `package.json` (`specloop` 0.1.0, `bin`, `files`, Node ≥ 22, sem dependências); `bin/specloop.mjs` e `scripts/cli/` com `install`, `init`, `adopt` e `update`; `template.json` do framework com `framework` no lugar de `template.repo`; `bin`, `scripts/cli` e `package.json` em `template_only`; `checks.typecheck` passou a incluir `bin` (cobertura nova, nenhum limiar reduzido); skills `new-project`, `template-update` e `template-migrate` viraram wrappers do CLI; `template-check` confere `framework.version` contra `package.json`.
+- **Decisão interna (dentro de D3):** `adopt --items a,b` aplica só os itens listados, sem perguntar, para a skill confirmar cada item na conversa. Teste próprio em `adopt.test.mjs`.
+- **Confirmação:** um leitor de linhas único para todas as perguntas, para que respostas por pipe não se percam entre perguntas (verificado à mão com `adopt` e cinco respostas).
+- **Teste existente alterado (justificativa):** `scripts/test/benchmark/greenfield.test.mjs`, "new-project cria o repositorio sem rm do historico", exigia `checkout FETCH_HEAD` e `git -C <target> rm` no texto da skill. Isso contradiz SL-017 do contrato aprovado (as skills não buscam o framework por git). A asserção passou a exigir `specloop init` e `node <path>/bin/specloop.mjs init`; a proibição de `rm -rf <target>/.git` foi mantida.
+- **TDD:** em `update` (SL-009, SL-014 a SL-016) e `pacote` (SL-010) os testes passaram na primeira execução porque o código já existia; a validade foi provada por mutação (sem o comando, os 4 de `update` falham; com `scripts/test` em `files`, ou sem `.claude/harness`, SL-010 falha).
+- **Evidência do tarball (4.3):** `npm pack` gerou `specloop-0.1.0.tgz` (769 arquivos, 1,7 MB). `npx --package=<tgz> specloop init demo --yes --name demo --languages typescript` criou o projeto com um commit; `openspec validate --all` ok; `update` no projeto disse "Já atualizado"; `lint.mjs` e `implement-gate.mjs` carregam no projeto gerado.
+- **Benchmark greenfield:** não rodado (pago). O runner continua chamando `/new-project --non-interactive`; `node <template>/bin/specloop.mjs` já é liberado por `Bash(node:*)`.
+- **Licença (decidida pelo usuário: "defina mit"):** `LICENSE` MIT com titular "SpecLoop contributors", `package.json` → `license: MIT` e seção Licença no README.
+
+### 2026-10-24 — rename-to-specloop-npx: F1 (identidade)
+
+- **Baseline:** gravado antes de qualquer código (122 arquivos, 972 casos).
+- **Feito:** nome antigo trocado por SpecLoop/specloop em 11 arquivos; nome pessoal trocado por `mantenedor` em fixtures, `authorizations.json` arquivados (só `approver`) e neste log; README como framework, seção de créditos (ECC, OpenSpec, `mattpocock/skills`, MIT, conferido por `gh api`) e seção de instalação `npx` (antecipa 3.7, porque SL-005 lê o README); glossário e arquitetura.
+- **Exceção a PM-005 (change arquivada inalterada):** o requisito trata da migração de projetos. Aqui a troca é só do campo `approver`, que não entra em `contract_hash` (provado por SL-003). `supervised-completion.json` arquivado guarda `authorizations_sha256`, que deixa de bater com o arquivo; ele só é conferido em change ativa.
+- **Referência que ficou desatualizada:** o diretório local de experimentos citado neste log ainda tem o nome antigo no disco; o texto passou a citar `~/dev/specloop-experimentos`.
+- **Testes:** suíte 977/977, lint 0, sintaxe 0, `openspec validate --all` ok.
+
+### 2026-10-24 — rename-to-specloop-npx: contrato criado
+
+- **Decisões aprovadas na conversa:** comandos `install` (só `managed`), `init`, `adopt` (via `migrate.mjs`) e `update`; o CLI copia do próprio pacote npm `specloop` e as skills `new-project`, `template-update` e `template-migrate` viram wrappers; o nome pessoal sai dos arquivos atuais, sem reescrever o histórico do git; a publicação (renomear o repositório e `npm publish`) fica na change como F5, só com confirmação.
+- **Premissas (não aprovadas):** repositório em `github.com/schussler/specloop`; `npm publish` com a conta npm já autenticada; `--yes` para rodar sem perguntas e manter o `--non-interactive`; textos em português; nome `specloop` livre no npm em 2026-10-24.
+- **Ponto de atenção:** os termos proibidos (nome antigo e nome pessoal) não aparecem literalmente nos artefatos da change, para que a varredura SL-001/SL-002 passe depois do arquivamento (design.md D6).
+- **Fallback:** artefatos criados com `openspec new change` e escritos à mão, sem `/opsx:propose`.
+- **Validação:** `openspec validate rename-to-specloop-npx --strict` válida; `contract.mjs` com 0 erro.
+- **Não feito:** implementação, testes, commit, push, publicação.
+
 ### 2026-10-24 — simplify-approval-and-execution: implementação supervisionada e conclusão registrada
 
 - **Estado:** change implementada e validada localmente, sem commit, push ou PR. Arquivamento não feito (aguarda decisão do usuário).
-- **Aprovação do contrato:** registrada pela conversa com `scripts/harness/authorize.mjs conversa`, caminho 3, frase "Aprovado o escopo e as premissas.", aprovador Douglas. Registro com `procedure: conversa`, `contract_hash` `8b4bab3b…616ca4`, versão 1. Não usa TTY, e não alega autenticação forte.
+- **Aprovação do contrato:** registrada pela conversa com `scripts/harness/authorize.mjs conversa`, caminho 3, frase "Aprovado o escopo e as premissas.", aprovador mantenedor. Registro com `procedure: conversa`, `contract_hash` `8b4bab3b…616ca4`, versão 1. Não usa TTY, e não alega autenticação forte.
 - **Premissas assumidas (não aprovadas além da frase):** diagnóstico reaproveita `stop_reason` e `symptoms`; registro de conversa reaproveita `contract_approval`; conclusão supervisionada não depende do runner; cenários MODIFIED de `spec-gates` começam na revisão 1.
 - **Implementado:** `recordConversationApproval` e o CLI `conversa` em `scripts/harness/authorize.mjs`; `scripts/harness/supervised-completion.mjs` (grava e lê `supervised-completion.json`); `scripts/gates/archive-gate.mjs` aceita a conclusão válida; `diagnoseStop` em `scripts/harness/stop-report.mjs`; seções nas skills `change-flow`, `spec-create`, `spec-implement` e `spec-archive`; seção em `.claude/harness/policy.md`.
 - **Conclusão supervisionada gravada:** suíte, lint, sintaxe, `openspec validate --strict` e contrato passaram agora; hash do contrato igual ao da aprovação. O arquivo `supervised-completion.json` fica na change, fora do git até o commit.
@@ -67,7 +126,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 ### 2026-10-24 — add-silent-consumption-observability: implementação supervisionada concluída; arquivamento bloqueado
 
 - **Estado:** change mantida aberta. Implementação concluída localmente, sem `spec-implement` (sem execução paga do runner).
-- **Aprovações registradas (TTY, Douglas):** `add-spec-harness` versão 3 (`a687ab69-a30f-4494-a2a4-4e9e7f945fef`, hash `9309f657…68b8`); `add-silent-consumption-observability` versão 2 (`c15a88c9-b7ec-426e-afde-95f07caf36ad`, hash `0bfec198…7777f`). A versão 1 da nova change (`41b7c66c`, hash `4c8adb62…`) e a v2 de `add-spec-harness` (`236094ec…`) ficam como histórico.
+- **Aprovações registradas (TTY, mantenedor):** `add-spec-harness` versão 3 (`a687ab69-a30f-4494-a2a4-4e9e7f945fef`, hash `9309f657…68b8`); `add-silent-consumption-observability` versão 2 (`c15a88c9-b7ec-426e-afde-95f07caf36ad`, hash `0bfec198…7777f`). A versão 1 da nova change (`41b7c66c`, hash `4c8adb62…`) e a v2 de `add-spec-harness` (`236094ec…`) ficam como histórico.
 - **Verificações locais:** suíte 899/899; lint 0; sintaxe 0; `openspec validate --all` ok; `openspec validate --strict` e `contract.mjs` sem erro nas duas changes.
 - **Arquivamento:** `archive-gate.mjs --legacy-write` reprovou (tentativa 1, `stop`): "o gate de implementação não está em pass; rode spec-implement antes de arquivar". Registrado em `gates.json`. O gate não foi contornado.
 - **Pendência:** decidir como concluir o gate de implementação (execução headless paga do `spec-implement`, ou outro caminho aprovado) antes de `spec-archive`.
@@ -75,7 +134,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ### 2026-10-24 — add-silent-consumption-observability: implementação local e testes
 
-- **Aprovações conferidas:** `add-spec-harness` versão 2 (`4d2453e8-ee18-47e8-8523-a77bcef8345f`, hash `236094ecdd4930859ea1205dbe1b51355012f8a9f89e03e217cf42ac20a8b830`) e `add-silent-consumption-observability` versão 1 (`41b7c66c-582e-42d6-ae35-c8a71da2451a`, hash `4c8adb62a618e5d52939bf93e2ca5f1e03b3fe6b628bd946c6973194baff0bb4`), ambas `contract_approval`, aprovador Douglas. A aprovação `336249d1` segue como histórico.
+- **Aprovações conferidas:** `add-spec-harness` versão 2 (`4d2453e8-ee18-47e8-8523-a77bcef8345f`, hash `236094ecdd4930859ea1205dbe1b51355012f8a9f89e03e217cf42ac20a8b830`) e `add-silent-consumption-observability` versão 1 (`41b7c66c-582e-42d6-ae35-c8a71da2451a`, hash `4c8adb62a618e5d52939bf93e2ca5f1e03b3fe6b628bd946c6973194baff0bb4`), ambas `contract_approval`, aprovador mantenedor. A aprovação `336249d1` segue como histórico.
 - **Implementado:** `scripts/harness/observation.mjs` (modo, aviso não bloqueante, consolidação, resumo e subcomando `consumo`); `runner.mjs` (reserva, autorização, liquidação e `--max-budget-usd` só no modo financeiro; evento com `stage` e `attempt`; aviso não bloqueante); `telemetry.mjs` (campos `stage` e `task`); `cli.mjs` (`consumo`); `cli-run.mjs` (`stage`); skill `spec-archive` (passo 8, depois do arquivamento).
 - **Testes:** `scripts/test/harness/observacao-consumo.test.mjs`, 20 testes, um por CO-001 a CO-020. Suíte 899/899, lint 0, sintaxe 0. Mutação do modo (padrão financeiro) derruba 8 dos 20.
 - **Testes existentes alterados (asserções inalteradas):** o modo financeiro passou a ser declarado nos testes que exercitam reserva, autorização, saldo ou reconciliação: `cli-run.test.mjs` (perfil do projeto), `f6-limits.test.mjs`, `runner-gates.test.mjs`, `f5-adjust.test.mjs`, `f6-resume.test.mjs`, `f6-interrupt.test.mjs`, `b5-restore.test.mjs`, `integração-reconciliacao.test.mjs` e o fixture `fixtures/runner-child.mjs`. Justificativa: na revisão de `add-spec-harness`, esses requisitos valem só com `modo_financeiro: true`.
@@ -108,7 +167,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 - **Pendências documentais (não corrigidas nesta rodada):**
   1. `spec-create/SKILL.md` diz que o gate de arquivamento casa cenário com teste "com o mesmo nome". O código casa pelo `[ID]` no nome do caso (`archive-gate.mjs:76`). O nome exato é compatível com o gate, mas a documentação precisa ser corrigida.
   2. `change-flow/SKILL.md`, regra 5: a skill diz `investigar` só quando o fato desconhecido decide a descida. `change-flow.mjs` devolve `investigar` para qualquer fato de risco desconhecido. Os dois levam a perguntar ou investigar; alinhar o texto numa mudança futura.
-- **Evidências:** `~/dev/setup-ecc-openspec-experimentos/2026-10-24-add-proportional-change-flow/`, com autorização (`authorizations.json`, não reutilizada), estado e eventos do runner, transcrições das duas invocações, testes, patch da cópia e manifesto SHA-256.
+- **Evidências:** `~/dev/specloop-experimentos/2026-10-24-add-proportional-change-flow/`, com autorização (`authorizations.json`, não reutilizada), estado e eventos do runner, transcrições das duas invocações, testes, patch da cópia e manifesto SHA-256.
 - **Não feito:** commit, push, PR, arquivamento, nova chamada headless.
 
 ### 2026-10-24 — add-proportional-change-flow: spec criada (sem implementação)
@@ -138,9 +197,9 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ### 2026-10-24 — evidências do experimento preservadas em diretório persistente
 
-- **Local:** `~/dev/setup-ecc-openspec-experimentos/2026-10-24-add-kebab-case-helper` (fora de qualquer repositório; não entra na impressão da evidência). Índice em `README.md`; hashes de todos os arquivos em `MANIFEST.sha256` (47 arquivos, 2,6 MB).
+- **Local:** `~/dev/specloop-experimentos/2026-10-24-add-kebab-case-helper` (fora de qualquer repositório; não entra na impressão da evidência). Índice em `README.md`; hashes de todos os arquivos em `MANIFEST.sha256` (47 arquivos, 2,6 MB).
 - **Conteúdo:** contrato e perfil do experimento; testes de referência e oráculo; por rodada (rodada-1, harness original `0471c916…`; rodada-1b, v1.1 `e59e653d…`): relatório, saída do run, tempos, suítes antes e depois, run-state, eventos, report.md/json da versão da rodada, autorizações, resumo durável e checkpoint (1b), entrega do executor e diff da cópia.
-- **Sem segredos:** varredura de padrões de chave, token, senha e e-mail sem achados; só aprovador (Douglas) e usuário local (schussler).
+- **Sem segredos:** varredura de padrões de chave, token, senha e e-mail sem achados; só aprovador (mantenedor) e usuário local (schussler).
 - **Versões e limitações preservadas no índice:** nenhuma rodada com a v1.2 (`39d7fcac…`); os report.md das rodadas refletem as versões delas. O scratchpad da sessão não é persistente.
 
 ### 2026-10-24 — defeitos de medição corrigidos (harness v1.2) e encerramento da v1 experimental
@@ -193,7 +252,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ### 2026-10-24 — aprovação registrada, revalidação e marco restrito
 
-- **Aprovações conferidas:** `336249d1-e8e3-43e3-ac57-a35f8147f22d` (`add-spec-harness`, hash `9fc8fe2b…751f7a`, versão 1) e, na base do experimento, `7d52fe7e-57f1-46ce-939d-113628b20db2` (`add-kebab-case-helper`, hash `4864b4c3…cb151`, versão 1). Ambas `origin: human`, `procedure: tty`, aprovador Douglas.
+- **Aprovações conferidas:** `336249d1-e8e3-43e3-ac57-a35f8147f22d` (`add-spec-harness`, hash `9fc8fe2b…751f7a`, versão 1) e, na base do experimento, `7d52fe7e-57f1-46ce-939d-113628b20db2` (`add-kebab-case-helper`, hash `4864b4c3…cb151`, versão 1). Ambas `origin: human`, `procedure: tty`, aprovador mantenedor.
 - **Revalidação:** `validate.mjs add-spec-harness` pass às 14:12:58Z, 828/828, autorização `336249d1` na impressão. 219 s.
 - **Marco 13.2:** registrado no ponto de restauração, com escopo restrito e limitações.
 - **Orçamento gravado no destino errado:** `55881231-c1d0-4b70-9c9b-5f9a9c0af52e` (US$ 3,00 / US$ 1,00) foi gravado na base do experimento porque o `cd` para `rodada-1` falhou (a cópia ainda não existia). Preservado no histórico; revogação pendente pelo dono. A base só recebe commit e `rodada-1` só é criada depois da revogação, para nenhuma cópia herdar orçamento ativo.

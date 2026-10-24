@@ -11,7 +11,7 @@ export { CHANGE };
 export const EXEC = 'exec-cli-0001';
 export const CHANGE_DIR = `openspec/changes/${CHANGE}`;
 export const HUMAN_DATE = '2026-10-23T12:00:00.000Z';
-export const MARKER = '- **Marco de adoção registrado:** 2026-10-25 — aprovador: Douglas\n';
+export const MARKER = '- **Marco de adoção registrado:** 2026-10-25 — aprovador: mantenedor\n';
 
 export function writeText(root, relative, text) {
   mkdirSync(dirname(join(root, relative)), { recursive: true });

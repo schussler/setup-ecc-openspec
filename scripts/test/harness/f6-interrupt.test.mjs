@@ -80,7 +80,7 @@ test('[RC-017] [RS-024] interrupção no meio da invocação: lock permanece, re
       ...readAuthorizationsFile(root),
       {
         id: 'lock-1', kind: 'lock_release', origin: 'human', scope: { change: CHANGE }, project_id: lockBody.project_id,
-        execution_id: lockBody.execution_id, reason: 'processo morto no meio da invocação', approver: 'Douglas',
+        execution_id: lockBody.execution_id, reason: 'processo morto no meio da invocação', approver: 'mantenedor',
         date: '2026-10-23', recorded_at: HUMAN.recorded_at, author: HUMAN.author,
       },
     ],
@@ -103,7 +103,7 @@ test('[RC-017] [RS-024] interrupção no meio da invocação: lock permanece, re
       ...readAuthorizationsFile(root),
       {
         id: 'reconciliacao-1', kind: 'reconciliation', origin: 'human', scope: { change: CHANGE },
-        approver: 'Douglas', date: '2026-10-23', observed_consumption: [], evidence_to_revalidate: [],
+        approver: 'mantenedor', date: '2026-10-23', observed_consumption: [], evidence_to_revalidate: [],
         reservations: [{ session_id: interrupted.session_id, decision: 'closed_unknown' }],
         reason: 'chamada interrompida pelo teste', recorded_at: HUMAN.recorded_at, author: HUMAN.author,
       },

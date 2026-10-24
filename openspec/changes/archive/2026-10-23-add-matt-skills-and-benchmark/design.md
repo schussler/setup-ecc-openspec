@@ -2,7 +2,7 @@
 
 ## Context
 
-O template (`schussler/setup-ecc-openspec`) gera projetos com `/new-project` e os mantém com `/template-update`, e o `template.json` divide os caminhos em `managed` e `owned`. Até aqui o repositório só tinha prompts (skills, rules, comandos), sem nenhum script nem teste. Ver `proposal.md` para a motivação.
+O template (`schussler/specloop`) gera projetos com `/new-project` e os mantém com `/template-update`, e o `template.json` divide os caminhos em `managed` e `owned`. Até aqui o repositório só tinha prompts (skills, rules, comandos), sem nenhum script nem teste. Ver `proposal.md` para a motivação.
 
 Estado verificado no início (2026-10-23):
 

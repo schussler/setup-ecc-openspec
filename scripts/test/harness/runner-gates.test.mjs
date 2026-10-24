@@ -14,17 +14,17 @@ const TOOLS = ['Read'];
 const PROMPT = '/spec-implement add-spec-harness';
 const CHANGE_DIR = `openspec/changes/${CHANGE}`;
 const OK_OUTPUT = { type: 'result', subtype: 'success', is_error: false, result: 'ok' };
-const HUMAN = { origin: 'human', scope: { change: CHANGE }, recorded_at: '2026-10-23T12:00:00.000Z', author: 'douglas' };
+const HUMAN = { origin: 'human', scope: { change: CHANGE }, recorded_at: '2026-10-23T12:00:00.000Z', author: 'mantenedor' };
 // Testes de orçamento exercitam o modo financeiro, que é explícito desde add-silent-consumption-observability.
 const FINANCIAL = { provisional: true, modo_financeiro: true };
 
 // Concessão no formato D23: total_usd e per_call_usd (por chamada = menor entre 2 e o total).
 function grant(id, totalUsd, extra = {}) {
-  return { id, kind: 'budget', total_usd: totalUsd, per_call_usd: Math.min(2, totalUsd), reason: 'teste', approver: 'Douglas', ...HUMAN, ...extra };
+  return { id, kind: 'budget', total_usd: totalUsd, per_call_usd: Math.min(2, totalUsd), reason: 'teste', approver: 'mantenedor', ...HUMAN, ...extra };
 }
 
 function probe(result, extra = {}) {
-  return { id: `probe-${result}`, kind: 'probe_result', result, reason: 'sonda P.2', approver: 'Douglas', ...HUMAN, ...extra };
+  return { id: `probe-${result}`, kind: 'probe_result', result, reason: 'sonda P.2', approver: 'mantenedor', ...HUMAN, ...extra };
 }
 
 function writeAuthorizations(root, records) {

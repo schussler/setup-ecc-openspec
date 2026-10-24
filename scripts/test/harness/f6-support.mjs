@@ -13,7 +13,7 @@ export const CHANGE_DIR = `openspec/changes/${CHANGE}`;
 export const TOOLS = ['Read'];
 export const PROMPT = '/spec-implement add-spec-harness';
 export const CORRECTION_PROMPT = '/spec-implement add-spec-harness (correção)';
-export const HUMAN = { origin: 'human', scope: { change: CHANGE }, recorded_at: '2026-10-23T12:00:00.000Z', author: 'douglas' };
+export const HUMAN = { origin: 'human', scope: { change: CHANGE }, recorded_at: '2026-10-23T12:00:00.000Z', author: 'mantenedor' };
 export const OK_OUTPUT = { type: 'result', subtype: 'success', is_error: false, result: 'ok' };
 
 // Saída paga do simulador: o custo informado vira consumo conhecido.
@@ -23,7 +23,7 @@ export function paidOutput(costUsd) {
 
 // Concessão de orçamento no formato D23 (por chamada = menor entre 2 e o total).
 export function grant(id, totalUsd, extra = {}) {
-  return { id, kind: 'budget', total_usd: totalUsd, per_call_usd: Math.min(2, totalUsd), reason: 'teste', approver: 'Douglas', ...HUMAN, ...extra };
+  return { id, kind: 'budget', total_usd: totalUsd, per_call_usd: Math.min(2, totalUsd), reason: 'teste', approver: 'mantenedor', ...HUMAN, ...extra };
 }
 
 export function writeAuthorizations(root, records) {

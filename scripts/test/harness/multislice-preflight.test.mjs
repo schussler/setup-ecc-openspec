@@ -12,7 +12,7 @@ import { REPO_ROOT } from './fixture.mjs';
 
 const FAKE = join(REPO_ROOT, 'scripts', 'test', 'harness', 'fixtures', 'fake-claude.mjs');
 const OK_BIN = [process.execPath, FAKE];
-const ADOPTION = '## Marco de adoção\n- **Marco de adoção registrado:** 2026-10-24 — aprovador: Douglas\n';
+const ADOPTION = '## Marco de adoção\n- **Marco de adoção registrado:** 2026-10-24 — aprovador: mantenedor\n';
 const CLEAN_ENV = { ...process.env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null' };
 
 // Projeto mínimo que passa em todos os itens; cada teste quebra um item.

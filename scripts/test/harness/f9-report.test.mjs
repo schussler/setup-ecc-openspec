@@ -53,7 +53,7 @@ test('[TE-004] métricas trazem aceitação, regressões, retrabalho, intervenç
         { id: 'CN-1', outcome: 'pass', mandatory: true, regression: false },
         { id: 'RG-1', outcome: 'pass', mandatory: false, regression: true },
       ],
-      human_decisions: [{ decided_by: 'Douglas', note: 'aceito' }],
+      human_decisions: [{ decided_by: 'mantenedor', note: 'aceito' }],
       stops: ['human_decision_needed'],
       interruptions: [{ at: GENERATED_AT }],
     }),

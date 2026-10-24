@@ -42,7 +42,7 @@ function lockRelease(overrides = {}) {
     execution_id: overrides.execution_id ?? 'exec-vencido',
     scope: { change: CHANGE },
     reason: 'processo morto',
-    approver: 'Douglas',
+    approver: 'mantenedor',
     date: DATE,
     ...overrides,
   };
@@ -258,7 +258,7 @@ test('[RS-017] etapa 3 (autorização): registro revogado por registro posterior
   acquire(root, { executionId: owner });
   writeAuthorizations(root, [
     lockRelease({ id: 'auth-revogado', execution_id: owner }),
-    { id: 'auth-revogacao', kind: 'revocation', origin: 'human', revokes: 'auth-revogado', approver: 'Douglas', date: DATE, reason: 'engano' },
+    { id: 'auth-revogacao', kind: 'revocation', origin: 'human', revokes: 'auth-revogado', approver: 'mantenedor', date: DATE, reason: 'engano' },
   ]);
 
   assertRefusal(() => releaseStaleLock(root, CHANGE, { authorizationId: 'auth-revogado', now: staleNow(root) }), 'human_decision_needed', /revogad/);

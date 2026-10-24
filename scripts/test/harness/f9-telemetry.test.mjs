@@ -117,8 +117,8 @@ test('[TE-002] custo estimado mantém a origem estimated e não vira reported', 
 });
 
 // Ligação com o runner: uma invocação real (simulador) grava exatamente um evento.
-const HUMAN = { origin: 'human', scope: { change: CHANGE }, recorded_at: '2026-10-23T12:00:00.000Z', author: 'douglas' };
-const BUDGET = { id: 'budget-1', kind: 'budget', total_usd: 10, per_call_usd: 2, reason: 'teste', approver: 'Douglas', ...HUMAN };
+const HUMAN = { origin: 'human', scope: { change: CHANGE }, recorded_at: '2026-10-23T12:00:00.000Z', author: 'mantenedor' };
+const BUDGET = { id: 'budget-1', kind: 'budget', total_usd: 10, per_call_usd: 2, reason: 'teste', approver: 'mantenedor', ...HUMAN };
 const PROMPT = '/spec-implement add-spec-harness';
 
 async function runOneStep(output) {

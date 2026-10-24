@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Explicit migration of a derived project to the current template: the owned
+// Explicit migration of a SpecLoop project to the current framework: the owned
 // paths `/template-update` never writes, plus managed paths added to the
 // template after the project was created. `plan` only reads; `apply` writes
 // only the items it is given. Every item only adds: nothing in the project is

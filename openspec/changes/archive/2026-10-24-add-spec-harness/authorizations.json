@@ -10,7 +10,7 @@
       "change": "add-spec-harness"
     },
     "reason": "Aprovo o contrato add-spec-harness (sha256 9fc8fe2b...751f7a), incluindo D26, para uso experimental supervisionado em Node 24.21.0/macOS com uma única fatia; pendências conhecidas: multifatia, Ctrl+C e caminhos com espaço",
-    "approver": "Douglas",
+    "approver": "mantenedor",
     "author": "schussler",
     "recorded_at": "2026-10-24T14:06:58.119Z",
     "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
@@ -28,7 +28,7 @@
       "change": "add-spec-harness"
     },
     "reason": "Aprovo a revisão de compatibilidade de add-spec-harness: orçamento, reserva e reconciliação financeira só valem com modo_financeiro true. Hash 236094ecdd4930859ea1205dbe1b51355012f8a9f89e03e217cf42ac20a8b830. A aprovação 336249d1 permanece como registro histórico.",
-    "approver": "Douglas",
+    "approver": "mantenedor",
     "author": "schussler",
     "recorded_at": "2026-10-24T16:59:13.755Z",
     "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
@@ -46,7 +46,7 @@
       "change": "add-spec-harness"
     },
     "reason": "Aprovo a versão 3 do contrato add-spec-harness: modo_financeiro no perfil da execução, padrão false. Hash 9309f6572beee0c106ac379b13917280cc63b2b2d0fd166c4ced017a85e768b8.",
-    "approver": "Douglas",
+    "approver": "mantenedor",
     "author": "schussler",
     "recorded_at": "2026-10-24T17:16:32.396Z",
     "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",

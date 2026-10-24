@@ -132,7 +132,7 @@ test('[TE-010] processo do runner morto no meio da invocação gera interrupçã
   writeTree(root, {
     [`openspec/changes/${CHANGE}/authorizations.json`]: [...readAuthorizationsFile(root), {
       id: 'lock-1', kind: 'lock_release', origin: 'human', scope: { change: CHANGE }, project_id: lock.project_id,
-      execution_id: lock.execution_id, reason: 'processo morto no meio da invocação', approver: 'Douglas',
+      execution_id: lock.execution_id, reason: 'processo morto no meio da invocação', approver: 'mantenedor',
       date: '2026-10-23',
     }],
   });

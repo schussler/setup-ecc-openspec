@@ -161,8 +161,8 @@ test('[RS-017] lock vencido com lock_release humano citando o execution_id é li
   writeTree(root, {
     [`openspec/changes/${CHANGE}/authorizations.json`]: [{
       id: 'lock-1', kind: 'lock_release', origin: 'human', scope: { change: CHANGE }, project_id: projectId(root),
-      execution_id: EXECUTION_ID, reason: 'processo morto', approver: 'Douglas', date: '2026-10-24',
-      recorded_at: '2026-10-24T12:00:00.000Z', author: 'douglas',
+      execution_id: EXECUTION_ID, reason: 'processo morto', approver: 'mantenedor', date: '2026-10-24',
+      recorded_at: '2026-10-24T12:00:00.000Z', author: 'mantenedor',
     }],
   });
 

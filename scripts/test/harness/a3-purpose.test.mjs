@@ -10,7 +10,7 @@ import {
 import { makeRepo } from './fixture.mjs';
 
 const NOW = new Date('2026-10-23T12:00:00.000Z');
-const build = (root, input, records = []) => buildRecord(root, CHANGE, { reason: 'motivo', approver: 'Douglas', ...input }, records, { now: NOW, author: 'douglas' });
+const build = (root, input, records = []) => buildRecord(root, CHANGE, { reason: 'motivo', approver: 'mantenedor', ...input }, records, { now: NOW, author: 'mantenedor' });
 
 test('[EV-008] purpose fora da lista fechada é recusado ao registrar a autorização', () => {
   const root = makeRepo();

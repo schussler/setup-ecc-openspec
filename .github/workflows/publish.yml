@@ -1,0 +1,48 @@
+# Publicação no npm (design.md D2, D3, D5): só no push da main, que só acontece por PR mergeada.
+# Trusted publishing (OIDC) com proveniência: nenhum token npm no repositório.
+# O environment npm aceita só a branch main, e o trusted publisher exige esse environment.
+name: publish
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: Node 24 (npm >= 11.5.1 para trusted publishing)
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+      - name: OpenSpec CLI na versão de upstreams
+        run: npm install --global "@fission-ai/openspec@$(node -p "require('./template.json').upstreams.openspec")"
+      - name: Identidade git para os testes
+        run: |
+          git config --global user.name "specloop-ci"
+          git config --global user.email "ci@specloop.invalid"
+      - name: Checks (test, lint, typecheck)
+        run: node scripts/ci/run-checks.mjs
+      - name: Decidir publicação
+        id: decide
+        run: node scripts/ci/should-publish.mjs
+      - name: Publicar com proveniência
+        if: steps.decide.outputs.publish == 'true'
+        run: npm publish --provenance --access public

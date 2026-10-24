@@ -19,7 +19,7 @@ const FAKE = join(REPO_ROOT, 'scripts', 'test', 'harness', 'fixtures', 'fake-cla
 const CLAUDE_BIN = JSON.stringify([process.execPath, FAKE]);
 const PROFILE = '.claude/harness/profiles/default.json';
 const PAID = JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: 'ok', total_cost_usd: 0.1 });
-const HUMAN = { origin: 'human', project_id: PROJECT_ID, scope: { change: CHANGE }, approver: 'Douglas', recorded_at: '2026-10-24T12:00:00.000Z' };
+const HUMAN = { origin: 'human', project_id: PROJECT_ID, scope: { change: CHANGE }, approver: 'mantenedor', recorded_at: '2026-10-24T12:00:00.000Z' };
 const TAP = 'node --test --test-reporter=tap scripts/e2e/cenario.test.mjs';
 const CASE_FIRST = `import { test } from 'node:test';
 import assert from 'node:assert/strict';

@@ -10,6 +10,8 @@ metadata:
 
 Step 1 of the pipeline `spec-create` → (`spec-accept`, run by the runner) → `spec-implement` → `spec-archive` → `pr`. This skill writes the contract and nothing else. It never writes code.
 
+Antes deste passo, a skill `change-flow` classifica o pedido. Este passo roda para o caminho 3 (fluxo completo) e para o caminho 2 com contrato curto. No caminho 2 o contrato é curto: `proposal.md` e `specs/`, sem `design.md` quando não houver decisão de arquitetura. O caminho 1 não cria change.
+
 It is a thin wrapper over `/opsx:propose`. It adds the investigation, the interview, the contract rules and the record in `docs/agents/issue-tracker.md`. It does not reimplement how OpenSpec creates artifacts. Run autonomously, this step is conducted by the runner (`scripts/harness/`); run supervised, it delegates to `/opsx:propose`. Until the adoption milestone (marco de adoção) is recorded, every execution stays `legacy`.
 
 ## Input

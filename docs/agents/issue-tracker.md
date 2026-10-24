@@ -5,9 +5,9 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 ## Ponto de restauração
 
 - **Marco de adoção registrado:** 2026-10-24 — aprovador: Douglas. Escopo restrito: uso experimental supervisionado em Node 24.21.0/macOS, uma única fatia (`implement`). Base: aprovação do contrato `336249d1-e8e3-43e3-ac57-a35f8147f22d` (hash `9fc8fe2b…751f7a`, versão 1) e validação final aprovada em 2026-10-24T14:12:58.827Z (828 casos). Limitações mantidas: multifatia, Ctrl+C durante a invocação e caminhos com espaço em `--claude-bin` pendentes; limite de turnos não comprovado (P.2 não autorizada); PB-009 aberto; Node 22 não verificado; isolamento advisory. `--legacy-write` preservado; adoção em projetos reais não autorizada. Não é conformidade integral com o desenho original.
-- **Change ativa:** `add-spec-harness` (F1 a F12, A, B.1 a B.8, C, P.1 e 12.5 concluídos; 13.2, 10.3, 12.4b, B.9, P.2 e P.3 pendentes)
+- **Change ativa:** `add-proportional-change-flow` (implementação supervisionada concluída; arquivamento bloqueado pelo fluxo atual: o gate de implementação do runner não está em pass; change mantida aberta). `add-spec-harness` continua aberta e também bloqueia o `pr-gate`, porque o gate reprova qualquer diretório fora de `archive/`. Estado de `add-spec-harness`: (F1 a F12, A, B.1 a B.8, C, P.1 e 12.5 concluídos; 13.2, 10.3, 12.4b, B.9, P.2 e P.3 pendentes)
 - **Branch:** `rorqual` (worktree), a partir de `main` em `8401fa1`; sem commit
-- **Próximo passo:** decisão do dono sobre o ajuste mínimo de escopo para arquivar `add-spec-harness` (spec-gates F10, pipeline-benchmark PB-009, run-control limite por fatia). v1 experimental (harness v1.2 `39d7fcac…`) commitada sem arquivar. Trabalho futuro listado no log de 2026-10-24. Evidências do experimento: `~/dev/setup-ecc-openspec-experimentos/2026-10-24-add-kebab-case-helper`.
+- **Próximo passo:** decisão sobre como fechar o gate de implementação de `add-proportional-change-flow` pelo runner (a execução está em `awaiting_decision`); arquivamento depende disso. Pendências documentais do log de 2026-10-24. Separadamente, decisão do dono sobre o ajuste mínimo de escopo para arquivar `add-spec-harness` (spec-gates F10, pipeline-benchmark PB-009, run-control limite por fatia). v1 experimental (harness v1.2 `39d7fcac…`) commitada sem arquivar. Trabalho futuro listado no log de 2026-10-24. Evidências do experimento: `~/dev/setup-ecc-openspec-experimentos/2026-10-24-add-kebab-case-helper`.
 - **Bloqueios:** orçamento de `claude -p` esgotado (60/60). Medir o efeito da orientação de comando simples no headless exige uma rodada nova de legado
 - **Pendente de autorização:** sonda paga de `--max-turns` (tarefa P.2 de `tasks.md`), com orçamento pretendido de US$ 0,05, sem teto exato. Não autorizada e não executada. Sem ela, o limite de turnos não é comprovado.
 - **Atualizado em:** 2026-10-24
@@ -47,6 +47,30 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 | 2026-10-24 | add-spec-harness | archive (12.5, fluxo legado, `--legacy-write`) | 1 | — | C.1 a C.3 aplicados; nenhuma alteração de código nesta avaliação | cenários 218/218 (100%), suíte verde, `openspec validate --strict` válido | pass |
 
 ## Log
+
+### 2026-10-24 — add-proportional-change-flow: implementação supervisionada concluída; arquivamento bloqueado pelo fluxo atual
+
+- **Estado:** change mantida aberta. Implementação supervisionada concluída fora do runner, na cópia candidata (base `bb90790`, commit `0738bd6` só na cópia) e incorporada ao worktree principal sem commit. Arquivamento bloqueado pelo fluxo atual: `archive-gate` reprova com "o gate de implementação não está em pass; rode spec-implement antes de arquivar". O veredito de implementação não foi alterado à mão, e o gate de arquivamento não foi contornado.
+- **Runner:** execução `229724cc` em `awaiting_decision` (`human_decision_needed`) após 2 invocações pagas e 2 avaliações do gate, ambas reprovadas por módulo ausente. Não aprovou a fatia nem a execução.
+- **Consumo:** 2 invocações com `claude-sonnet-5-5`: US$ 0,5342 e US$ 0,3010, total reportado US$ 0,8352 de US$ 3,00 autorizados. O saldo não usado (US$ 2,1648) não foi gasto. O consumo da conclusão manual não passa pelo runner e não está medido, então o total pode estar incompleto.
+- **Limitação do harness:** mudanças em caminhos que a ferramenta protege (`.claude/`, em `dontAsk`) não são concluídas pelo runner headless, e a regra `permissions.allow` não as libera. Esses casos precisam de encaminhamento para execução supervisionada, em vez de novas tentativas de correção.
+- **`changes_produced`:** não medido. O runner não preenche o campo, e `[]` não significa ausência de alterações.
+- **Verificação local (não é aprovação do runner):** suíte 879/879 no worktree principal; testes change-flow 35/35; lint 0 erro; sintaxe 0 erro; `openspec validate --strict` válido; `contract.mjs` 0 erro. Contrato inalterado (`9438f705…c88`).
+- **Nomes de testes:** cada cenário CF-001 a CF-014 tem um teste com `[ID] <nome exato do cenário>` (14 de 14). Asserções preservadas.
+- **Pendências documentais (não corrigidas nesta rodada):**
+  1. `spec-create/SKILL.md` diz que o gate de arquivamento casa cenário com teste "com o mesmo nome". O código casa pelo `[ID]` no nome do caso (`archive-gate.mjs:76`). O nome exato é compatível com o gate, mas a documentação precisa ser corrigida.
+  2. `change-flow/SKILL.md`, regra 5: a skill diz `investigar` só quando o fato desconhecido decide a descida. `change-flow.mjs` devolve `investigar` para qualquer fato de risco desconhecido. Os dois levam a perguntar ou investigar; alinhar o texto numa mudança futura.
+- **Evidências:** `~/dev/setup-ecc-openspec-experimentos/2026-10-24-add-proportional-change-flow/`, com autorização (`authorizations.json`, não reutilizada), estado e eventos do runner, transcrições das duas invocações, testes, patch da cópia e manifesto SHA-256.
+- **Não feito:** commit, push, PR, arquivamento, nova chamada headless.
+
+### 2026-10-24 — add-proportional-change-flow: spec criada (sem implementação)
+
+- **Entendimento aprovado:** três caminhos por risco (não por diff); caminho 1 sem change, com registro curto no tracker; caminho 2 com contrato curto e confirmação das decisões faltantes; caminho 3 com aprovação formal; ponto de entrada `change-flow`; detecção da regra "Zero código sem spec" antiga; fixture de classificação; sem caminhos protegidos; comportamento novo declarado.
+- **Artefatos:** `openspec/changes/add-proportional-change-flow/` (proposal, specs `change-flow` com CF-001 a CF-012, design com fatia única F1, tasks 1 a 7). `openspec validate --strict` válido; `contract.mjs` 0 erro.
+- **Premissas assumidas:** a classificação é feita por fatos declarados e uma função pura (D1 do design), que é uma escolha minha; os testes são estáticos e de função pura, sem provar classificação real do agente.
+- **Contrato curto de caminho 2:** validado em cópia descartável fora do repositório. Passa em `openspec validate --strict` e `contract.mjs`; cenário sem ID é reprovado (`HI-003`). Resultado registrado no design.
+- **Correção de premissa:** a versão anterior desta entrada assumia que trocar a "Change ativa" liberava o `pr-gate`. Isso é falso: o gate reprova qualquer diretório fora de `archive/`.
+- **Não feito:** implementação (tasks 1 a 7 pendentes), chamada ao modelo, orçamento, `authorize.mjs`, commit, PR. Lacuna declarada: avaliação visual real não executada.
 
 ### 2026-10-24 — revisão final do diff, trabalho futuro e arquivamento retido
 

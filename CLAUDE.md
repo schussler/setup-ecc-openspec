@@ -17,7 +17,7 @@ Campo `TBD` é lacuna conhecida. Não invente o valor; registre a lacuna em `iss
 ---
 
 ## 1. Fluxo de Decisão (OpenSpec)
-- **Zero código sem spec:** Nenhuma funcionalidade ou alteração arquitetural deve ser escrita sem uma especificação em `openspec/changes/<feature>/`.
+- **Caminhos por risco:** a skill `change-flow` classifica o pedido antes de qualquer alteração. Caminho 1 (ajuste visual ou textual sem efeito funcional): registro curto em `docs/agents/issue-tracker.md`, sem change. Caminho 2 (comportamento localizado): contrato curto em `openspec/changes/<feature>/`. Caminho 3 (contrato externo, regra de negócio, dados sensíveis, autenticação, permissões, arquitetura ou dependência de risco): fluxo completo com `spec-create`.
 - **Fonte da Verdade:** Os requisitos e critérios de aceite residem em `proposal.md` e `design.md`.
 - **Roteiro de Execução:** Siga estritamente a ordem definida em `tasks.md`. Atualize o status das caixas de seleção (`- [x]`) conforme for finalizando.
 

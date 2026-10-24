@@ -1,8 +1,29 @@
-# setup-ecc-openspec — Template OpenSpec + ECC
+# SpecLoop — framework de desenvolvimento orientado a specs para Claude Code
 
-Template de referência para iniciar novos projetos combinando **[OpenSpec](https://github.com/Fission-AI/OpenSpec)** (desenvolvimento orientado a especificações — *Spec-Driven Development*) com **[ECC — Everything Claude Code](https://github.com/affaan-m/everything-claude-code)** (agentes, skills, rules e hooks para execução com Claude Code).
+**SpecLoop** é um framework que combina **[OpenSpec](https://github.com/Fission-AI/OpenSpec)** (desenvolvimento orientado a especificações, ou *Spec-Driven Development*) com **[ECC — Everything Claude Code](https://github.com/affaan-m/everything-claude-code)** (agentes, skills, rules e hooks para Claude Code), mais um pipeline com gates verificáveis: `spec-create` → `spec-implement` → `spec-archive` → `pr`.
 
-A regra central do template: **zero código sem spec**. Toda funcionalidade nasce como uma especificação em `openspec/changes/`, é implementada com TDD e validação contínua seguindo os padrões ECC, e é arquivada ao concluir.
+A regra central: **zero código sem spec**. Toda funcionalidade nasce como uma especificação em `openspec/changes/`, é implementada com TDD e validação contínua seguindo os padrões ECC, e é arquivada ao concluir.
+
+## Instalação
+
+Um único CLI instala e atualiza o framework. Não é preciso clonar este repositório.
+
+| Comando | Quando usar | O que faz |
+|---------|-------------|-----------|
+| `npx specloop init <dir>` | começar um projeto novo | cria `<dir>` (vazio ou inexistente) com git, o toolset, os modelos de `docs/agents/`, `template.json` e o primeiro commit |
+| `npx specloop adopt` | seguir um projeto existente | mostra o plano (toolset, `docs/agents/`, `checks`, permissões, blocos do `CLAUDE.md`) e aplica só os itens que você confirmar, sem remover nada |
+| `npx specloop install` | só o toolset no repositório atual | copia os caminhos `managed` (rules, agents, skills, comandos, gates e harness); não toca em `CLAUDE.md`, `docs/agents/` nem `.claude/settings.json` |
+| `npx specloop@latest update` | buscar atualização do framework | mostra o que muda nos caminhos `managed`, aplica após confirmação e grava a versão em `template.json` → `framework` |
+
+Opções comuns:
+- `--yes`: confirma tudo sem perguntar (automação e modo headless).
+- `init`: `--name <nome>`, `--description "<texto>"`, `--languages "typescript python"` (rules de linguagem; `common` vem sempre), `--checks-test`, `--checks-lint`, `--checks-typecheck`, `--checks-test-file`, `--checks-coverage`, `--checks-test-report` e `--suite`.
+- `adopt`: os mesmos `--checks-*`; sem eles, usa os comandos detectados no projeto (`package.json`, `pyproject.toml`, `go.mod`).
+- `install`: `--languages`.
+
+Nenhum comando escreve antes da confirmação, e nenhum escreve em caminhos próprios do projeto (`owned`). Projetos criados antes do CLI, com `template.repo` no `template.json`, passam a usar `framework` no primeiro `update`.
+
+Dentro do Claude Code, as skills `/new-project`, `/template-migrate` e `/template-update` chamam o mesmo CLI (`init`, `adopt` e `update`).
 
 ## Conceitos
 
@@ -25,57 +46,22 @@ Cada mudança (*change*) no fluxo `spec-driven` produz quatro artefatos:
 
 - **[Claude Code](https://claude.com/claude-code)** instalado e autenticado
 - **CLI do OpenSpec 1.14.3** disponível no PATH (`openspec --version` para conferir; é a versão registrada em `template.json`). O perfil de workflows é global na máquina: rode `openspec config profile core` uma vez, para ter o workflow `update` junto com os demais
-- **Node 22+**, para os gates (`scripts/gates/`), a migração e o benchmark (sem dependências npm)
-- **Rules ECC** instaladas no projeto (este template já as traz em `.claude/rules/`); para instalar em outro lugar, siga `.claude/rules/README.md`
+- **Node 22+** e **npm** (para o `npx`), usados também pelos gates (`scripts/gates/`) e pela migração; o pacote não tem dependências npm
+- **git**, para `init`, `adopt` e `install`
 
-## Inicializando um novo projeto
+## Manutenção do framework e dos projetos
 
-Use a skill **`/new-project`**. Ela cria o projeto a partir deste template e pede confirmação antes do primeiro commit:
-
-1. Informe o diretório de destino (que não exista ou esteja vazio), o nome do projeto, uma descrição de uma linha, as linguagens que o projeto usa (ex.: `typescript python`) e os comandos de teste, lint e tipos. `common/` é sempre mantido. Comando não informado fica vazio, e o gate correspondente avisa qual campo falta.
-2. A skill monta o repositório só com git (`git init`, `git fetch` do template e `git checkout FETCH_HEAD -- .`), então o projeto nasce sem o histórico do template.
-3. Ela remove as rules das linguagens não escolhidas e os caminhos de `template_only`, e instala `docs/agents/` a partir dos modelos `TBD` de `templates/docs/agents/`.
-4. Ela grava em `template.json` o projeto, as rules e os `checks`, reescreve o título do `CLAUDE.md` e o `README.md`, valida o OpenSpec e faz o primeiro commit.
-
-Para automação, `--non-interactive` recebe tudo por argumentos e não pergunta nada, e `--template-source` aceita um caminho local (ver o `SKILL.md` da skill).
-
-Para fazer à mão:
-
-```bash
-git init -b main meu-projeto
-git -C meu-projeto fetch --depth 1 <url-deste-repo> main
-git -C meu-projeto checkout FETCH_HEAD -- .
-cd meu-projeto
-git rm -r -q -f docs/agents
-mkdir -p docs
-git mv templates/docs/agents docs/agents
-rm -r templates   # só sobraram diretórios vazios depois do git mv
-git rm -r -q -f scripts/benchmark scripts/test openspec/specs openspec/changes/archive CLAUDE.ecc.md
-mkdir -p openspec/specs openspec/changes
-openspec validate --all
-openspec config list   # confirme profile: core
-```
-
-Depois:
-- preencha os campos `TBD` de `docs/agents/`;
-- preencha `checks` e remova `template_only` do `template.json`;
-- mantenha só as rules das linguagens que o projeto usa.
-
-Detalhes da estrutura em `.claude/rules/README.md`.
-
-## Manutenção do template e dos projetos derivados
-
-Cada projeto criado a partir do template guarda um `template.json` com a origem (`template.repo` e `template.branch`), as versões de ECC e OpenSpec, a lista de caminhos gerenciados (`managed`, atualizados pelo template) e a de caminhos próprios (`owned`, nunca sobrescritos: `CLAUDE.md`, `README.md`, `openspec/config.yaml`, `openspec/changes/`, `openspec/specs/`, `.claude/rules/project/`, `docs/agents/` e `.claude/settings.json`). Ele também guarda os `checks`: os comandos de teste, lint e tipos que os gates usam. No template, `template_only` lista o que só existe aqui (benchmark, suíte do template, modelos) e é removido pelo `/new-project`.
+Cada projeto SpecLoop guarda um `template.json` com a origem (`framework.package` e `framework.version`), as versões de ECC e OpenSpec, a lista de caminhos gerenciados (`managed`, atualizados pelo `update`) e a de caminhos próprios (`owned`, nunca sobrescritos: `CLAUDE.md`, `README.md`, `openspec/config.yaml`, `openspec/changes/`, `openspec/specs/`, `.claude/rules/project/`, `docs/agents/` e `.claude/settings.json`). Ele também guarda os `checks`: os comandos de teste, lint e tipos que os gates usam. No repositório do framework, `template_only` lista o que só existe aqui (benchmark, suíte, modelos) e não vai para os projetos.
 
 | Skill | Onde rodar | O que faz |
 |-------|-----------|-----------|
-| `/template-update` | projeto derivado | Compara os caminhos gerenciados com o template, mostra o que mudaria e aplica só depois da sua confirmação |
-| `/template-migrate` | projeto derivado | Traz o que o `/template-update` não escreve: blocos do pipeline no `CLAUDE.md`, `docs/agents/`, permissões em `.claude/settings.json`, `checks` e caminhos gerenciados novos (como `scripts/gates`). Mostra o plano e aplica item a item, só com confirmação, sem remover nada |
-| `/template-check` | este template | Valida o manifest, os caminhos, as versões e a ausência de caminhos pessoais e segredos |
-| `/upstream-sync-check` | este template | Compara rules, agents, skills e workflows com os upstreams ECC, OpenSpec e `mattpocock/skills` e lista o que está desatualizado |
+| `/template-update` | projeto SpecLoop | Chama `npx specloop update`: compara os caminhos gerenciados com o pacote, mostra o que mudaria e aplica só depois da sua confirmação |
+| `/template-migrate` | projeto SpecLoop | Chama `npx specloop adopt`. Traz o que o `/template-update` não escreve: blocos do pipeline no `CLAUDE.md`, `docs/agents/`, permissões em `.claude/settings.json`, `checks` e caminhos gerenciados novos (como `scripts/gates`). Mostra o plano e aplica item a item, só com confirmação, sem remover nada |
+| `/template-check` | este repositório | Valida o manifest, os caminhos, as versões e a ausência de caminhos pessoais e segredos |
+| `/upstream-sync-check` | este repositório | Compara rules, agents, skills e workflows com os upstreams ECC, OpenSpec e `mattpocock/skills` e lista o que está desatualizado |
 | `/toolset-retro` | qualquer um | Retrospectiva do toolset `.claude/` ao fim de uma sessão |
 
-Em um projeto criado antes do pipeline com gates, rode `/template-update` e depois `/template-migrate`.
+Em um projeto criado antes do pipeline com gates, rode `npx specloop@latest update` e depois `npx specloop adopt`.
 
 Para corrigir uma rule de origem ECC só num projeto, não edite o arquivo de origem: ele é sobrescrito na próxima atualização. Crie a rule local em `.claude/rules/project/`, que é um caminho próprio do projeto.
 
@@ -176,10 +162,10 @@ Agentes especializados (`common/agents.md`) apoiam cada etapa: **planner** (plan
 | `/spec-archive [nome]` | Gate de arquivamento, arquivamento e sync das specs |
 | `/pr` | PR com gate e confirmação; só sob pedido |
 | `/handoff` | Grava o ponto de restauração para a próxima sessão |
-| `/new-project` | Criar um projeto novo a partir do template |
-| `/template-update` | Atualizar um projeto derivado a partir do template |
-| `/template-migrate` | Trazer a um projeto existente o que o `/template-update` não escreve |
-| `/template-check` | Validar o template antes de usá-lo como base ou publicá-lo |
+| `/new-project` | Criar um projeto novo (chama `npx specloop init`) |
+| `/template-update` | Atualizar um projeto (chama `npx specloop update`) |
+| `/template-migrate` | Adotar o pipeline num projeto existente (chama `npx specloop adopt`) |
+| `/template-check` | Validar o framework antes de publicá-lo |
 | `/upstream-sync-check` | Ver o que está desatualizado em relação ao ECC, ao OpenSpec e ao `mattpocock/skills` |
 | `/toolset-retro [foco]` | Retrospectiva do toolset `.claude/` ao fim de uma sessão: aplica ajustes e adia o resto como change |
 | `openspec list` | Listar changes ativos |
@@ -203,10 +189,15 @@ Agentes especializados (`common/agents.md`) apoiam cada etapa: **planner** (plan
 ├── CLAUDE.md                # Contrato do agente: fluxo OpenSpec + padrões ECC
 ├── CLAUDE.ecc.md            # CLAUDE.md original do ECC upstream (referência)
 ├── README.md                # Este guia
-├── template.json            # Origem, versões, managed/owned/template_only e checks
+├── .github/                 # CI de PR, publicação no npm e regra da main (só no repositório)
+├── package.json             # Pacote npm specloop (bin e files)
+├── template.json            # Versão do framework, upstreams, managed/owned/template_only e checks
+├── bin/specloop.mjs         # CLI: npx specloop <install|init|adopt|update>
 ├── docs/agents/             # Contexto do agente (do template; projetos recebem os modelos)
-├── templates/docs/agents/   # Modelos TBD copiados pelo /new-project
+├── templates/docs/agents/   # Modelos TBD copiados pelo init e pelo adopt
 ├── scripts/
+│   ├── ci/                  # run-checks e should-publish, usados pelos workflows
+│   ├── cli/                 # Comandos do CLI (vão no pacote, não nos projetos)
 │   ├── gates/               # Gates do pipeline (vão para os projetos)
 │   ├── benchmark/           # Runner, tarefas, fixtures e relatórios (só no template)
 │   └── test/                # Suíte do template (node --test)
@@ -225,6 +216,49 @@ Agentes especializados (`common/agents.md`) apoiam cada etapa: **planner** (plan
     └── changes/             # Changes ativos (um diretório por mudança)
         └── archive/         # Changes concluídos
 ```
+
+## Publicação
+
+O pacote `specloop` é publicado no npm pela CI, nunca da máquina de alguém (exceto a primeira vez). O fluxo:
+
+1. Toda mudança chega à `main` por PR. O workflow `ci` (`.github/workflows/ci.yml`) roda `test`, `lint` e `typecheck` de `template.json` → `checks` sem nenhuma credencial, e o merge exige o check `ci` verde.
+2. O merge dispara `.github/workflows/publish.yml`, no environment `npm`. Ele roda os checks de novo e `scripts/ci/should-publish.mjs`: se a versão do `package.json` ainda não está no npm, publica com `npm publish --provenance --access public` por trusted publishing (OIDC, sem token); se já está, não faz nada. Para publicar, suba a versão do `package.json` na PR.
+
+Não há caminho de publicação fora disso: push direto e force push na `main` são bloqueados para todos, um fork não recebe o token OIDC do repositório, e o environment `npm` só aceita a branch `main`.
+
+### Configuração única (dono do repositório)
+
+Rode na ordem. Os passos 1 a 7 dependem de permissão de administrador no GitHub e de dono do pacote no npm.
+
+1. **Renomear o repositório:** `gh repo rename specloop` (no clone do repositório atual).
+2. **Criar o environment `npm` restrito à `main`:** em Settings → Environments, crie `npm` e, em "Deployment branches and tags", escolha "Selected branches and tags" com a regra `main`. Pela CLI:
+   ```bash
+   gh api repos/schussler/specloop/environments/npm --method PUT --input - <<< '{"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}'
+   gh api repos/schussler/specloop/environments/npm/deployment-branch-policies --method POST -f name=main -f type=branch
+   ```
+3. **Primeira publicação, manual** (o trusted publisher só pode ser configurado num pacote que já existe): com 2FA ativo na conta npm, `npm login` e, na raiz do repositório na `main`, `npm publish --access public`.
+4. **Trusted publisher:** `npm trust github specloop --file publish.yml --repo schussler/specloop --env npm` (ou, no npmjs.com, Package → Settings → Trusted publishing, com o environment `npm`).
+5. **Bloquear publicação por token:** no npmjs.com, Package → Settings → Publishing access, escolha "Require two-factor authentication and disallow tokens", e revogue tokens antigos em Access Tokens.
+6. **Regra da `main`** (exige PR e o check `ci`, bloqueia force push e exclusão, sem exceção): `gh api repos/schussler/specloop/rulesets --method POST --input .github/rulesets/main.json`.
+7. **Workflows de quem é de fora:** em Settings → Actions → General → "Approval for running fork pull request workflows from contributors", escolha "Require approval for all outside collaborators".
+
+Ative também 2FA na conta do GitHub. O que nenhuma configuração cobre: uma PR maliciosa que o dono mergeie publica. A revisão antes do merge é a defesa.
+
+## Créditos
+
+O SpecLoop é construído sobre três projetos abertos, e não existiria sem eles:
+
+| Projeto | O que o SpecLoop usa | Licença |
+|---------|----------------------|---------|
+| [Everything Claude Code (ECC)](https://github.com/affaan-m/everything-claude-code), de `affaan-m` | rules, agentes e skills em `.claude/` | MIT |
+| [OpenSpec](https://github.com/Fission-AI/OpenSpec), de `Fission-AI` | CLI, workflows `/opsx:*` e o formato de specs e changes em `openspec/` | MIT |
+| [mattpocock/skills](https://github.com/mattpocock/skills), de `mattpocock` | partes das skills `spec-create`, `spec-implement`, `pr` e `handoff` (ver o `NOTICE.md` de cada uma) | MIT |
+
+As versões vendorizadas ficam em `template.json` → `upstreams`, e `/upstream-sync-check` mostra o que mudou desde então.
+
+## Licença
+
+SpecLoop é distribuído sob a licença MIT (ver [`LICENSE`](LICENSE)). O conteúdo vindo dos projetos acima mantém a licença MIT de origem.
 
 ## Para aprofundar
 

@@ -196,10 +196,10 @@ test('[RC-036] tempo de avaliação do gate entra no tempo ativo na categoria ga
 test('[RC-039] registro gravado no terminal tem origin human e procedure tty', async () => {
   const root = makeRepo();
   await recordAuthorization(root, CHANGE, {
-    kind: 'budget', totalUsd: 30, perCallUsd: 2, reason: 'teste de origem', approver: 'Douglas',
+    kind: 'budget', totalUsd: 30, perCallUsd: 2, reason: 'teste de origem', approver: 'mantenedor',
   }, {
     isInteractive: () => true, confirm: async (_summary, code) => code,
-    now: new Date('2026-10-23T12:00:00.000Z'), author: 'douglas',
+    now: new Date('2026-10-23T12:00:00.000Z'), author: 'mantenedor',
   });
   const [record] = readAuthorizationsFile(root);
   assert.equal(record.origin, 'human');

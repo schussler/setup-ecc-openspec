@@ -1,6 +1,6 @@
 ---
 name: template-check
-description: Validate the setup-ecc-openspec template itself before it is used as a base for new projects or published. Checks that template.json is valid, managed and owned paths exist, OpenSpec versions match the installed files, and no machine-specific paths or secrets are committed. Use when the user changes the template, before merging to main, or asks whether the template is healthy.
+description: Validate the SpecLoop framework itself before it is used as a base for new projects or published. Checks that template.json is valid, managed and owned paths exist, OpenSpec versions match the installed files, and no machine-specific paths or secrets are committed. Use when the user changes the template, before merging to main, or asks whether the template is healthy.
 metadata:
   origin: local
 ---
@@ -13,7 +13,7 @@ This skill only reads and reports. Run each check with read-only commands, and n
 
 ## Checks
 
-1. **Manifest is valid.** `template.json` parses as JSON. It has `template.repo`, `template.branch`, `upstreams.ecc`, `upstreams.openspec`, `managed` and `owned`. Fail if any of these is missing.
+1. **Manifest is valid.** `template.json` parses as JSON. It has `framework.package` (`specloop`), `framework.version`, `upstreams.ecc`, `upstreams.openspec`, `managed` and `owned`. Fail if any of these is missing.
 
 2. **Managed paths exist.** Each entry in `managed` exists in the repo. Fail on any missing entry.
 
@@ -27,7 +27,7 @@ This skill only reads and reports. Run each check with read-only commands, and n
 
 7. **No secrets.** Search tracked files for common key shapes: `sk_live_[A-Za-z0-9]`, `AKIA[0-9A-Z]{16}`, `-----BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY-----`, and `ghp_[A-Za-z0-9]{36}`. Treat placeholders like `sk_live_...` as clean. Fail on any real-looking match. Do not print the matched secret. Report only the file and line.
 
-8. **Template is on the branch that will be used.** Compare the current branch with `template.branch` in `template.json`. Warn, do not fail, if the current branch has commits that the template branch does not have. A new project clones from `template.branch`, so unmerged template work will not reach it.
+8. **Package version matches.** `framework.version` in `template.json` equals `version` in `package.json`, and `package.json` → `name` equals `framework.package`. Fail on a mismatch: `npx specloop init` and `update` record `framework.version` from `package.json`.
 
 9. **New manifest fields are sane.** `checks.lint` and `checks.typecheck` are non-empty strings. `checks.test` is a non-empty string or an object `{command, suite}` (check 11). `checks.test_file`, when present, contains `{file}`. No `template_only` entry is in `managed` or a prefix of a `managed` entry. A `template_only` entry that does not exist yet is a `NOTE`, because `openspec/specs` and `openspec/changes/archive` only appear after the first archive. `upstreams.mattpocock-skills` is a 40-character commit hash. Fail on any of these.
 

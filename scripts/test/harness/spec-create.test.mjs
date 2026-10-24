@@ -21,7 +21,7 @@ const PROJECT_ID = '3f2c9a1e-6b7d-4e8f-9a0b-1c2d3e4f5a6b';
 const CHANGE = 'contrato-teste';
 const REVISION_AUTH = {
   id: 'R-1', kind: 'revision', purpose: 'scenario_change', project_id: PROJECT_ID, scope: { change: CHANGE, scenario: 'check' },
-  reason: 'exceção aprovada', approver: 'Douglas', source: 'cli', date: '2026-10-23',
+  reason: 'exceção aprovada', approver: 'mantenedor', source: 'cli', date: '2026-10-23',
 };
 
 // Monta uma change temporária com um spec contendo os blocos de cenário dados.

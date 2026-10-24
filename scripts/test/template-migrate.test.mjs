@@ -16,7 +16,7 @@ const PILOT_COMMIT = '822f1cf';
 const hasPilotCommit = spawnSync('git', ['cat-file', '-e', `${PILOT_COMMIT}^{commit}`], { cwd: REPO_ROOT }).status === 0;
 const pilotAvailable = Boolean(PILOT) || hasPilotCommit;
 const OLD_MANIFEST = {
-  template: { repo: 'https://github.com/schussler/setup-ecc-openspec.git', branch: 'main' },
+  template: { repo: 'https://github.com/schussler/specloop.git', branch: 'main' },
   upstreams: { ecc: '2.2.3', openspec: '1.14.3' },
   managed: ['.claude/rules/common', '.claude/skills'],
   owned: ['CLAUDE.md', 'README.md'],

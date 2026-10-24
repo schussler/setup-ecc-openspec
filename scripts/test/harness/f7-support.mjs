@@ -56,8 +56,8 @@ export function defaultTemplate(extraChecks = {}) {
 export function humanRecord(id, kind, scope, extra = {}) {
   const purpose = kind === 'revision' ? { purpose: 'scenario_change' } : {};
   return {
-    id, kind, origin: 'human', ...purpose, scope: { change: CHANGE, ...scope }, reason: 'teste', approver: 'Douglas',
-    author: 'douglas', recorded_at: HUMAN_DATE, project_id: '3f2c9a1e-6b7d-4e8f-9a0b-1c2d3e4f5a6b', ...extra,
+    id, kind, origin: 'human', ...purpose, scope: { change: CHANGE, ...scope }, reason: 'teste', approver: 'mantenedor',
+    author: 'mantenedor', recorded_at: HUMAN_DATE, project_id: '3f2c9a1e-6b7d-4e8f-9a0b-1c2d3e4f5a6b', ...extra,
   };
 }
 

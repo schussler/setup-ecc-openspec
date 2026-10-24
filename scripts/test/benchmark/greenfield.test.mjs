@@ -105,8 +105,9 @@ test('regras extras do new-project ficam no destino e nao liberam push nem rm', 
 
 test('new-project cria o repositorio sem rm do historico', () => {
   const text = readFileSync(join(REPO_ROOT, '.claude/skills/new-project/SKILL.md'), 'utf8');
-  assert.match(text, /checkout FETCH_HEAD -- \./);
-  assert.match(text, /git -C <target> rm -r -q -f/);
+  // rename-to-specloop-npx (SL-017): o projeto nasce pelo CLI, sem git fetch do template.
+  assert.match(text, /specloop(@\S+)? init/);
+  assert.match(text, /node <path>\/bin\/specloop\.mjs init/);
   assert.doesNotMatch(text, /rm -rf <target>\/\.git/);
 });
 

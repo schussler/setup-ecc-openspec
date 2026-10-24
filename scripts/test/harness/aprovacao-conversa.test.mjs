@@ -34,7 +34,7 @@ function approval(root, extra = {}) {
   return {
     path: 3,
     instruction: 'Aprovado o escopo e as premissas.',
-    approver: 'Douglas',
+    approver: 'mantenedor',
     reason: 'aprovação do contrato pela conversa',
     now: FIXED_NOW,
     author: 'teste',
@@ -96,7 +96,7 @@ test('[AP-006] registro sem TTY', () => {
   const { root, dir } = makeChange();
   const result = spawnSync(process.execPath, [
     AUTHORIZE, 'conversa', '--change', CHANGE, '--path', '3', '--instruction', 'Aprovado.',
-    '--approver', 'Douglas', '--reason', 'aprovação pela conversa',
+    '--approver', 'mantenedor', '--reason', 'aprovação pela conversa',
   ], { cwd: root, input: '', encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   assert.doesNotMatch(result.stdout, /código/);

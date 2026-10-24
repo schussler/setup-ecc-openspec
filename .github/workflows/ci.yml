@@ -1,0 +1,32 @@
+# CI de PR (design.md D4): roda os checks de template.json sem credenciais.
+# Só o evento pull_request: o evento "target" roda código de fork com permissões do repositório (design.md D4).
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: Node 22 (piso de engines)
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: OpenSpec CLI na versão de upstreams
+        run: npm install --global "@fission-ai/openspec@$(node -p "require('./template.json').upstreams.openspec")"
+      - name: Identidade git para os testes
+        run: |
+          git config --global user.name "specloop-ci"
+          git config --global user.email "ci@specloop.invalid"
+      - name: Checks (test, lint, typecheck)
+        run: node scripts/ci/run-checks.mjs

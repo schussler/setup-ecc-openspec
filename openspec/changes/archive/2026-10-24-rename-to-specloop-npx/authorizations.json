@@ -1,0 +1,22 @@
+[
+  {
+    "id": "923ea152-1424-4032-a7a6-bd8a2590fc4f",
+    "kind": "revision",
+    "origin": "human",
+    "procedure": "conversa",
+    "purpose": "contract_approval",
+    "scope": {
+      "contract_approval": true,
+      "path": 3,
+      "change": "rename-to-specloop-npx"
+    },
+    "reason": "consolidação de rename-to-specloop-npx aprovada na conversa",
+    "approver": "mantenedor",
+    "author": "schussler",
+    "recorded_at": "2026-10-24T22:00:53.405Z",
+    "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
+    "contract_hash": "0d81ed9887f0bc51abcb1bc2748b152c3d6239528a1ab81f860f7d062bb79b17",
+    "contract_version": 1,
+    "instruction": "aprovado"
+  }
+]

@@ -13,7 +13,7 @@ const INVOCATION = 'inv-1';
 function writeBudget(root, totalUsd = 12.5) {
   writeText(root, `${CHANGE_DIR}/authorizations.json`, `${JSON.stringify([{
     id: 'bud-1', kind: 'budget', origin: 'human', project_id: PROJECT_ID, scope: { change: CHANGE },
-    total_usd: totalUsd, per_call_usd: 2, reason: 'teste', approver: 'Douglas', recorded_at: '2026-10-23T12:00:00.000Z',
+    total_usd: totalUsd, per_call_usd: 2, reason: 'teste', approver: 'mantenedor', recorded_at: '2026-10-23T12:00:00.000Z',
   }], null, 2)}\n`);
 }
 

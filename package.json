@@ -1,0 +1,41 @@
+{
+  "name": "specloop",
+  "version": "0.1.0",
+  "description": "Framework de desenvolvimento orientado a specs para Claude Code: OpenSpec + ECC com pipeline de gates verificáveis.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "specloop": "bin/specloop.mjs"
+  },
+  "files": [
+    "bin",
+    "scripts/cli",
+    "scripts/gates",
+    "scripts/harness",
+    ".claude/agents",
+    ".claude/commands/opsx",
+    ".claude/commands/toolset-retro.md",
+    ".claude/harness",
+    ".claude/rules",
+    ".claude/skills",
+    ".claude/settings.json",
+    "templates/docs/agents",
+    "openspec/config.yaml",
+    "template.json",
+    "CLAUDE.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schussler/specloop.git"
+  },
+  "keywords": [
+    "claude-code",
+    "openspec",
+    "spec-driven-development",
+    "tdd",
+    "framework"
+  ]
+}

@@ -30,7 +30,7 @@ function reconciliationRecord(overrides = {}) {
     observed_consumption: [{ call_id: 'c1', usd: 0.4, source: 'reported' }],
     reservations: [],
     evidence_to_revalidate: [],
-    approver: 'Douglas',
+    approver: 'mantenedor',
     date: '2026-10-23',
     ...overrides,
   };

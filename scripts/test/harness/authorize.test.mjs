@@ -26,14 +26,14 @@ function readRecords(root) {
 }
 
 function budgetInput(extra = {}) {
-  return { kind: 'budget', reason: 'orçamento da fatia F5', approver: 'Douglas', totalUsd: 30, perCallUsd: 2, ...extra };
+  return { kind: 'budget', reason: 'orçamento da fatia F5', approver: 'mantenedor', totalUsd: 30, perCallUsd: 2, ...extra };
 }
 
 test('[RC-029] CLI sem terminal interativo recusa e não grava nada', () => {
   const root = makeRepo();
   const result = spawnSync(process.execPath, [
     AUTHORIZE, 'record', '--kind', 'budget', '--change', CHANGE,
-    '--total-usd', '30', '--per-call-usd', '2', '--reason', 'teste', '--approver', 'Douglas',
+    '--total-usd', '30', '--per-call-usd', '2', '--reason', 'teste', '--approver', 'mantenedor',
   ], { cwd: root, input: '', encoding: 'utf8' });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /terminal interativo/);
@@ -51,7 +51,7 @@ test('[RC-029] record sem TTY lança ConfigError e não cria o arquivo', async (
 
 test('[RC-012] registro de orçamento traz origem humana, escopo, valor, autor e data', async () => {
   const root = makeRepo();
-  await recordAuthorization(root, CHANGE, budgetInput(), { ...interactive, confirm: accept, author: 'douglas' });
+  await recordAuthorization(root, CHANGE, budgetInput(), { ...interactive, confirm: accept, author: 'mantenedor' });
   const [record] = readRecords(root);
   assert.equal(record.kind, 'budget');
   assert.equal(record.origin, 'human');
@@ -59,8 +59,8 @@ test('[RC-012] registro de orçamento traz origem humana, escopo, valor, autor e
   assert.equal(record.total_usd, 30);
   assert.equal(record.per_call_usd, 2);
   assert.equal('amount_usd' in record, false);
-  assert.equal(record.approver, 'Douglas');
-  assert.equal(record.author, 'douglas');
+  assert.equal(record.approver, 'mantenedor');
+  assert.equal(record.author, 'mantenedor');
   assert.equal(record.recorded_at, FIXED_NOW.toISOString());
   assert.equal(record.project_id, PROJECT_ID);
   assert.match(record.id, /^[0-9a-f-]{36}$/);
@@ -77,7 +77,7 @@ test('[RC-012] orçamento sem valor é recusado e tipo fora da lista também', a
 test('[RC-030] revogação acrescenta um registro novo e preserva o original', async () => {
   const root = makeRepo();
   const first = await recordAuthorization(root, CHANGE, budgetInput(), { ...interactive, confirm: accept });
-  await recordAuthorization(root, CHANGE, { kind: 'revocation', reason: 'revogação pelo humano', approver: 'Douglas', revokes: first.id }, { ...interactive, confirm: accept });
+  await recordAuthorization(root, CHANGE, { kind: 'revocation', reason: 'revogação pelo humano', approver: 'mantenedor', revokes: first.id }, { ...interactive, confirm: accept });
   const records = readRecords(root);
   assert.equal(records.length, 2);
   assert.deepEqual(records[0], first);
@@ -129,9 +129,9 @@ test('[RC-029] confirmação digitada errada não grava', async () => {
 
 test('[PO-011] probe_result grava o resultado com origem humana', async () => {
   const root = makeRepo();
-  const probe = await recordAuthorization(root, CHANGE, { kind: 'probe', reason: 'sonda P.2', approver: 'Douglas' }, { ...interactive, confirm: accept });
+  const probe = await recordAuthorization(root, CHANGE, { kind: 'probe', reason: 'sonda P.2', approver: 'mantenedor' }, { ...interactive, confirm: accept });
   const evidence = { path: 'relatorios/sonda-p2.json', sha256: 'b'.repeat(64) };
-  await recordAuthorization(root, CHANGE, { kind: 'probe_result', reason: 'sonda P.2', approver: 'Douglas', result: 'enforced', data: { probe_id: probe.id, evidence } }, { ...interactive, confirm: accept });
+  await recordAuthorization(root, CHANGE, { kind: 'probe_result', reason: 'sonda P.2', approver: 'mantenedor', result: 'enforced', data: { probe_id: probe.id, evidence } }, { ...interactive, confirm: accept });
   const [, record] = readRecords(root);
   assert.equal(record.kind, 'probe_result');
   assert.equal(record.result, 'enforced');

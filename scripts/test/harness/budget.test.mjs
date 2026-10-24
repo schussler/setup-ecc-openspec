@@ -21,7 +21,7 @@ const ZERO = { known_usd: 0, estimated_usd: 0, unknown_calls: 0 };
 function grant(id, totalUsd, extra = {}) {
   return {
     id, kind: 'budget', origin: 'human', scope: { change: CHANGE }, total_usd: totalUsd, per_call_usd: Math.min(2, totalUsd),
-    reason: 'teste', approver: 'Douglas', author: 'douglas', recorded_at: '2026-10-23T12:00:00.000Z',
+    reason: 'teste', approver: 'mantenedor', author: 'mantenedor', recorded_at: '2026-10-23T12:00:00.000Z',
     project_id: '3f2c9a1e-6b7d-4e8f-9a0b-1c2d3e4f5a6b', ...extra,
   };
 }

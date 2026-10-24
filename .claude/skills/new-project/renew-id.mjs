@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Gera um project_id novo em .harness-project.json (RS-019): o projeto derivado não herda
+// Gera um project_id novo em .harness-project.json (RS-019): o projeto SpecLoop não herda
 // o id do template. Preserva as outras chaves do arquivo.
 // Uso: node .claude/skills/new-project/renew-id.mjs <caminho do .harness-project.json>
 import { randomUUID } from 'node:crypto';

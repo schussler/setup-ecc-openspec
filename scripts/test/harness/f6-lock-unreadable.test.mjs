@@ -31,7 +31,7 @@ function diagnosticEvents(root) {
 function lockReleaseRecord(overrides = {}) {
   return {
     id: 'lock-ilegivel-1', kind: 'lock_release', origin: 'human', scope: { change: CHANGE },
-    reason: 'lock de processo morto', approver: 'Douglas', date: '2026-10-23', ...overrides,
+    reason: 'lock de processo morto', approver: 'mantenedor', date: '2026-10-23', ...overrides,
   };
 }
 

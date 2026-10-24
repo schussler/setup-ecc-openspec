@@ -12,7 +12,7 @@ import { REPO_ROOT } from './fixture.mjs';
 
 const FAKE = join(REPO_ROOT, 'scripts', 'test', 'harness', 'fixtures', 'fake-claude.mjs');
 const OK_BIN = [process.execPath, FAKE];
-const ADOPTION = '## Marco de adoção\n- **Marco de adoção registrado:** 2026-10-24 — aprovador: Douglas\n';
+const ADOPTION = '## Marco de adoção\n- **Marco de adoção registrado:** 2026-10-24 — aprovador: mantenedor\n';
 const CLEAN_ENV = { ...process.env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null' };
 
 // Projeto mínimo que passa em todos os itens; cada teste quebra um item.
@@ -37,7 +37,10 @@ function project({ commit = true, identity = true, projectId = true, adoption = 
   mkdirSync(join(root, 'docs', 'agents'), { recursive: true });
   writeFileSync(join(root, 'docs', 'agents', 'issue-tracker.md'), adoption ? ADOPTION : '# Sem marco\n');
   writeFileSync(join(root, 'README.md'), 'x\n');
-  if (commit) git(['add', '-A']) && git(['commit', '-q', '-m', 'base']);
+  // A identidade do commit base vale só para este comando (-c), não fica na configuração do
+  // repositório: o preflight continua vendo o repositório sem identidade quando identity é false,
+  // e o fixture não depende de o git deduzir um nome do usuário da máquina.
+  if (commit) git(['add', '-A']) && git(['-c', 'user.name=Base', '-c', 'user.email=base@example.com', 'commit', '-q', '-m', 'base']);
   return root;
 }
 

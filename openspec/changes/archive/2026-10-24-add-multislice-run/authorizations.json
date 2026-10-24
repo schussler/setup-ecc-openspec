@@ -11,7 +11,7 @@
       "change": "add-multislice-run"
     },
     "reason": "contrato do harness aprovado pela conversa (escopo acrescentado)",
-    "approver": "Douglas",
+    "approver": "mantenedor",
     "author": "schussler",
     "recorded_at": "2026-10-24T19:24:15.910Z",
     "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
@@ -31,7 +31,7 @@
       "change": "add-multislice-run"
     },
     "reason": "nova versão do contrato: MS-010 revisado e MS-014 após validação real",
-    "approver": "Douglas",
+    "approver": "mantenedor",
     "author": "schussler",
     "recorded_at": "2026-10-24T19:44:17.947Z",
     "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",

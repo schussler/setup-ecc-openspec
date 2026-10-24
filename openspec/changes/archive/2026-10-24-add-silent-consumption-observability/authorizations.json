@@ -10,7 +10,7 @@
       "change": "add-silent-consumption-observability"
     },
     "reason": "Aprovo o contrato de add-silent-consumption-observability: coleta silenciosa, modo de observação padrão, controle financeiro opcional e resumo após arquivamento ou sob demanda. Hash 4c8adb62a618e5d52939bf93e2ca5f1e03b3fe6b628bd946c6973194baff0bb4.",
-    "approver": "Douglas",
+    "approver": "mantenedor",
     "author": "schussler",
     "recorded_at": "2026-10-24T16:59:27.669Z",
     "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
@@ -28,7 +28,7 @@
       "change": "add-silent-consumption-observability"
     },
     "reason": "Aprovo o contrato de add-silent-consumption-observability com modo_financeiro no perfil da execução, padrão false. Hash 0bfec198d30f34102611d583c0dde97965f02f7293f9d3d57195e2c25794777f.",
-    "approver": "Douglas",
+    "approver": "mantenedor",
     "author": "schussler",
     "recorded_at": "2026-10-24T17:16:39.661Z",
     "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",

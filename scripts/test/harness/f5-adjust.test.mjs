@@ -26,7 +26,7 @@ const interactive = { isInteractive: () => true, now: FIXED_NOW, confirm: async 
 const OK_OUTPUT = { type: 'result', subtype: 'success', is_error: false, result: 'ok' };
 // Testes de orçamento exercitam o modo financeiro, que é explícito desde add-silent-consumption-observability.
 const FINANCIAL = { provisional: true, modo_financeiro: true };
-const HUMAN = { origin: 'human', scope: { change: CHANGE }, recorded_at: '2026-10-23T12:00:00.000Z', author: 'douglas', project_id: PROJECT_ID };
+const HUMAN = { origin: 'human', scope: { change: CHANGE }, recorded_at: '2026-10-23T12:00:00.000Z', author: 'mantenedor', project_id: PROJECT_ID };
 
 function authPath(root) {
   return join(root, 'openspec', 'changes', CHANGE, 'authorizations.json');
@@ -42,7 +42,7 @@ function writeAuthorizations(root, records) {
 
 // Concessão de orçamento já gravada (formato F5 com total_usd e per_call_usd).
 function grant(id, totalUsd, perCallUsd = 2, extra = {}) {
-  return { id, kind: 'budget', total_usd: totalUsd, per_call_usd: perCallUsd, reason: 'teste', approver: 'Douglas', ...HUMAN, ...extra };
+  return { id, kind: 'budget', total_usd: totalUsd, per_call_usd: perCallUsd, reason: 'teste', approver: 'mantenedor', ...HUMAN, ...extra };
 }
 
 function step(root, log, options = {}) {
@@ -53,15 +53,15 @@ function step(root, log, options = {}) {
 }
 
 function budgetInput(extra = {}) {
-  return { kind: 'budget', reason: 'orçamento da fatia F5', approver: 'Douglas', totalUsd: 30, perCallUsd: 2, ...extra };
+  return { kind: 'budget', reason: 'orçamento da fatia F5', approver: 'mantenedor', totalUsd: 30, perCallUsd: 2, ...extra };
 }
 
 function probeInput(extra = {}) {
-  return { kind: 'probe', reason: 'sonda P.2', approver: 'Douglas', ...extra };
+  return { kind: 'probe', reason: 'sonda P.2', approver: 'mantenedor', ...extra };
 }
 
 function probeResultInput(data, extra = {}) {
-  return { kind: 'probe_result', reason: 'sonda P.2', approver: 'Douglas', result: 'enforced', data, ...extra };
+  return { kind: 'probe_result', reason: 'sonda P.2', approver: 'mantenedor', result: 'enforced', data, ...extra };
 }
 
 // Change de teste em <repo>/openspec/changes/<change>, com .harness-project.json (D32, RC-050).
@@ -89,7 +89,7 @@ const DRAFT = '## Contrato\n\n- **Comportamento novo:** sim\n- **Estado do contr
 const APPROVED = '## Contrato\n\n- **Comportamento novo:** sim\n- **Estado do contrato:** aprovado\n';
 const REVISION_AUTH = {
   id: 'R-1', kind: 'revision', purpose: 'scenario_change', project_id: FIXTURE_PROJECT_ID, scope: { change: CHANGE, scenario: 'HI-900', revision: 2 },
-  reason: 'exceção aprovada', approver: 'Douglas', source: 'cli', date: '2026-10-23',
+  reason: 'exceção aprovada', approver: 'mantenedor', source: 'cli', date: '2026-10-23',
 };
 
 // --- RC-022: orçamento em duas dimensões ------------------------------------
@@ -183,7 +183,7 @@ test('[RC-031] sem autorização budget o motivo é authorization_required, não
 
 test('[RC-031] autorização revogada conta como ausente e o motivo é authorization_required', async () => {
   const root = makeRepo();
-  writeAuthorizations(root, [grant('budget-1', 30, 2), { id: 'rev-1', kind: 'revocation', revokes: 'budget-1', origin: 'human', scope: { change: CHANGE }, reason: 'engano', approver: 'Douglas' }]);
+  writeAuthorizations(root, [grant('budget-1', 30, 2), { id: 'rev-1', kind: 'revocation', revokes: 'budget-1', origin: 'human', scope: { change: CHANGE }, reason: 'engano', approver: 'mantenedor' }]);
   const outcome = await step(root, newCallLog(), { profile: FINANCIAL });
   assert.equal(outcome.stop_reason, 'authorization_required');
 });
@@ -211,7 +211,7 @@ test('[RC-031] policy.json aceita os stop_reasons authorization_required e lock_
 test('[RC-034] revogação é registro próprio: a original permanece e o saldo deixa de contá-la', async () => {
   const root = makeRepo();
   const original = await recordAuthorization(root, CHANGE, budgetInput(), interactive);
-  const revocation = await recordAuthorization(root, CHANGE, { kind: 'revocation', reason: 'engano do valor', approver: 'Douglas', revokes: original.id }, interactive);
+  const revocation = await recordAuthorization(root, CHANGE, { kind: 'revocation', reason: 'engano do valor', approver: 'mantenedor', revokes: original.id }, interactive);
   const records = readRecords(root);
   assert.equal(records.length, 2);
   assert.deepEqual(records[0], original);
@@ -226,7 +226,7 @@ test('[RC-034] revogação de id inexistente é recusada e nada é gravado', asy
   await recordAuthorization(root, CHANGE, budgetInput(), interactive);
   const before = readFileSync(authPath(root), 'utf8');
   await assert.rejects(
-    recordAuthorization(root, CHANGE, { kind: 'revocation', reason: 'x', approver: 'Douglas', revokes: 'inexistente' }, interactive),
+    recordAuthorization(root, CHANGE, { kind: 'revocation', reason: 'x', approver: 'mantenedor', revokes: 'inexistente' }, interactive),
     /não existe/,
   );
   assert.equal(readFileSync(authPath(root), 'utf8'), before);
@@ -236,7 +236,7 @@ test('[RC-034] revogação não carrega valor de orçamento', async () => {
   const root = makeRepo();
   const original = await recordAuthorization(root, CHANGE, budgetInput(), interactive);
   await assert.rejects(
-    recordAuthorization(root, CHANGE, { kind: 'revocation', reason: 'x', approver: 'Douglas', revokes: original.id, totalUsd: 5 }, interactive),
+    recordAuthorization(root, CHANGE, { kind: 'revocation', reason: 'x', approver: 'mantenedor', revokes: original.id, totalUsd: 5 }, interactive),
     /revogação não concede orçamento/,
   );
 });
@@ -245,7 +245,7 @@ test('[RC-034] revogação só é aceita como tipo revocation, não como budget 
   const root = makeRepo();
   const original = await recordAuthorization(root, CHANGE, budgetInput(), interactive);
   await assert.rejects(
-    recordAuthorization(root, CHANGE, { kind: 'budget', reason: 'x', approver: 'Douglas', revokes: original.id }, interactive),
+    recordAuthorization(root, CHANGE, { kind: 'budget', reason: 'x', approver: 'mantenedor', revokes: original.id }, interactive),
     /revokes exige kind revocation/,
   );
 });

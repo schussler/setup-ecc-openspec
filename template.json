@@ -1,7 +1,7 @@
 {
-  "template": {
-    "repo": "https://github.com/schussler/setup-ecc-openspec.git",
-    "branch": "main"
+  "framework": {
+    "package": "specloop",
+    "version": "0.1.0"
   },
   "upstreams": {
     "ecc": "2.2.3",
@@ -37,7 +37,12 @@
     "scripts/test",
     "scripts/test/harness",
     "openspec/specs",
-    "openspec/changes/archive"
+    "openspec/changes/archive",
+    "bin",
+    "scripts/cli",
+    "package.json",
+    ".github",
+    "scripts/ci"
   ],
   "checks": {
     "test": {
@@ -53,6 +58,6 @@
     },
     "test_file": "node --test {file}",
     "lint": "node scripts/gates/lint.mjs",
-    "typecheck": "node scripts/gates/syntax-check.mjs scripts .claude/skills/template-migrate"
+    "typecheck": "node scripts/gates/syntax-check.mjs scripts .claude/skills/template-migrate bin"
   }
 }

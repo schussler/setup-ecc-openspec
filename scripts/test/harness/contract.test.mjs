@@ -12,7 +12,7 @@ const PROJECT_ID = 'ae7fabc2-4918-45fa-aefa-3c9519aba014';
 const CHANGE = 'contrato-teste';
 const REVISION_AUTH = {
   id: 'R-1', kind: 'revision', purpose: 'scenario_change', project_id: PROJECT_ID, scope: { change: CHANGE, scenario: 'HI-900', revision: 1 },
-  reason: 'exceção aprovada', approver: 'Douglas', source: 'cli', date: '2026-10-23',
+  reason: 'exceção aprovada', approver: 'mantenedor', source: 'cli', date: '2026-10-23',
 };
 const BUDGET_AUTH = { ...REVISION_AUTH, id: 'B-1', kind: 'budget' };
 const REVOKE_OF_R1 = { ...REVISION_AUTH, id: 'R-2', kind: 'revision', revokes: 'R-1' };
@@ -100,7 +100,7 @@ test('[HI-007] authorizations.json em formato de array é lido', () => {
 // ---------------------------------------------------------------------------
 
 test('[HI-009] aprovação em texto livre é recusada', () => {
-  const root = ONE('texto livre', { ...VALID, 'Verificação': 'check:lint', 'Justificativa': 'doc', 'Aprovação': 'Douglas, 2026-10-23' });
+  const root = ONE('texto livre', { ...VALID, 'Verificação': 'check:lint', 'Justificativa': 'doc', 'Aprovação': 'mantenedor, 2026-10-23' });
   const errors = checkScenarios(root);
   assert.deepEqual(codes(errors), ['HI-009']);
   assert.equal(errors[0].scenario, 'texto livre');
@@ -146,7 +146,7 @@ test('[HI-009] revisão alterada sem Aprovação é recusada', () => {
 test('[HI-010] comportamento novo: não sem auth:<id> é recusado na change', () => {
   const root = makeChange([scenario('completo', VALID)], {
     authorizations: [REVISION_AUTH],
-    proposal: '## Contrato\n\n- **Comportamento novo:** não\n- **Aprovação:** Douglas\n',
+    proposal: '## Contrato\n\n- **Comportamento novo:** não\n- **Aprovação:** mantenedor\n',
   });
   assert.deepEqual(codes(checkContract(root)), ['HI-009']);
 });

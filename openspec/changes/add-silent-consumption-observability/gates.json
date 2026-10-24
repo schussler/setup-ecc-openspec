@@ -1,0 +1,24 @@
+{
+  "archive": {
+    "attempts": [
+      {
+        "attempt": 1,
+        "at": "2026-10-24T17:18:05.990Z",
+        "note": "tentativa de arquivamento após aprovações de contrato",
+        "gate": "archive",
+        "passed": false,
+        "failures": 1,
+        "cases": [],
+        "evidence": {
+          "reason": "o gate de implementação não está em pass; rode spec-implement antes de arquivar"
+        },
+        "paid": false,
+        "cost_source": null,
+        "evaluator": "id",
+        "evaluator_limits": [],
+        "verdict": "stop",
+        "written": true
+      }
+    ]
+  }
+}

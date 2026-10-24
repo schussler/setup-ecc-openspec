@@ -145,7 +145,8 @@ test('[PM-011] nenhuma chamada paga inicia antes da reconciliação das reservas
   assert.equal(resumeExecution({ root, change: CHANGE }).stop_reason, 'reconciliation_required');
   writeAuthorizations(root, [grant('budget-1', 30)]);
   const log = newCallLog();
-  const outcome = await step(root, log, OK_OUTPUT);
+  // Reserva aberta da execução restaurada é fluxo financeiro: o modo financeiro é explícito.
+  const outcome = await step(root, log, OK_OUTPUT, { profile: { provisional: true, modo_financeiro: true } });
   assert.equal(outcome.invoked, false);
   assert.equal(outcome.stop_reason, 'reconciliation_required');
   assert.equal(simulatorCalls(log).length, 0);

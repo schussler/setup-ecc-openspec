@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Invocação headless
-O runner SHALL invocar cada passo autônomo com `claude -p`, com a skill nomeada no prompt, um argumento de tarefa, `--output-format json`, `--permission-mode dontAsk`, `--allowedTools` com a lista de `.claude/settings.json`, e `--session-id` gerado pelo runner. Nunca SHALL usar `--dangerously-skip-permissions` nem `--bare`, para que os hooks do ECC continuem ativos. O runner SHALL NOT passar `--fallback-model`. Quando houver teto de custo por chamada, SHALL passar `--max-budget-usd` com o limite efetivo, e SHALL controlar o total entre chamadas por conta própria.
+O runner SHALL invocar cada passo autônomo com `claude -p`, com a skill nomeada no prompt, um argumento de tarefa, `--output-format json`, `--permission-mode dontAsk`, `--allowedTools` com a lista de `.claude/settings.json`, e `--session-id` gerado pelo runner. Nunca SHALL usar `--dangerously-skip-permissions` nem `--bare`, para que os hooks do ECC continuem ativos. O runner SHALL NOT passar `--fallback-model`. Quando o modo financeiro estiver ativo (`modo_financeiro: true` no perfil da execução, com padrão `false`; ausente ou falsa, o modo é de observação) e houver teto de custo por chamada, SHALL passar `--max-budget-usd` com o limite efetivo, e SHALL controlar o total entre chamadas por conta própria. No modo de observação, o runner SHALL NOT passar `--max-budget-usd` e SHALL NOT exigir autorização `budget`, reserva ou reconciliação financeira, conforme `harness-consumption-observation`. Os cenários HE-004 e HE-005 valem somente no modo financeiro.
 
 #### Scenario: skill nomeada no prompt executa via claude -p
 - **ID:** HE-001

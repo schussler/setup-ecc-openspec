@@ -28,7 +28,7 @@ const PROVIDER_CLI = 'claude-cli';
 
 // Campos de contexto que o chamador pode passar além do resultado da invocação.
 const CONTEXT_FIELDS = [
-  'execution_id', 'invocation_id', 'delivery', 'attempt', 'status', 'cases', 'checks', 'results', 'hashes',
+  'execution_id', 'invocation_id', 'delivery', 'attempt', 'stage', 'task', 'status', 'cases', 'checks', 'results', 'hashes',
   'corrections_requested', 'changes_produced', 'stops', 'interruptions', 'human_decisions', 'reserves', 'nondeterminism',
 ];
 
@@ -84,6 +84,9 @@ export function buildEvent(fields, { at = new Date().toISOString() } = {}) {
     status: orNull(fields.status),
     delivery: orNull(fields.delivery),
     attempt: orNull(fields.attempt),
+    // Etapa do pipeline (gate ou passo). Tarefa só com vínculo confiável; sem ele, nula (CO-006).
+    stage: orNull(fields.stage),
+    task: orNull(fields.task),
     execution_id: orNull(fields.execution_id),
     invocation_id: orNull(fields.invocation_id),
     cases: arrayOf(fields.cases),

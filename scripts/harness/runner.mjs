@@ -1,6 +1,6 @@
 // Runner de uma etapa headless (F5, F6). Ordem dos portões, antes de qualquer processo:
 // 1. configuração (PO-002, PO-013): perfil que exige limite de turnos precisa de probe_result enforced humano;
-// 2. limite efetivo e autorização de orçamento (HE-005, RC-021, RC-031): sem concessão vigente, authorization_required;
+// 2. limite efetivo e autorização de orçamento (HE-005, RC-021, RC-031), só no modo financeiro (CO-001, CO-002): sem concessão vigente, authorization_required;
 // 3. lock da change (D1, RS-022); 4. modo runner (D20);
 // 5. nova execução só a partir de parada (RS-024, RC-035); invocação interrompida exige reconciliação (RC-017, RC-024);
 // 6. tempo ativo e invocações da change (RC-026, RC-036, RC-037);
@@ -11,6 +11,7 @@ import { randomUUID } from 'node:crypto';
 import { invokeHarness, readAllowedTools } from './claude.mjs';
 import { activeGrants, applyReconciliation, authorizedTotalUsd, checkReserve, marginUsd, reservationUsd, settleCall } from './budget.mjs';
 import { countInvocation } from './counters.mjs';
+import { financialMode, observeSafely } from './observation.mjs';
 import { loadAuthorizations } from './contract.mjs';
 import { addActive, emptyActiveBook } from './active-time.mjs';
 import { changeDir } from './identity.mjs';
@@ -198,7 +199,7 @@ function timeoutDiagnostic(result) {
 
 // Uma invocação completa, a partir do estado já validado. Ver a ordem dos portões no topo.
 async function runStep(ctx, options) {
-  const { root, change, policy, profile, limit, records, tools, prompt, bin, env, cwd, model, effort, observe, killGraceMs, terminate, protect, agent } = options;
+  const { root, change, policy, profile, limit, records, tools, prompt, bin, env, cwd, model, effort, observe, killGraceMs, terminate, protect, agent, financial, stage } = options;
   let state = loadState(root, change) ?? createState(root, change, { mode: RUNNER_MODE, executionId: ctx.executionId });
   if (state.mode !== RUNNER_MODE) return stopped(STATE_CONFIG_BLOCKED, 'mode_mismatch');
   ctx.timeBook = { total: state.active_ms ?? 0, book: { ...emptyActiveBook(), ...(state.active_ms_by_category ?? {}) } };
@@ -237,26 +238,29 @@ async function runStep(ctx, options) {
   const maxInvocations = effectiveCeiling(policy.max_invocations_per_change, profile.candidate_invocations_per_change);
   if ((state.invocations_total ?? 0) >= maxInvocations) return stopFrom(ctx, state, STATE_AWAITING_DECISION, 'budget_exhausted', limits);
 
-  const verdict = checkReserve({
-    authorizedTotalUsd: authorizedTotalUsd(policy, profile, options.grants),
-    consumption: state.consumption,
-    openReservations: state.open_reservations,
-    reserveUsd: limits.reserved_usd,
-  });
-  if (!verdict.ok) return stopFrom(ctx, state, STATE_AWAITING_DECISION, verdict.stop_reason, limits);
-
-  // Reserva aberta sem registro de reconciliação D26 bloqueia a próxima chamada paga (D19, D26).
-  if (uncoveredReservations(state, { mandatory: reconciliationPending }).length > 0) {
-    return stopFrom(ctx, state, STATE_AWAITING_DECISION, 'reconciliation_required', limits);
-  }
-
+  // Modo de observação (CO-001, CO-002): sem reserva, sem autorização de orçamento e sem bloqueio por custo.
   const invocationId = randomUUID();
-  let sessionId;
-  try {
-    sessionId = prepareReservation(root, change, { reserved_usd: limits.reserved_usd, invocation_id: invocationId }, { authorizations: records });
-  } catch (err) {
-    if (err.stopReason !== 'reconciliation_required') throw err;
-    return stopFrom(ctx, state, STATE_AWAITING_DECISION, 'reconciliation_required', limits);
+  let sessionId = randomUUID();
+  if (financial) {
+    const verdict = checkReserve({
+      authorizedTotalUsd: authorizedTotalUsd(policy, profile, options.grants),
+      consumption: state.consumption,
+      openReservations: state.open_reservations,
+      reserveUsd: limits.reserved_usd,
+    });
+    if (!verdict.ok) return stopFrom(ctx, state, STATE_AWAITING_DECISION, verdict.stop_reason, limits);
+
+    // Reserva aberta sem registro de reconciliação D26 bloqueia a próxima chamada paga (D19, D26).
+    if (uncoveredReservations(state, { mandatory: reconciliationPending }).length > 0) {
+      return stopFrom(ctx, state, STATE_AWAITING_DECISION, 'reconciliation_required', limits);
+    }
+
+    try {
+      sessionId = prepareReservation(root, change, { reserved_usd: limits.reserved_usd, invocation_id: invocationId }, { authorizations: records });
+    } catch (err) {
+      if (err.stopReason !== 'reconciliation_required') throw err;
+      return stopFrom(ctx, state, STATE_AWAITING_DECISION, 'reconciliation_required', limits);
+    }
   }
   const reserved = loadState(root, change);
   const invoking = transitionTo(ctx, reserved, STATE_INVOKING, {
@@ -273,14 +277,15 @@ async function runStep(ctx, options) {
   const timeoutMs = effectiveCeiling(policy.max_seconds_per_call, profile.candidate_seconds_per_call) * MS_PER_SECOND;
   const protectedBefore = protect ? await timedIn(ctx, 'ferramenta', protect) : null;
   const result = await timedIn(ctx, 'invocacao', () => invokeHarness({
-    bin, cwd, prompt, allowedTools: tools, sessionId, maxBudgetUsd: limit, model, effort, env,
+    bin, cwd, prompt, allowedTools: tools, sessionId, maxBudgetUsd: financial ? limit : null, model, effort, env,
     timeoutMs: options.timeoutMs === undefined ? timeoutMs : Math.min(timeoutMs, options.timeoutMs), killGraceMs, terminate,
   }));
 
   const current = loadState(root, change);
-  const settled = settleCall(current.consumption, current.open_reservations, {
-    sessionId, cost_usd: result.cost_usd, cost_source: result.cost_source,
-  });
+  // Só o modo financeiro tem reserva para liquidar. Na observação, o consumo fica nos eventos (CO-004).
+  const settled = financial
+    ? settleCall(current.consumption, current.open_reservations, { sessionId, cost_usd: result.cost_usd, cost_source: result.cost_source })
+    : { consumption: current.consumption, open_reservations: current.open_reservations };
   const observed = observe ? await timedIn(ctx, 'ferramenta', observe) : current.observed_hashes;
   // Término não confirmado: o processo pode seguir vivo. O estado registra, o lock não é liberado,
   // e nenhuma avaliação nova começa até decisão humana (RC-043, RC-044).
@@ -288,9 +293,11 @@ async function runStep(ctx, options) {
   if (unconfirmed) ctx.keepLock = true;
   const stopReason = unconfirmed ? 'human_decision_needed' : (result.stop_reason ?? null);
   // Um evento por invocação (F9, TE-001 a TE-002): custo sem origem fica unknown, nunca zero.
-  recordEvent(root, change, eventFromInvocation(result, {
+  // Falha de observação não altera o resultado do passo (CO-014, RG-003).
+  observeSafely(root, change, () => recordEvent(root, change, eventFromInvocation(result, {
     agent, function: 'invocacao', model, effort, execution_id: ctx.executionId, invocation_id: invocationId,
-  }));
+    stage, attempt: invoking.attempt_id,
+  })));
   const patch = {
     consumption: settled.consumption,
     open_reservations: settled.open_reservations,
@@ -426,7 +433,7 @@ function resumeGate(ctx, state) {
 // observe devolve o mapa caminho -> hash, para a validação pendente da retomada (RC-018).
 export async function runHarnessStep({
   root, change, bin, prompt, allowedTools, profile = {}, model, effort, env = {}, cwd = root,
-  timeoutMs, killGraceMs, executionId, newExecution = false, observe, terminate, protect, agent = 'runner',
+  timeoutMs, killGraceMs, executionId, newExecution = false, observe, terminate, protect, agent = 'runner', stage = null,
 }) {
   const policy = loadPolicy(root);
   validateProfileAgainstPolicy(profile, policy);
@@ -435,9 +442,11 @@ export async function runHarnessStep({
   if (profile.max_turns !== undefined && !hasEnforcedProbe(records, change)) {
     return stopped(STATE_CONFIG_BLOCKED, 'config_error');
   }
+  // Modo financeiro só com modo_financeiro: true no perfil (CO-002). Na observação, sem concessão e sem limite de custo.
+  const financial = financialMode(profile);
   const grants = activeGrants(records, change);
-  const { limit } = effectiveLimit(policy, profile, grants);
-  if (limit === null) return stopped(STATE_AWAITING_DECISION, 'authorization_required');
+  const limit = financial ? effectiveLimit(policy, profile, grants).limit : null;
+  if (financial && limit === null) return stopped(STATE_AWAITING_DECISION, 'authorization_required');
 
   const existing = loadState(root, change);
   if (newExecution && existing !== null && !NEW_EXECUTION_FROM.has(existing.state)) {
@@ -450,7 +459,7 @@ export async function runHarnessStep({
     ? { phase: 'resume', previousExecutionId: null }
     : { phase: 'start', previousExecutionId: startsNew ? existing.execution_id : null };
   return runWithLock({
-    root, change, policy, grants, profile, limit, records, tools, prompt, bin, env, cwd,
+    root, change, policy, grants, profile, limit, records, tools, prompt, bin, env, cwd, financial, stage,
     model, effort, timeoutMs, killGraceMs, observe, terminate, protect, agent, executionId: runExecutionId, newExecution: startsNew,
     phase: lifecycle.phase, previousExecutionId: lifecycle.previousExecutionId,
   });

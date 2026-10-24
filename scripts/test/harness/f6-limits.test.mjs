@@ -9,6 +9,8 @@ import { newCallLog, simulatorCalls } from './simulator.mjs';
 import { grant, paidOutput, patchState, step, writeAuthorizations, OK_OUTPUT } from './f6-support.mjs';
 
 const CANDIDATE = { provisional: true };
+// Testes de orçamento exercitam o modo financeiro, que é explícito desde add-silent-consumption-observability.
+const FINANCIAL = { ...CANDIDATE, modo_financeiro: true };
 
 test('[RC-026] tempo total ativo igual ao limite da política para com time_limit sem invocar', async () => {
   const root = makeRepo();
@@ -52,9 +54,9 @@ test('[RC-037] limite de invocações da change para com budget_exhausted antes 
   const root = makeRepo();
   writeAuthorizations(root, [grant('budget-1', 30)]);
   const log = newCallLog();
-  const first = await step(root, log, paidOutput(1), { profile: { ...CANDIDATE, candidate_invocations_per_change: 1 } });
+  const first = await step(root, log, paidOutput(1), { profile: { ...FINANCIAL, candidate_invocations_per_change: 1 } });
   assert.equal(first.invoked, true);
-  const second = await step(root, log, paidOutput(1), { profile: { ...CANDIDATE, candidate_invocations_per_change: 1 } });
+  const second = await step(root, log, paidOutput(1), { profile: { ...FINANCIAL, candidate_invocations_per_change: 1 } });
   const state = loadState(root, CHANGE);
   assert.equal(second.invoked, false);
   assert.equal(second.stop_reason, 'budget_exhausted');
@@ -81,10 +83,10 @@ test('[RC-035] nova execução referencia a anterior e mantém consumo e reserva
   const root = makeRepo();
   writeAuthorizations(root, [grant('budget-1', 30)]);
   const log = newCallLog();
-  const first = await step(root, log, paidOutput(1));
+  const first = await step(root, log, paidOutput(1), { profile: FINANCIAL });
   const oldExecution = loadState(root, CHANGE).execution_id;
   patchState(root, { state: 'awaiting_decision', stop_reason: 'human_decision_needed' });
-  const second = await step(root, log, paidOutput(1), { newExecution: true });
+  const second = await step(root, log, paidOutput(1), { profile: FINANCIAL, newExecution: true });
   const state = loadState(root, CHANGE);
   assert.equal(first.invoked, true);
   assert.equal(second.invoked, true);
@@ -125,7 +127,7 @@ test('[RC-038] cada invocação tem invocation_id próprio, distinto de executio
 test('[RC-031] sem autorização o relatório mostra authorization_required e não budget_reserve_insufficient', async () => {
   const root = makeRepo();
   writeAuthorizations(root, []);
-  const outcome = await step(root, newCallLog(), OK_OUTPUT);
+  const outcome = await step(root, newCallLog(), OK_OUTPUT, { profile: FINANCIAL });
   const report = buildStopReport({ outcome, objective: 'fatia F6' });
   assert.equal(outcome.stop_reason, 'authorization_required');
   assert.equal(report.blocker.stop_reason, 'authorization_required');
@@ -137,8 +139,8 @@ test('[RC-031] autorização vigente sem saldo para com budget_reserve_insuffici
   writeAuthorizations(root, [grant('budget-1', 2)]);
   const log = newCallLog();
   // Primeira chamada: limite 1, reserva 1,25, gasto real 1,5. Saldo restante 0,5.
-  const outcome = await step(root, log, paidOutput(1.5), { profile: { ...CANDIDATE, candidate_usd_per_call: 1 } });
-  const insufficient = await step(root, log, OK_OUTPUT);
+  const outcome = await step(root, log, paidOutput(1.5), { profile: { ...FINANCIAL, candidate_usd_per_call: 1 } });
+  const insufficient = await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   const report = buildStopReport({ outcome: insufficient, objective: 'fatia F6' });
   assert.equal(outcome.invoked, true);
   assert.equal(insufficient.stop_reason, 'budget_reserve_insufficient');

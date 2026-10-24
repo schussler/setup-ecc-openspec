@@ -115,7 +115,7 @@ export async function run({ root, change, options = {}, evaluate = evaluateImple
   const profile = loadProfile(root, profilePath);
   await recordProfile(root, change, profilePath);
   const outcome = await runSlice({
-    root, change, gate: GATE, cwd: root, bin: binOf(options),
+    root, change, gate: GATE, stage: GATE, cwd: root, bin: binOf(options),
     profile,
     model: typeof options.model === 'string' ? options.model : undefined,
     effort: typeof options.effort === 'string' ? options.effort : undefined,

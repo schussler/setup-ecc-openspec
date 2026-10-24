@@ -46,6 +46,8 @@ Read the `mode` field of `.harness-local/<change>/run-state.json`. Without that 
 
 7. **Record the restore point.** In `issue-tracker.md`, clear **Change ativa**, set **Próximo passo** to `pr` (only on explicit request) or the next change, and add a log entry that points to the gates state for the final scores, without copying them.
 
+8. **Consumo e observações finais.** Only after a successful archive, run `node scripts/harness/cli.mjs consumo --change <change> --archived` and show its `section` to the user under the heading "Consumo e observações finais". If the command fails, report that the report failed and that the archive is kept, then stop; the command can be run again later. Never revert the archive, never change the gate verdict, and never run this command in any other step.
+
 ## Headless mode
 
 Under `claude -p`, or when the input contains `--headless`, run the same steps without asking anything. Archive with `openspec archive <change> --yes`. The gate and its cycle run exactly as above. End with one line: `SPEC-ARCHIVE: <change> <archived|not-archived> <verdict>`.

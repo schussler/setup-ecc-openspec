@@ -13,6 +13,8 @@ const outcome = await runHarnessStep({
   bin: [process.execPath, join(HERE, 'fake-claude.mjs')],
   prompt: HARNESS_PROMPT,
   allowedTools: ['Read'],
+  // Interrupção com reserva aberta é um fluxo financeiro: o modo financeiro é explícito.
+  profile: { provisional: true, modo_financeiro: true },
   env: {},
 });
 

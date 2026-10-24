@@ -15,6 +15,8 @@ const PROMPT = '/spec-implement add-spec-harness';
 const CHANGE_DIR = `openspec/changes/${CHANGE}`;
 const OK_OUTPUT = { type: 'result', subtype: 'success', is_error: false, result: 'ok' };
 const HUMAN = { origin: 'human', scope: { change: CHANGE }, recorded_at: '2026-10-23T12:00:00.000Z', author: 'douglas' };
+// Testes de orçamento exercitam o modo financeiro, que é explícito desde add-silent-consumption-observability.
+const FINANCIAL = { provisional: true, modo_financeiro: true };
 
 // Concessão no formato D23: total_usd e per_call_usd (por chamada = menor entre 2 e o total).
 function grant(id, totalUsd, extra = {}) {
@@ -45,7 +47,7 @@ test('[HE-005] sem autorização de orçamento nenhuma invocação começa', asy
   const root = makeRepo();
   writeAuthorizations(root, []);
   const log = newCallLog();
-  const outcome = await step(root, log, OK_OUTPUT);
+  const outcome = await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   assert.equal(outcome.invoked, false);
   assert.equal(outcome.stop_reason, 'authorization_required');
   assert.equal(outcome.state, 'awaiting_decision');
@@ -56,7 +58,7 @@ test('[RC-021] candidato de gasto no perfil não autoriza nenhum gasto', async (
   const root = makeRepo();
   writeAuthorizations(root, []);
   const log = newCallLog();
-  const outcome = await step(root, log, OK_OUTPUT, { profile: { provisional: true, candidate_usd_per_change: 30 } });
+  const outcome = await step(root, log, OK_OUTPUT, { profile: { ...FINANCIAL, candidate_usd_per_change: 30 } });
   assert.equal(outcome.invoked, false);
   assert.equal(simulatorCalls(log).length, 0);
 });
@@ -96,7 +98,7 @@ test('[RC-029] registro de orçamento sem origem humana não autoriza gasto', as
   const root = makeRepo();
   writeAuthorizations(root, [grant('agente', 30, { origin: 'agent' })]);
   const log = newCallLog();
-  const outcome = await step(root, log, OK_OUTPUT);
+  const outcome = await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   assert.equal(outcome.invoked, false);
   assert.equal(simulatorCalls(log).length, 0);
 });
@@ -105,7 +107,7 @@ test('[HE-004] o limite efetivo vai em --max-budget-usd e o runner cria o estado
   const root = makeRepo();
   writeAuthorizations(root, [grant('budget-1', 30)]);
   const log = newCallLog();
-  const outcome = await step(root, log, OK_OUTPUT);
+  const outcome = await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   assert.equal(outcome.invoked, true);
   assert.equal(outcome.limit_usd, 2);
   const [call] = simulatorCalls(log);
@@ -117,7 +119,7 @@ test('[RC-008] reserva que não cabe no orçamento autorizado não inicia a cham
   const root = makeRepo();
   writeAuthorizations(root, [grant('budget-1', 2)]);
   const log = newCallLog();
-  const outcome = await step(root, log, OK_OUTPUT);
+  const outcome = await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   assert.equal(outcome.invoked, false);
   assert.equal(outcome.stop_reason, 'budget_reserve_insufficient');
   assert.equal(outcome.state, 'awaiting_decision');
@@ -128,9 +130,9 @@ test('[RC-009] orçamento esgotado para a próxima chamada e mantém o consumo',
   const root = makeRepo();
   writeAuthorizations(root, [grant('budget-1', 3)]);
   const log = newCallLog();
-  const first = await step(root, log, { ...OK_OUTPUT, total_cost_usd: 3 });
+  const first = await step(root, log, { ...OK_OUTPUT, total_cost_usd: 3 }, { profile: FINANCIAL });
   assert.equal(first.invoked, true);
-  const second = await step(root, log, OK_OUTPUT);
+  const second = await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   assert.equal(second.invoked, false);
   assert.equal(second.stop_reason, 'budget_exhausted');
   assert.equal(simulatorCalls(log).length, 1);
@@ -141,13 +143,13 @@ test('[RC-010] [RC-011] custo ausente conta como desconhecido e a reserva segue 
   const root = makeRepo();
   writeAuthorizations(root, [grant('budget-1', 4)]);
   const log = newCallLog();
-  const first = await step(root, log, OK_OUTPUT);
+  const first = await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   assert.equal(first.invoked, true);
   assert.equal(first.result.cost_source, 'unknown');
   const state = loadState(root, CHANGE);
   assert.equal(state.consumption.unknown_calls, 1);
   assert.equal(state.open_reservations.length, 1);
-  const second = await step(root, log, OK_OUTPUT);
+  const second = await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   assert.equal(second.invoked, false);
   assert.equal(second.stop_reason, 'budget_reserve_insufficient');
   assert.equal(simulatorCalls(log).length, 1);

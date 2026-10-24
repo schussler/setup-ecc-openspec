@@ -14,6 +14,9 @@ import { newCallLog, simulatorCalls } from './simulator.mjs';
 import { grant, OK_OUTPUT, PROMPT, step, writeAuthorizations, HUMAN, readAuthorizationsFile } from './f6-support.mjs';
 import { writeTree } from '../helpers.mjs';
 
+// Interrupção com reserva aberta é fluxo financeiro: o modo financeiro é explícito (add-silent-consumption-observability).
+const FINANCIAL = { provisional: true, modo_financeiro: true };
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const CHILD = join(HERE, 'fixtures', 'runner-child.mjs');
 const POLL_MS = 50;
@@ -61,7 +64,7 @@ test('[RC-017] [RS-024] interrupção no meio da invocação: lock permanece, re
   // 1. O lock permanece e a partida nova é bloqueada sem tocar no estado.
   assert.equal(existsSync(lockPath(root, CHANGE)), true);
   const lockBody = JSON.parse(readFileSync(lockPath(root, CHANGE), 'utf8'));
-  const blocked = await step(root, log, OK_OUTPUT);
+  const blocked = await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   assert.equal(blocked.invoked, false);
   assert.equal(blocked.stop_reason, 'lock_held');
   assert.equal(loadState(root, CHANGE).state, 'invoking');
@@ -87,7 +90,7 @@ test('[RC-017] [RS-024] interrupção no meio da invocação: lock permanece, re
   assert.equal(released.reconciliation_required, true);
 
   // 3. A retomada encontra a invocação interrompida e para em interrupted, sem chamada.
-  const resumed = await step(root, log, OK_OUTPUT);
+  const resumed = await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   assert.equal(resumed.invoked, false);
   assert.equal(resumed.state, 'interrupted');
   assert.equal(resumed.stop_reason, 'reconciliation_required');
@@ -106,7 +109,7 @@ test('[RC-017] [RS-024] interrupção no meio da invocação: lock permanece, re
       },
     ],
   });
-  const continued = await step(root, log, OK_OUTPUT);
+  const continued = await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   const state = loadState(root, CHANGE);
   assert.equal(continued.invoked, true);
   assert.equal(continued.state, 'awaiting_gate');

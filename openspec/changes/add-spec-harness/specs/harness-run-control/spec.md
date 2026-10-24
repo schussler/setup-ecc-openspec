@@ -51,6 +51,8 @@ Cada gate SHALL ter no máximo `max_corrections_per_gate` correções por rodada
 ### Requirement: Orçamento com limites independentes
 O runner SHALL controlar, independentemente, invocações, turnos por chamada (somente quando o limite de turnos estiver comprovado), correções, diagnósticos, tempo por chamada e total, custo por chamada e total, e invocações por fatia. Cada limite efetivo SHALL ser o menor entre a política, a configuração proposta e a autorização vigente.
 
+**Aplicação por modo:** no modo de observação, limites de custo e `budget` não se aplicam; os demais continuam.
+
 #### Scenario: limite efetivo e o menor dos tres
 - **ID:** RC-022
 - **Revisão:** 1
@@ -83,6 +85,8 @@ O runner SHALL controlar, independentemente, invocações, turnos por chamada (s
 ### Requirement: Reserva e custo
 Cada chamada SHALL reservar `limite efetivo × (1 + reserve_margin_ratio)`. A reserva SHALL ser tratada como margem de segurança, não como garantia de teto. Custo desconhecido SHALL NOT ser tratado como zero. Uma reserva sem reconciliação SHALL permanecer aberta.
 
+**Aplicação por modo:** reserva só no modo financeiro; custo desconhecido vale nos dois modos.
+
 #### Scenario: custo desconhecido nao vira zero
 - **ID:** RC-010
 - **Revisão:** 1
@@ -103,6 +107,8 @@ Cada chamada SHALL reservar `limite efetivo × (1 + reserve_margin_ratio)`. A re
 ### Requirement: Reconciliação de reservas
 Uma decisão humana de reconciliação SHALL registrar o custo observado ou estimado com sua origem, e a decisão sobre a reserva (`closed_observed`, `closed_unknown` ou `kept`). `closed_unknown` SHALL encerrar a reserva administrativamente sem converter o consumo desconhecido em zero: a contagem de chamadas com custo desconhecido permanece no estado, no checkpoint e no relatório.
 
+**Aplicação por modo:** somente no modo financeiro.
+
 #### Scenario: reserva encerrada com custo desconhecido preserva a incerteza
 - **ID:** RC-024
 - **Revisão:** 1
@@ -122,6 +128,8 @@ Uma decisão humana de reconciliação SHALL registrar o custo observado ou esti
 
 ### Requirement: Registro de reconciliação idempotente e correspondido
 Um registro de reconciliação SHALL ser idempotente, SHALL corresponder à invocação e à reserva que referencia, e SHALL ter efeito no saldo calculado pelo runner, não informado (D26, regras 1 a 7).
+
+**Aplicação por modo:** somente no modo financeiro.
 
 #### Scenario: reconciliacao so vale para invocacao e reserva que existem e se correspondem
 - **ID:** RC-051
@@ -160,6 +168,8 @@ Um registro de reconciliação SHALL ser idempotente, SHALL corresponder à invo
 - **THEN** um registro novo é acrescentado com `supersedes` apontando o `reconciliation_id` original, o original permanece idêntico, e o efeito no saldo é recalculado a partir do registro novo
 ### Requirement: Extensão de orçamento com autorização
 Ampliar o orçamento SHALL exigir uma autorização do tipo `budget` com limite novo, motivo, aprovador e data, registrada em `authorizations.json`. A orientação humana SHALL poder reiniciar contadores locais, mas SHALL NOT apagar consumo acumulado.
+
+**Aplicação por modo:** somente no modo financeiro.
 
 #### Scenario: extensao de orcamento exige autorizacao registrada
 - **ID:** RC-012

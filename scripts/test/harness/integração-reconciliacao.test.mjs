@@ -7,6 +7,9 @@ import { CHANGE, CHANGE_DIR, EXEC, changeRepo, cli, seedRunner, stateOf, writeRe
 import { newCallLog, simulatorCalls } from './simulator.mjs';
 import { OK_OUTPUT, step } from './f6-support.mjs';
 
+// Reserva e reconciliação são fluxo financeiro: o modo financeiro é explícito (add-silent-consumption-observability).
+const FINANCIAL = { provisional: true, modo_financeiro: true };
+
 const INVOCATION = 'inv-1';
 const RESERVE = 'res-1';
 
@@ -42,7 +45,7 @@ test('[RC-057] runner não inicia chamada paga com reserva aberta sem registro d
   writeBudget(root);
   openReservation(root);
   const log = newCallLog();
-  const result = await step(root, log, OK_OUTPUT, { executionId: EXEC });
+  const result = await step(root, log, OK_OUTPUT, { executionId: EXEC, profile: FINANCIAL });
   assert.equal(result.invoked, false);
   assert.equal(result.stop_reason, 'reconciliation_required');
   assert.deepEqual(simulatorCalls(log), []);
@@ -55,7 +58,7 @@ test('[RC-057] após o registro D26 da reserva, o runner volta a invocar e conta
   const path = writeRecord(root, 'rec-0001', reconciliationRecord());
   assert.equal((await cli(root, 'reconcile', ['--record', path])).status, 'accepted');
   const log = newCallLog();
-  const result = await step(root, log, OK_OUTPUT, { executionId: EXEC });
+  const result = await step(root, log, OK_OUTPUT, { executionId: EXEC, profile: FINANCIAL });
   assert.equal(result.invoked, true);
   assert.equal(simulatorCalls(log).length, 1);
   assert.equal(stateOf(root).consumption.known_usd, 0.42);

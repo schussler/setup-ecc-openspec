@@ -10,15 +10,18 @@ import { buildStopReport } from '../../harness/stop-report.mjs';
 import { newCallLog, simulatorCalls } from './simulator.mjs';
 import { grant, paidOutput, patchState, step, writeAuthorizations, OK_OUTPUT, HUMAN, readAuthorizationsFile } from './f6-support.mjs';
 
+// Testes de reserva e consumo exercitam o modo financeiro, que é explícito desde add-silent-consumption-observability.
+const FINANCIAL = { provisional: true, modo_financeiro: true };
+
 const ROUND_RECORD = { id: 'round-1', kind: 'round', reason: 'nova rodada após correção', approver: 'Douglas', ...HUMAN };
 
 test('[RC-017] retomada com chamada interrompida mantém a reserva aberta e marca a chamada como interrompida', async () => {
   const root = makeRepo();
   writeAuthorizations(root, [grant('budget-1', 30)]);
   const log = newCallLog();
-  await step(root, log, OK_OUTPUT);
+  await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   patchState(root, { state: 'invoking' });
-  const outcome = await step(root, log, OK_OUTPUT);
+  const outcome = await step(root, log, OK_OUTPUT, { profile: FINANCIAL });
   const state = loadState(root, CHANGE);
   const report = buildStopReport({ outcome, state, objective: 'fatia F6' });
   assert.equal(outcome.invoked, false);
@@ -82,7 +85,7 @@ test('[RC-013] nova rodada com autorização round zera contadores locais e pres
   const root = makeRepo();
   writeAuthorizations(root, [grant('budget-1', 30)]);
   const log = newCallLog();
-  await step(root, log, paidOutput(3));
+  await step(root, log, paidOutput(3), { profile: FINANCIAL });
   patchState(root, { state: 'awaiting_decision', stop_reason: 'correction_limit', counters: { ...emptyCounters(), corrections: { implement: 3 } } });
   writeAuthorizations(root, [grant('budget-1', 30), ROUND_RECORD]);
   const result = openLocalRound(root, CHANGE);

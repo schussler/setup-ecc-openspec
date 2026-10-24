@@ -52,7 +52,9 @@ function project() {
     typecheck: 'node -e ""',
   } }, null, 2)}\n`);
   writeText(root, 'scripts/e2e/cenario.test.mjs', CASE);
-  writeText(root, PROFILE, readFileSync(join(REPO_ROOT, PROFILE), 'utf8'));
+  // Os testes deste arquivo exercitam orçamento, reserva e reconciliação: o modo financeiro é explícito.
+  const profile = JSON.parse(readFileSync(join(REPO_ROOT, PROFILE), 'utf8'));
+  writeText(root, PROFILE, `${JSON.stringify({ ...profile, modo_financeiro: true }, null, 2)}\n`);
   writeText(root, '.claude/settings.json', `${JSON.stringify({ permissions: { allow: ['Read', 'Edit', 'Write'] } }, null, 2)}\n`);
   writeText(root, `${CHANGE_DIR}/specs/harness-cli/spec.md`, SPEC);
   adopt(root);

@@ -24,6 +24,8 @@ const SHA256 = 'a'.repeat(64);
 const EVIDENCE = { path: 'relatorios/sonda-p2.json', sha256: SHA256 };
 const interactive = { isInteractive: () => true, now: FIXED_NOW, confirm: async (_summary, code) => code };
 const OK_OUTPUT = { type: 'result', subtype: 'success', is_error: false, result: 'ok' };
+// Testes de orçamento exercitam o modo financeiro, que é explícito desde add-silent-consumption-observability.
+const FINANCIAL = { provisional: true, modo_financeiro: true };
 const HUMAN = { origin: 'human', scope: { change: CHANGE }, recorded_at: '2026-10-23T12:00:00.000Z', author: 'douglas', project_id: PROJECT_ID };
 
 function authPath(root) {
@@ -139,10 +141,10 @@ test('[RC-033] reserva aberta de chamada interrompida reduz o saldo da nova cham
   const root = makeRepo();
   writeAuthorizations(root, [grant('budget-1', 3, 2)]);
   const log = newCallLog();
-  const first = await step(root, log);
+  const first = await step(root, log, { profile: FINANCIAL });
   assert.equal(first.invoked, true);
   assert.equal(first.result.cost_source, 'unknown');
-  const second = await step(root, log);
+  const second = await step(root, log, { profile: FINANCIAL });
   assert.equal(second.invoked, false);
   assert.equal(second.stop_reason, 'budget_reserve_insufficient');
   assert.equal(simulatorCalls(log).length, 1);
@@ -152,7 +154,7 @@ test('[RC-021] candidato de gasto sem autorização para com authorization_requi
   const root = makeRepo();
   writeAuthorizations(root, []);
   const log = newCallLog();
-  const outcome = await step(root, log, { profile: { provisional: true, candidate_usd_per_change: 30 } });
+  const outcome = await step(root, log, { profile: { ...FINANCIAL, candidate_usd_per_change: 30 } });
   assert.equal(outcome.invoked, false);
   assert.equal(outcome.stop_reason, 'authorization_required');
   assert.equal(outcome.state, 'awaiting_decision');
@@ -162,7 +164,7 @@ test('[RC-021] candidato de gasto sem autorização para com authorization_requi
 test('[RC-008] retorno do runner separa limite por chamada, margem e reserva', async () => {
   const root = makeRepo();
   writeAuthorizations(root, [grant('budget-1', 2, 2)]);
-  const outcome = await step(root, newCallLog());
+  const outcome = await step(root, newCallLog(), { profile: FINANCIAL });
   assert.equal(outcome.stop_reason, 'budget_reserve_insufficient');
   assert.equal(outcome.limit_usd, 2);
   assert.equal(outcome.margin_usd, 0.5);
@@ -174,7 +176,7 @@ test('[RC-008] retorno do runner separa limite por chamada, margem e reserva', a
 test('[RC-031] sem autorização budget o motivo é authorization_required, não budget_reserve_insufficient', async () => {
   const root = makeRepo();
   writeAuthorizations(root, []);
-  const outcome = await step(root, newCallLog());
+  const outcome = await step(root, newCallLog(), { profile: FINANCIAL });
   assert.equal(outcome.stop_reason, 'authorization_required');
   assert.equal(outcome.state, 'awaiting_decision');
 });
@@ -182,14 +184,14 @@ test('[RC-031] sem autorização budget o motivo é authorization_required, não
 test('[RC-031] autorização revogada conta como ausente e o motivo é authorization_required', async () => {
   const root = makeRepo();
   writeAuthorizations(root, [grant('budget-1', 30, 2), { id: 'rev-1', kind: 'revocation', revokes: 'budget-1', origin: 'human', scope: { change: CHANGE }, reason: 'engano', approver: 'Douglas' }]);
-  const outcome = await step(root, newCallLog());
+  const outcome = await step(root, newCallLog(), { profile: FINANCIAL });
   assert.equal(outcome.stop_reason, 'authorization_required');
 });
 
 test('[RC-031] autorização vigente sem saldo para com budget_reserve_insufficient', async () => {
   const root = makeRepo();
   writeAuthorizations(root, [grant('budget-1', 2, 2)]);
-  const outcome = await step(root, newCallLog());
+  const outcome = await step(root, newCallLog(), { profile: FINANCIAL });
   assert.equal(outcome.stop_reason, 'budget_reserve_insufficient');
 });
 

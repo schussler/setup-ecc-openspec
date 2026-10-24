@@ -172,3 +172,17 @@ test('[AP-013] negação não conta como aprovação', () => {
     assert.throws(() => recordConversationApproval(root, CHANGE, approval(root, { instruction })), ConfigError, instruction);
   }
 });
+
+test('[AP-014] desaprovação e palavras que só contêm uma intenção não autorizam', () => {
+  for (const instruction of ['Desaprovo.', 'Desaprovado o escopo.', 'Reaprovado.', 'Pode implementar?', 'Aprovo ou não, depende.']) {
+    const { root } = makeChange();
+    assert.throws(() => recordConversationApproval(root, CHANGE, approval(root, { instruction })), ConfigError, instruction);
+  }
+});
+
+test('[AP-015] a intenção vale como palavra inteira: "aprovos" e "implementar" sozinho não autorizam', () => {
+  for (const instruction of ['Aprovos isso.', 'Implementar, por favor.']) {
+    const { root } = makeChange();
+    assert.throws(() => recordConversationApproval(root, CHANGE, approval(root, { instruction })), ConfigError, instruction);
+  }
+});

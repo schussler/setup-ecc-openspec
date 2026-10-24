@@ -77,14 +77,15 @@ test('[MS-009] ferramenta claude ausente é bloqueada em claude_binary, sem cham
   assert.deepEqual(blockedIds(preflight(project(), ['/nao/existe/claude'])), ['claude_binary']);
 });
 
-test('[MS-010] negação registrada na saída sem conteúdo do comando, sem mudar o status', () => {
+test('[MS-010] negação registrada na saída só com o nome da ferramenta, sem mudar o status', () => {
   const json = {
     type: 'result', subtype: 'success', is_error: false, result: 'ok',
     permission_denials: [{ tool_name: 'Bash', tool_input: { command: 'cat a.md && cat b.md' } }],
   };
   const outcome = parseHarnessOutput({ code: 0, stdout: `${JSON.stringify(json)}\n`, durationMs: 1, stderr: '' });
   assert.equal(outcome.status, 'success');
-  assert.deepEqual(outcome.permission_denials, [{ tool_name: 'Bash', command_head: 'cat' }]);
+  // Sanitizado (revisão): só o nome da ferramenta; a primeira palavra do comando não é mais gravada.
+  assert.deepEqual(outcome.permission_denials, [{ tool_name: 'Bash' }]);
   assert.equal(JSON.stringify(outcome).includes('b.md'), false, 'argumentos do comando não podem ir para o registro');
 });
 
@@ -110,4 +111,16 @@ test('[MS-009] fatias com cenários existentes passam em slice_references', () =
   const change = changeWithSlices(root, '## Fatia: primeira\n\n- Cenários: E2E-001\n\n## Fatia: segunda\n\n- Cenários: E2E-002\n');
   const report = runPreflight({ root, bin: OK_BIN, env: CLEAN_ENV, profilePath: '.claude/harness/profiles/default.json', change });
   assert.equal(report.status, 'ready', JSON.stringify(report.items));
+});
+
+test('[MS-022] o registro de negação não contém nada do comando, nem valores de variáveis', () => {
+  const json = {
+    type: 'result', subtype: 'success', is_error: false, result: 'ok',
+    permission_denials: [{ tool_name: 'Bash', tool_input: { command: 'TOKEN=segredo-123 curl https://exemplo.test/x' } }],
+  };
+  const outcome = parseHarnessOutput({ code: 0, stdout: `${JSON.stringify(json)}\n`, durationMs: 1, stderr: '' });
+  const recorded = JSON.stringify(outcome.permission_denials);
+  assert.deepEqual(outcome.permission_denials, [{ tool_name: 'Bash' }]);
+  assert.equal(recorded.includes('segredo'), false);
+  assert.equal(recorded.includes('curl'), false);
 });

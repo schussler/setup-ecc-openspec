@@ -217,16 +217,22 @@ export async function validateFinal({ root, change, validate = validateChange, n
   if (blocked) return blocked;
   const limitMs = timeLimitMs(root, state);
   const required = state.required_slices ?? REQUIRED_SLICES;
+  // Aprovação só vale para a impressão atual (MS-016): fatia com impressão diferente precisa de revalidação.
+  const current = fingerprint({ root, change, runtime: defaultRuntime() }).fingerprint;
+  const stale = required.filter((slice) => sliceApproved(state, slice) && !sliceFresh(state, slice, current));
   const pending = required.filter((slice) => !sliceApproved(state, slice));
-  const base = { execution_id: state.execution_id, pending_slices: pending };
+  const base = { execution_id: state.execution_id, pending_slices: [...pending, ...stale], revalidation_required: stale };
   if ((state.active_ms ?? 0) >= limitMs) {
     stopForTime(root, change);
     recordFinalValidation(root, change, { executionId: state.execution_id, approved: false, verdict: null, cases: [], stops: [TIME_LIMIT] });
     return { status: 'stop', verdict: null, stop_reason: TIME_LIMIT, execution_approved: false, ...base };
   }
   // Fatia pendente recusa antes de rodar a suíte (MS-006): a validação final não serve para execução incompleta.
-  if (pending.length > 0) {
-    return { status: 'refused', ...base, execution_approved: false, message: 'há fatias obrigatórias sem aprovação: validação final não executada (SP-010)' };
+  if (pending.length > 0 || stale.length > 0) {
+    return {
+      status: 'refused', ...base, execution_approved: false,
+      message: 'há fatias obrigatórias sem aprovação válida para a impressão atual: validação final não executada (SP-010, MS-016)',
+    };
   }
   const started = now();
   const outcome = await validate({ root, change, executionId: state.execution_id, runtime: defaultRuntime() });
@@ -253,6 +259,12 @@ export async function validateFinal({ root, change, validate = validateChange, n
 
 function sliceApproved(state, slice) {
   return (state.slice_approvals ?? []).some((item) => (item.task ?? item.slice) === slice);
+}
+
+// Última aprovação da fatia tem a impressão atual. Aprovação sem impressão gravada não vale.
+function sliceFresh(state, slice, current) {
+  const record = (state.slice_approvals ?? []).filter((item) => (item.task ?? item.slice) === slice).at(-1);
+  return record?.fingerprint === current;
 }
 
 // Marco de checkpoint (D18, B.1): archived só depois de validação final aprovada (D18 passo 1).

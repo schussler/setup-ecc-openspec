@@ -30,15 +30,20 @@ test('[MS-013] contador de invocações divergente do número de eventos é dive
   input.state.counters.invocations = 3;
   const result = conciliate(input);
   assert.equal(result.status, 'divergent');
-  assert.deepEqual(result.checks.filter((check) => !check.ok).map((check) => check.id), ['invocations_state']);
+  // Id renomeado na revisão (MS-021): diz de qual fonte veio a divergência (contador do estado).
+  assert.deepEqual(result.checks.filter((check) => !check.ok).map((check) => check.id), ['invocations_state_counter']);
 });
 
-test('[MS-013] custo do relatório diferente dos eventos é divergência', () => {
+test('[MS-021] evento pago sem fonte de custo é divergência (a checagem de custo não compara o relatório com ele mesmo)', () => {
   const input = consistent();
-  input.reportKnownUsd = 0.5;
+  input.events.push({ function: 'invocacao', paid: true, cost_usd: null, cost_source: null });
+  input.state.invocations_total = 3;
+  input.state.counters.invocations = 3;
+  input.state.invocations = [{}, {}, {}];
+  input.reportInvocations = 3;
   const result = conciliate(input);
   assert.equal(result.status, 'divergent');
-  assert.deepEqual(result.checks.filter((check) => !check.ok).map((check) => check.id), ['known_usd_report']);
+  assert.deepEqual(result.checks.filter((check) => !check.ok).map((check) => check.id), ['cost_sources']);
 });
 
 test('[MS-013] em modo financeiro, o consumo do estado também entra na conciliação', () => {
@@ -62,7 +67,8 @@ test('[MS-013] chamada interrompida sem evento, registrada na interrupção, nã
   input.state.counters.invocations = 3;
   input.state.invocations = [{ invocation_id: 'a' }, { invocation_id: 'b' }, { invocation_id: 'lost' }];
   input.state.interruptions = [{ invocation_id: 'lost' }];
-  input.reportInvocations = 3;
+  // O relatório mede eventos: a invocação interrompida sem evento não entra nessa medição.
+  input.reportInvocations = 2;
   const result = conciliate(input);
   assert.equal(result.status, 'reconciled', JSON.stringify(result.checks));
   assert.equal(result.interrupted_without_event, 1);
@@ -76,4 +82,23 @@ test('[MS-013] invocação negada conta como tentativa malsucedida; validação 
   ];
   const report = buildReport({ change: 'mudanca-teste', events, state: null });
   assert.equal(report.per_accepted_delivery.failed_attempts, 1);
+});
+
+test('[MS-020] negação e falha são contagens separadas: negação recuperada não é falha', () => {
+  const events = [
+    callEvent({ status: 'success', cost_usd: 1, permission_denials: [{ tool_name: 'Bash' }] }),
+    callEvent({ status: 'error', cost_usd: 0.5, permission_denials: [] }),
+    callEvent({ status: 'success', cost_usd: 0.2 }),
+  ];
+  const { invocations, per_accepted_delivery: delivery } = buildReport({ change: 'mudanca-teste', events, state: null });
+  assert.deepEqual(invocations, {
+    measured: 3, with_denials: 1, denials_total: 1, recovered: 1, failed: 1, failed_with_denials: 0,
+  });
+  assert.equal(delivery.failed_attempts, 1);
+});
+
+test('[MS-020] evento antigo com status permission_denied conta como negação e falha, sem lista de negações', () => {
+  const events = [callEvent({ status: 'permission_denied', cost_usd: 0.02 })];
+  const { invocations } = buildReport({ change: 'mudanca-teste', events, state: null });
+  assert.deepEqual(invocations, { measured: 1, with_denials: 1, denials_total: 1, recovered: 0, failed: 1, failed_with_denials: 1 });
 });

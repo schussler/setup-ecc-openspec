@@ -100,6 +100,8 @@ export function buildEvent(fields, { at = new Date().toISOString() } = {}) {
     human_decisions: arrayOf(fields.human_decisions),
     reserves: orNull(fields.reserves),
     nondeterminism: arrayOf(fields.nondeterminism),
+    // Negações de permissão da invocação, só com o nome da ferramenta (MS-022).
+    permission_denials: arrayOf(fields.permission_denials),
   };
 }
 
@@ -245,6 +247,7 @@ export function eventFromInvocation(result, context = {}) {
     cost_source: result.cost_source,
     status: result.status,
     stops: result.stop_reason ? [result.stop_reason] : [],
+    permission_denials: arrayOf(result.permission_denials),
     results: [{ status: result.status, cause: result.cause ?? null }],
     ...Object.fromEntries(CONTEXT_FIELDS.filter((key) => key in context).map((key) => [key, context[key]])),
   };

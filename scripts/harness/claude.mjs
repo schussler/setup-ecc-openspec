@@ -72,13 +72,11 @@ function outcome(status, fields) {
   return { status, stop_reason: STOP_REASON_BY_STATUS[status] ?? null, cause: null, ...fields };
 }
 
-// Negações de permissão da sessão, sem o conteúdo dos comandos (podem trazer dados sensíveis).
+// Negações de permissão da sessão: só o nome da ferramenta. Nada do comando, nem a primeira palavra dele
+// (comandos podem trazer valores de variáveis e conteúdo sensível).
 export function permissionDenialsOf(json) {
   const denials = Array.isArray(json?.permission_denials) ? json.permission_denials : [];
-  return denials.map((denial) => ({
-    tool_name: typeof denial?.tool_name === 'string' ? denial.tool_name : null,
-    command_head: typeof denial?.tool_input?.command === 'string' ? denial.tool_input.command.trim().split(/\s+/)[0] : null,
-  }));
+  return denials.map((denial) => ({ tool_name: typeof denial?.tool_name === 'string' ? denial.tool_name : null }));
 }
 
 // Classifica a saída do processo. Só a causa identificada vira status especial;

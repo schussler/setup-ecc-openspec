@@ -3,6 +3,7 @@
 // e ausência de medição aparece como "não medida" (TE-004, TE-005). A validação final entra no tempo
 // ativo e no limite total: ultrapassar o limite nessa fase impede aprovar (RC-026, RC-036).
 // Validação injetada e relógio controlado: nenhum modelo, nenhuma espera real.
+import { fingerprint, defaultRuntime } from '../../harness/evidence.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
@@ -20,13 +21,19 @@ const LIMIT_SECONDS = 10;
 const PROFILE = { path: '.claude/harness/profiles/experimento.json', content: { provisional: true, candidate_seconds_per_change: LIMIT_SECONDS } };
 
 // Execução com a fatia aprovada, pronta para a validação final, e tempo ativo já gasto.
+// Aprovação com a impressão atual da árvore (MS-016): a validação final só aceita aprovação da impressão vigente.
+// O fixture antigo gravava a impressão 'f', que agora é recusada; o que o teste mede (tempo ativo) não muda.
 function approvedSlice(activeMs) {
   const root = makeRepo();
   const created = createState(root, CHANGE, { mode: 'runner', executionId: EXEC });
   saveState(root, CHANGE, {
     ...created, state: 'approved', stop_reason: null, profile: PROFILE, active_ms: activeMs,
     active_ms_by_category: { invocacao: activeMs, gate: 0, diagnostico: 0, ferramenta: 0 },
-    slice_approvals: [{ slice: 'implement', attempt: 1, fingerprint: 'f', cases: ['c'], at: '2026-10-24T15:00:00.000Z' }],
+  });
+  const current = fingerprint({ root, change: CHANGE, runtime: defaultRuntime() }).fingerprint;
+  saveState(root, CHANGE, {
+    ...loadState(root, CHANGE),
+    slice_approvals: [{ slice: 'implement', attempt: 1, fingerprint: current, cases: ['c'], at: '2026-10-24T15:00:00.000Z' }],
   });
   return root;
 }

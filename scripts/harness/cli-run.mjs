@@ -11,7 +11,7 @@ import { validateFinal, withLock } from './cli-actions.mjs';
 import { defaultRuntime, fingerprint, protectedSnapshot, sha256, sortKeys } from './evidence.mjs';
 import { applyTransition, STATE_APPROVED, STATE_READY } from './machine.mjs';
 import { ConfigError, loadProfile } from './policy.mjs';
-import { approvedTask, runSlice, sliceDeclarations, tagSliceApproval } from './slice.mjs';
+import { approvedTask, runSlice, sliceDeclarations } from './slice.mjs';
 import { PREFLIGHT_BLOCKED, runPreflight } from './preflight.mjs';
 import { conciliate } from './conciliation.mjs';
 import { guardedEvaluation } from './gate-guard.mjs';
@@ -27,6 +27,7 @@ const SKILL = '/spec-implement';
 const PROFILE_DEFAULT = '.claude/harness/profiles/default.json';
 const DEFAULT_BIN = ['claude'];
 const RECONCILIATION_MISMATCH = 'reconciliation_mismatch';
+const REVALIDATION_INTERRUPTED = 'revalidation_interrupted';
 const profilePathOf = (options) => (typeof options.profile === 'string' ? options.profile : PROFILE_DEFAULT);
 
 // Prompt de cada passo (HE-001): a skill nomeada e o argumento de tarefa. --runner-step diz à skill
@@ -39,6 +40,9 @@ export function correctionPrompt(change, task, verdict) {
   const failures = verdict.failures.length > 0 ? verdict.failures.join(', ') : 'sem caso identificado (ver lint, tipos ou código de saída)';
   return `${stepPrompt(change, task)} --correction "falhas do gate de implementação: ${failures}"`;
 }
+
+// Identificadores entre colchetes do nome do caso ("[E2E-001] ..." ou "arquivo > [E2E-001] ...").
+const bracketIds = (name) => [...name.matchAll(/\[([^\]\s]+)\]/g)].map((match) => match[1]);
 
 const print = (root, change) => fingerprint({ root, change, runtime: defaultRuntime() }).fingerprint;
 
@@ -64,8 +68,8 @@ function implementEvaluation(root, change, evaluate, slice) {
     const result = await evaluate({ root, baseline, onSpawn });
     const after = print(root, change);
     const cases = Array.isArray(result.cases) ? result.cases : [];
-    // O id do caso é o nome do teste ("[E2E-001] ..."): o cenário casa pelo identificador entre colchetes.
-    const passed = (scenario) => cases.some((item) => item.status === 'pass' && item.id.includes(`[${scenario}]`));
+    // Identidade exata (MS-019): o cenário casa só por igualdade com um identificador entre colchetes do nome do caso.
+    const passed = (scenario) => cases.some((item) => item.status === 'pass' && bracketIds(item.id).includes(scenario));
     const missing = slice.scenarios.filter((scenario) => !passed(scenario));
     const failures = [...cases.filter((item) => item.status !== 'pass').map((item) => item.id), ...missing];
     let outcome = result.passed && missing.length === 0 ? 'passed' : 'failed';
@@ -128,8 +132,7 @@ function conciliateExecution(root, change, profilePath) {
   const events = readEvents(root, change);
   const report = buildReport({ change, events, state });
   return conciliate({
-    state, events, reportInvocations: report.state.invocations_total, reportKnownUsd: report.cost.known_usd,
-    financial: financialMode(loadProfile(root, profilePath)),
+    state, events, reportInvocations: report.invocations.measured, financial: financialMode(loadProfile(root, profilePath)),
   });
 }
 
@@ -154,9 +157,10 @@ async function conclude({ root, change, validate, outcome, profilePath }) {
 
 // Uma invocação de fatia até aprovação ou parada. task None = fatia legada (implement, sem cenários exigidos).
 async function sliceRun({ root, change, options, evaluate, profile, slice }) {
-  const task = slice.name;
+  const { name: task } = slice;
   return runSlice({
     root, change, gate: GATE, stage: GATE, cwd: root, bin: binOf(options),
+    task, correctionKey: task ? `${task}:${GATE}` : GATE,
     profile,
     model: typeof options.model === 'string' ? options.model : undefined,
     effort: typeof options.effort === 'string' ? options.effort : undefined,
@@ -218,6 +222,10 @@ export async function revalidateApprovals({ root, change, evaluate, slices, guar
     const guarded = await guardedEvaluation({
       root, change, gate: GATE, evaluate: implementEvaluation(root, change, evaluate, slice), executionId: loadState(root, change).execution_id, ...guard,
     });
+    // Sem veredito: a aprovação fica como está, o motivo é explícito e a próxima execução revalida de novo (MS-017).
+    if (guarded.status === 'interrupted') {
+      return { ...guarded, stop_reason: REVALIDATION_INTERRUPTED, revalidated_task: slice.name };
+    }
     if (guarded.status !== 'evaluated') return guarded;
     const verdict = guarded.verdict;
     const at = new Date().toISOString();
@@ -257,7 +265,6 @@ async function runDeclaredSlices({ root, change, options, evaluate, validate, sl
       await persistEarlyStop(root, change, outcome);
       return stopResult(root, change, outcome, `fatia ${slice.name} da change ${change}`);
     }
-    tagSliceApproval(root, change, slice.name);
   }
 }
 

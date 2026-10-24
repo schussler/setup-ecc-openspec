@@ -51,6 +51,25 @@ O projeto SHALL criar os dois marcadores, um por fatia.
 - **WHEN** a segunda fatia roda
 - **THEN** o teste \`[E2E-002]\` passa
 `;
+// Caso que trava enquanto hang.flag existir (revalidação interrompida pelo prazo, MS-017).
+const HANG_CASE = `import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
+
+test('[E2E-001] o primeiro marcador existe', () => {
+  if (existsSync('hang.flag')) setInterval(() => {}, 1000);
+  assert.ok(existsSync('first.flag'), 'first.flag ausente');
+});
+`;
+// Caso com ID quase igual ao cenário (MS-019): não pode cumprir E2E-001.
+const CASE_NEAR_MISS = `import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
+
+test('[E2E-0010] o primeiro marcador existe', () => {
+  assert.ok(existsSync('first.flag'), 'first.flag ausente');
+});
+`;
 const TASKS = `# Tarefas
 
 ## Fatia: primeira
@@ -251,7 +270,7 @@ test('[MS-013] conclusão para com reconciliation_mismatch quando o contador do 
   assert.equal(again.code, 2);
   assert.equal(again.out.stop_reason, 'reconciliation_mismatch');
   assert.equal(again.out.execution_approved, false);
-  assert.ok(again.out.conciliation.checks.some((item) => item.id === 'invocations_state' && !item.ok));
+  assert.ok(again.out.conciliation.checks.some((item) => item.id === 'invocations_state_counter' && !item.ok));
 });
 
 test('[MS-014] negação já recuperada pelo modelo não para a execução quando o gate passa', () => {
@@ -294,4 +313,77 @@ test('[MS-011] revalidação com prazo estourado usa o guarda existente e não a
   assert.deepEqual(after.slice_approvals.find((item) => item.task === 'primeira'), before);
   assert.equal(after.invalidated_slices ?? null, null);
   assert.equal(simulatorCalls(log).length, callsBefore, 'nenhuma chamada ao modelo na revalidação');
+});
+
+test('[MS-016] validação final recusa aprovação de impressão anterior, sem chamada ao modelo', () => {
+  const root = project();
+  cli(root, 'start', ['--mode', 'runner']);
+  const log = newCallLog();
+  stoppedAfterFirstSlice(root, log);
+  writeText(root, 'README.md', 'mudança depois da aprovação\n');
+  const callsBefore = simulatorCalls(log).length;
+
+  const refused = cli(root, 'validate-final', []);
+
+  assert.equal(refused.out.status, 'refused');
+  assert.deepEqual(refused.out.revalidation_required, ['primeira']);
+  assert.equal(refused.out.execution_approved, false);
+  assert.equal(simulatorCalls(log).length, callsBefore);
+});
+
+test('[MS-017] revalidação interrompida pelo prazo tem motivo explícito e a próxima execução retoma', () => {
+  const root = project();
+  cli(root, 'start', ['--mode', 'runner']);
+  const log = newCallLog();
+  stoppedAfterFirstSlice(root, log);
+  // Prazo curto só neste projeto de teste. O caso hang só trava enquanto hang.flag existir.
+  const policyPath = join(root, '.claude', 'harness', 'policy.json');
+  writeText(root, '.claude/harness/policy.json', `${JSON.stringify({ ...JSON.parse(readFileSync(policyPath, 'utf8')), max_seconds_per_gate: 3 }, null, 2)}\n`);
+  writeText(root, 'scripts/e2e/cenario.test.mjs', HANG_CASE);
+  writeText(root, 'hang.flag', '');
+  writeText(root, 'README.md', 'mudança para forçar revalidação\n');
+  const callsBefore = simulatorCalls(log).length;
+  const approvalBefore = stateOf(root).slice_approvals.find((item) => item.task === 'primeira');
+
+  const interrupted = run(root, simulator(log));
+
+  assert.equal(interrupted.code, 2);
+  assert.equal(interrupted.out.stop_reason, 'revalidation_interrupted');
+  assert.equal(simulatorCalls(log).length, callsBefore, 'revalidação interrompida não chama o modelo');
+  const kept = stateOf(root).slice_approvals.find((item) => item.task === 'primeira');
+  assert.deepEqual(kept, approvalBefore, 'aprovação antiga fica como está até a revalidação completar');
+
+  // Recuperação: o caso volta ao normal e a próxima execução revalida e segue.
+  rmSync(join(root, 'hang.flag'));
+  writeText(root, 'scripts/e2e/cenario.test.mjs', CASE_FIRST);
+  const resumed = run(root, simulator(log));
+  assert.notEqual(resumed.out.stop_reason, 'revalidation_interrupted');
+  assert.equal(stateOf(root).slice_approvals.find((item) => item.task === 'primeira').revalidations.length, 1);
+});
+
+test('[MS-018] correções contam por fatia e gate; o total do change acumula', () => {
+  const root = project();
+  cli(root, 'start', ['--mode', 'runner']);
+  const log = newCallLog();
+  const result = run(root, simulator(log, {
+    FAKE_CLAUDE_TOUCH: 'first.flag', FAKE_CLAUDE_TOUCH_ON_CALL: '1',
+    FAKE_CLAUDE_WRITE: JSON.stringify([{ path: 'scripts/e2e/cenario.test.mjs', content: CASE_BOTH }, { path: 'second.flag', content: '' }]),
+    FAKE_CLAUDE_WRITE_ON_CALL: '3',
+  }));
+  assert.equal(result.out.status, 'pass', JSON.stringify(result.out));
+  const counters = stateOf(root).counters;
+  assert.deepEqual(counters.corrections, { 'segunda:implement': 1 });
+  assert.equal(counters.corrections_total, 1);
+});
+
+test('[MS-019] cenário casa por igualdade exata: [E2E-0010] não cumpre E2E-001', () => {
+  const root = project();
+  cli(root, 'start', ['--mode', 'runner']);
+  const log = newCallLog();
+  writeText(root, 'scripts/e2e/cenario.test.mjs', CASE_NEAR_MISS);
+
+  const result = run(root, simulator(log, { FAKE_CLAUDE_TOUCH: 'first.flag', FAKE_CLAUDE_TOUCH_ON_CALL: '1' }));
+
+  assert.equal(result.code, 2, JSON.stringify(result.out));
+  assert.equal(stateOf(root).slice_approvals ?? null, null, 'nenhuma fatia pode aprovar com cenário quase igual');
 });

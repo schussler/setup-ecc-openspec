@@ -52,6 +52,13 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ## Log
 
+### 2026-10-24 — PR #4: primeira execução real da CI
+
+- **Resultado:** `ci` falhou em 1 de 1006 casos: `[MS-009] sem identidade Git é bloqueado em git_identity` (`scripts/test/harness/multislice-preflight.test.mjs`).
+- **Causa (prova):** com `identity: false`, o fixture fazia o commit base sem identidade e com `GIT_CONFIG_GLOBAL=/dev/null`. No macOS o git deduz um nome do usuário da máquina; no runner do GitHub falha com "fatal: empty ident name ... not allowed" (log da execução 40142260120). O teste dependia da máquina, não do comportamento.
+- **Teste alterado (justificativa):** só o fixture. O commit base usa `git -c user.name=Base -c user.email=base@example.com commit`, que não grava identidade na configuração do repositório; o preflight lê `git config user.name/email` e continua vendo o repositório sem identidade. A asserção (`['git_identity']`) não mudou. Verificado com HOME isolado: 12/12.
+- **Evidência da F4 (parcial):** o workflow `ci` rodou no PR com Node 22, instalou o OpenSpec e executou a suíte inteira (1006 casos) em cerca de 45 s.
+
 ### 2026-10-24 — add-npm-publish-ci: arquivada
 
 - **Gate de arquivamento:** `pass` na tentativa 1 (resultado em `gates.json` da change arquivada). Arquivamento por `openspec archive --yes`; spec `release-ci` em `openspec/specs/`; `openspec validate --all` ok.

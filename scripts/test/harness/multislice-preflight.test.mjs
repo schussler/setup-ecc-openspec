@@ -37,7 +37,10 @@ function project({ commit = true, identity = true, projectId = true, adoption = 
   mkdirSync(join(root, 'docs', 'agents'), { recursive: true });
   writeFileSync(join(root, 'docs', 'agents', 'issue-tracker.md'), adoption ? ADOPTION : '# Sem marco\n');
   writeFileSync(join(root, 'README.md'), 'x\n');
-  if (commit) git(['add', '-A']) && git(['commit', '-q', '-m', 'base']);
+  // A identidade do commit base vale só para este comando (-c), não fica na configuração do
+  // repositório: o preflight continua vendo o repositório sem identidade quando identity é false,
+  // e o fixture não depende de o git deduzir um nome do usuário da máquina.
+  if (commit) git(['add', '-A']) && git(['-c', 'user.name=Base', '-c', 'user.email=base@example.com', 'commit', '-q', '-m', 'base']);
   return root;
 }
 

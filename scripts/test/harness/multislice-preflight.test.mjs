@@ -77,7 +77,7 @@ test('[MS-009] ferramenta claude ausente é bloqueada em claude_binary, sem cham
   assert.deepEqual(blockedIds(preflight(project(), ['/nao/existe/claude'])), ['claude_binary']);
 });
 
-test('[MS-010] negação registrada na saída só com o nome da ferramenta, sem mudar o status', () => {
+test('[MS-010] negação registrada na saída sem conteúdo do comando, sem mudar o status', () => {
   const json = {
     type: 'result', subtype: 'success', is_error: false, result: 'ok',
     permission_denials: [{ tool_name: 'Bash', tool_input: { command: 'cat a.md && cat b.md' } }],

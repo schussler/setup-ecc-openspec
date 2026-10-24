@@ -1,0 +1,22 @@
+[
+  {
+    "id": "43980501-b4e0-44a9-acda-c12c180d3bf6",
+    "kind": "revision",
+    "origin": "human",
+    "procedure": "conversa",
+    "purpose": "contract_approval",
+    "scope": {
+      "contract_approval": true,
+      "path": 3,
+      "change": "fix-multislice-review"
+    },
+    "reason": "contrato corretivo aprovado pela conversa",
+    "approver": "Douglas",
+    "author": "schussler",
+    "recorded_at": "2026-10-24T21:08:54.334Z",
+    "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
+    "contract_hash": "05dc57b153b1dcf7320681178761b3ca6a2838e68dd289104fd77c70db87a43f",
+    "contract_version": 1,
+    "instruction": "Aprovado fix-multislice-review."
+  }
+]

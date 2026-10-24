@@ -731,3 +731,11 @@ A lógica de gate, aprovação, preflight, classificação de negação e conclu
 **Não verificado com modelo real:** revalidação interrompida pelo prazo, caminho com espaço no piloto, interrupção durante a chamada, e os comportamentos novos de aprovação e medição. Todos são comprovados só por simulador ou por testes locais.
 
 **Pendente:** a change `fix-multislice-review` (contrato corretivo) não tem aprovação de conversa, porque a frase do usuário dessa rodada não é uma das frases de aprovação aceitas. Sem ela, a change não é arquivada.
+
+### 2026-10-24 — fix-multislice-review: aprovado, gates e arquivamento
+
+- **Aprovação:** "Aprovado fix-multislice-review." pela conversa, caminho 3 (registro `43980501…`). O contrato não foi alterado depois dessa aprovação.
+- **Gate de implementação:** linha de base do commit anterior à correção (`0f5178d`), numa worktree temporária. A primeira pontuação reprovou (`old_pct` 99,79) por dois casos antigos que sumiram. Causas: nome de teste alterado por mim (MS-010) e teste de MS-013 removido. Corrigido: o nome original de MS-010 foi restaurado, e o teste de MS-013 voltou com o mesmo nome, exercendo a fonte financeira. A linha de base não foi refeita. Segunda pontuação: 100%, sem falhas.
+- **Gate de arquivamento:** 12 de 12 cenários cobertos. O cenário MS-016 ganhou um teste de gravação atômica, com o mesmo ID; o teste de recusa de impressão antiga continua no mesmo ID, porque o requisito tem o título "válida só para a impressão atual".
+- **Arquivamento:** `openspec archive fix-multislice-review --yes` em `2026-10-24-fix-multislice-review`. Specs principais: 5 requisitos adicionados e 2 modificados em `multislice-run`.
+- **Ajuste de teste registrado:** o teste MS-013 de custo com relatório foi retirado da forma antiga, porque o relatório lê os mesmos eventos. A intenção (custo diferente dos eventos é divergência) passou a ser exercida pelo consumo do estado contra os eventos no modo financeiro.

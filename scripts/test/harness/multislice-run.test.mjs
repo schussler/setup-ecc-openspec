@@ -387,3 +387,15 @@ test('[MS-019] cenário casa por igualdade exata: [E2E-0010] não cumpre E2E-001
   assert.equal(result.code, 2, JSON.stringify(result.out));
   assert.equal(stateOf(root).slice_approvals ?? null, null, 'nenhuma fatia pode aprovar com cenário quase igual');
 });
+
+test('[MS-016] aprovação grava tarefa e impressão no mesmo registro, sem escrita separada', () => {
+  const root = project();
+  cli(root, 'start', ['--mode', 'runner']);
+  const log = newCallLog();
+  stoppedAfterFirstSlice(root, log);
+
+  const [approval] = stateOf(root).slice_approvals;
+  assert.equal(approval.task, 'primeira');
+  assert.equal(typeof approval.fingerprint, 'string');
+  assert.equal(approval.fingerprint.length, 64);
+});

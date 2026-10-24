@@ -34,6 +34,18 @@ test('[MS-013] contador de invocações divergente do número de eventos é dive
   assert.deepEqual(result.checks.filter((check) => !check.ok).map((check) => check.id), ['invocations_state_counter']);
 });
 
+// Revisão: a versão com o relatório como segunda fonte de custo foi retirada (o relatório lê os mesmos eventos).
+// A intenção do teste, detectar custo diferente dos eventos, passa a ser exercida pela fonte real do modo
+// financeiro: o consumo do estado contra a soma dos eventos. Registro no issue-tracker (2026-10-24).
+test('[MS-013] custo do relatório diferente dos eventos é divergência', () => {
+  const input = consistent();
+  input.financial = true;
+  input.state.consumption.known_usd = 0.5;
+  const result = conciliate(input);
+  assert.equal(result.status, 'divergent');
+  assert.deepEqual(result.checks.filter((check) => !check.ok).map((check) => check.id), ['known_usd_state']);
+});
+
 test('[MS-021] evento pago sem fonte de custo é divergência (a checagem de custo não compara o relatório com ele mesmo)', () => {
   const input = consistent();
   input.events.push({ function: 'invocacao', paid: true, cost_usd: null, cost_source: null });

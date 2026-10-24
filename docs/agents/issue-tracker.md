@@ -703,3 +703,31 @@ Nenhuma.
 - **Verificação:** suíte do harness 960/960, lint 0, sintaxe 0. Suíte do piloto 35/35 (31 + 4 novos), lint 0, check 0.
 - **Preparos locais:** commit base `df1f284` no piloto, criado para o git do runner (reversível). Backup persistente em `/Users/schussler/dev/harness-pilot-backups/2026-10-24-pre-multifatia/` (sha256 do tar `08459d5a…c654`).
 - **Limitações:** o piloto está em caminho sem espaço (o caminho com espaço ficou só no teste integrado com simulador); a change do piloto não foi arquivada; revalidação roda o gate sem a proteção de prazo do guarda; interrupção durante o real não foi testada; nada commitado, sem push, PR ou merge.
+
+### 2026-10-24 — Correção de registros: revisão da validação multifatia
+
+Esta entrada corrige afirmações das entradas anteriores sobre `add-multislice-run` e a validação do piloto. As entradas anteriores ficam como estão.
+
+**Versão executada no piloto (execução `de2c1761-d5d5-4ea8-967f-d5ddbabf99a3`).** Não há hash de código gravado nos registros do piloto, então a versão é reconstruída: árvore do harness em `0f5178d`, sem três trechos que vieram depois da execução:
+1. revalidação de fatia sem o guarda de prazo (`revalidateApprovals` chamava `implementEvaluation` direto);
+2. `conclude` sem o campo `conciliation` no retorno de sucesso (cosmético, a conferência já rodava);
+3. `failed_attempts` contando eventos `failed` (validações finais), e não invocações sem sucesso.
+A lógica de gate, aprovação, preflight, classificação de negação e conclusão é a mesma. Não atribua ao piloto nenhuma validação de código posterior a `0f5178d`.
+
+**Afirmações corrigidas:**
+- "Conciliação `reconciled`" (entrada de 2026-10-24, validação real): a checagem comparava o contador do estado com a medição do relatório, que lia o mesmo estado, e o custo era comparado com a soma dos mesmos eventos. Não era uma conferência entre fontes independentes. Substituída em `381bb22`. Com a conferência corrigida, os dados do piloto dão `reconciled` em cinco checagens: lista e contador do estado, eventos, medição do relatório e fonte de custo por evento.
+- "Tentativas malsucedidas: 2" (entrada de 2026-10-24, correção do relatório): a conta era de validações finais reprovadas, não de invocações. Agora a conta é de invocações sem sucesso. O piloto dá `failed: 1`.
+- "Negação recuperada": o registro da invocação `708c4506…` tem `status: permission_denied`, gravado pela regra que a validação real corrigiu. O transcript mostra que o modelo concluiu a fatia depois da negação. O registro antigo é mantido como está. O relatório atual o lê como falha com negação, porque é o que o registro diz, e não há campo que mostre a recuperação.
+- "Revalidação sem chamada ao modelo": verdadeiro na execução, mas sem controle de prazo. Corrigido em `381bb22` (MS-017).
+- "Aprovação por intenção": a checagem anterior casava substring e aceitava palavras contidas em outras. Corrigida em `381bb22` (AP-014, AP-015).
+
+**Validações que valem para a versão executada:** execução multifatia com duas fatias, aprovações, validação final `pass`, três invocações com custo conhecido de US$ 0,064225 (soma dos eventos). Nenhum desses resultados depende dos trechos corrigidos depois.
+
+**Validações feitas depois, na versão candidata `381bb22`, sem chamada ao modelo:**
+- Suíte do harness: 970/970, lint 0, sintaxe 0.
+- Testes afetados pela CLI (62/62): `multislice-run`, `multislice-preflight`, `multislice-conciliation`, `aprovacao-conversa`, `medicao-final`, `cli-run`. Com simulador como binário.
+- Relatório do piloto regenerado pela versão candidata, sem alterar o estado.
+
+**Não verificado com modelo real:** revalidação interrompida pelo prazo, caminho com espaço no piloto, interrupção durante a chamada, e os comportamentos novos de aprovação e medição. Todos são comprovados só por simulador ou por testes locais.
+
+**Pendente:** a change `fix-multislice-review` (contrato corretivo) não tem aprovação de conversa, porque a frase do usuário dessa rodada não é uma das frases de aprovação aceitas. Sem ela, a change não é arquivada.

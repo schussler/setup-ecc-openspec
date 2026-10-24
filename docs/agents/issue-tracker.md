@@ -674,3 +674,68 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 ## Paradas
 
 Nenhuma.
+
+### 2026-10-24 — Escopo incompleto: execução multifatia e validação no piloto (não iniciada)
+
+- **Estado:** dois ajustes locais, sem commit, sem change: `--claude-bin` com espaços (executável existente, array JSON ou comando separado) e intenções de aprovação por caminho com recusa de negação. Suíte 931/931, lint e sintaxe 0. Patch em `ajustes-aprovacao-e-claude-bin.patch` na pasta de scratchpad da sessão.
+- **Não feito:** execução multifatia sequencial (`REQUIRED_SLICES = ['implement']` ainda é único); preflight; reutilização de autorização vigente; negação de permissão como bloqueio operacional; percurso integrado com duas fatias, falha simulada e retomada; registro de verificações humanas; conciliação de contagens e consumo; validação real no piloto.
+- **Piloto:** `/Users/schussler/dev/harness-pilot` não foi alterado. Não tem commits; todo o conteúdo está como não rastreado, e precisa ser preservado antes de qualquer atualização.
+- **Processo:** os ajustes foram feitos sem contrato de change; não foram commitados. Antes de virar marco, precisam entrar numa change com contrato validado.
+- **Sem:** chamadas de modelo, push, PR, merge ou deploy nesta rodada.
+
+### 2026-10-24 — add-multislice-run: percurso multifatia validado localmente; piloto bloqueado
+
+- **Change:** `openspec/changes/add-multislice-run`, válida no `openspec validate`. Os dois ajustes anteriores estão registrados como feitos antes do contrato, sem RED retroativo.
+- **Implementado:** fatias declaradas em `tasks.md` (`## Fatia: <nome>`, com `- Cenários: <IDs>`); execução sequencial com retomada pelas aprovações; aprovação exige os cenários da fatia; validação final recusa com pendência antes da suíte.
+- **Testes:** 5 novos (`multislice-slices`, `multislice-run`), com RED observado antes da implementação. Suíte 936/936, lint 0, sintaxe 0. O percurso integrado usa o CLI com raiz em caminho com espaço, `--claude-bin` em JSON e o simulador.
+- **Não feito:** conciliação de consumo entre estado, eventos e relatório; preflight; bloqueios operacionais; invalidação de fatias; execução real no piloto.
+- **Bloqueio do piloto:** falta a aprovação de contrato pela conversa (frase do usuário) e o valor do orçamento para chamadas reais. Não foram fabricados.
+- **Piloto preservado:** `harness-pilot-preservado-antes-multifatia.tar.gz` (sha256 `978d9f6a…c654`) na pasta de scratchpad da sessão. Nenhuma alteração no piloto.
+- **Sem:** commit, push, PR ou merge nesta rodada.
+
+### 2026-10-24 — add-multislice-run: validação real multifatia no piloto concluída
+
+- **Piloto:** `add-pending-summary` (duas fatias dependentes: filtro de pendentes e contagem por prioridade), `claude -p` 2.1.310 pela assinatura, modo observação, sem orçamento financeiro e sem API paga. Execução aprovada, validação final `pass`.
+- **Invocações:** 3 (duas com sucesso, US$ 0,023862 e US$ 0,017355; uma negada, US$ 0,023007). Custo conhecido US$ 0,064225, igual à soma dos eventos, ao relatório e ao contador do estado. Conciliação `reconciled`.
+- **Permissão:** a primeira invocação teve uma negação de comando composto (`cat … && find … -exec`). O modelo repetiu os comandos separadamente e concluiu a fatia. Por isso a negação só é registrada; vira parada `permission_denied` quando o gate reprova a fatia (MS-010 revisado e MS-014).
+- **Contrato do piloto:** a primeira validação final parou por falta da declaração `Comportamento novo` (HI-010) no `proposal.md`. Corrigido com nova versão de aprovação. As duas fatias foram revalidadas pelo gate, sem chamada ao modelo, e mantiveram a aprovação.
+- **Correção no relatório:** `failed_attempts` contava só eventos `failed` (validações finais), e a invocação negada ficava de fora. Agora conta invocações pagas sem sucesso. Teste em `multislice-conciliation`.
+- **Verificação:** suíte do harness 960/960, lint 0, sintaxe 0. Suíte do piloto 35/35 (31 + 4 novos), lint 0, check 0.
+- **Preparos locais:** commit base `df1f284` no piloto, criado para o git do runner (reversível). Backup persistente em `/Users/schussler/dev/harness-pilot-backups/2026-10-24-pre-multifatia/` (sha256 do tar `08459d5a…c654`).
+- **Limitações:** o piloto está em caminho sem espaço (o caminho com espaço ficou só no teste integrado com simulador); a change do piloto não foi arquivada; revalidação roda o gate sem a proteção de prazo do guarda; interrupção durante o real não foi testada; nada commitado, sem push, PR ou merge.
+
+### 2026-10-24 — Correção de registros: revisão da validação multifatia
+
+Esta entrada corrige afirmações das entradas anteriores sobre `add-multislice-run` e a validação do piloto. As entradas anteriores ficam como estão.
+
+**Versão executada no piloto (execução `de2c1761-d5d5-4ea8-967f-d5ddbabf99a3`).** Não há hash de código gravado nos registros do piloto, então a versão é reconstruída: árvore do harness em `0f5178d`, sem três trechos que vieram depois da execução:
+1. revalidação de fatia sem o guarda de prazo (`revalidateApprovals` chamava `implementEvaluation` direto);
+2. `conclude` sem o campo `conciliation` no retorno de sucesso (cosmético, a conferência já rodava);
+3. `failed_attempts` contando eventos `failed` (validações finais), e não invocações sem sucesso.
+A lógica de gate, aprovação, preflight, classificação de negação e conclusão é a mesma. Não atribua ao piloto nenhuma validação de código posterior a `0f5178d`.
+
+**Afirmações corrigidas:**
+- "Conciliação `reconciled`" (entrada de 2026-10-24, validação real): a checagem comparava o contador do estado com a medição do relatório, que lia o mesmo estado, e o custo era comparado com a soma dos mesmos eventos. Não era uma conferência entre fontes independentes. Substituída em `381bb22`. Com a conferência corrigida, os dados do piloto dão `reconciled` em cinco checagens: lista e contador do estado, eventos, medição do relatório e fonte de custo por evento.
+- "Tentativas malsucedidas: 2" (entrada de 2026-10-24, correção do relatório): a conta era de validações finais reprovadas, não de invocações. Agora a conta é de invocações sem sucesso. O piloto dá `failed: 1`.
+- "Negação recuperada": o registro da invocação `708c4506…` tem `status: permission_denied`, gravado pela regra que a validação real corrigiu. O transcript mostra que o modelo concluiu a fatia depois da negação. O registro antigo é mantido como está. O relatório atual o lê como falha com negação, porque é o que o registro diz, e não há campo que mostre a recuperação.
+- "Revalidação sem chamada ao modelo": verdadeiro na execução, mas sem controle de prazo. Corrigido em `381bb22` (MS-017).
+- "Aprovação por intenção": a checagem anterior casava substring e aceitava palavras contidas em outras. Corrigida em `381bb22` (AP-014, AP-015).
+
+**Validações que valem para a versão executada:** execução multifatia com duas fatias, aprovações, validação final `pass`, três invocações com custo conhecido de US$ 0,064225 (soma dos eventos). Nenhum desses resultados depende dos trechos corrigidos depois.
+
+**Validações feitas depois, na versão candidata `381bb22`, sem chamada ao modelo:**
+- Suíte do harness: 970/970, lint 0, sintaxe 0.
+- Testes afetados pela CLI (62/62): `multislice-run`, `multislice-preflight`, `multislice-conciliation`, `aprovacao-conversa`, `medicao-final`, `cli-run`. Com simulador como binário.
+- Relatório do piloto regenerado pela versão candidata, sem alterar o estado.
+
+**Não verificado com modelo real:** revalidação interrompida pelo prazo, caminho com espaço no piloto, interrupção durante a chamada, e os comportamentos novos de aprovação e medição. Todos são comprovados só por simulador ou por testes locais.
+
+**Pendente:** a change `fix-multislice-review` (contrato corretivo) não tem aprovação de conversa, porque a frase do usuário dessa rodada não é uma das frases de aprovação aceitas. Sem ela, a change não é arquivada.
+
+### 2026-10-24 — fix-multislice-review: aprovado, gates e arquivamento
+
+- **Aprovação:** "Aprovado fix-multislice-review." pela conversa, caminho 3 (registro `43980501…`). O contrato não foi alterado depois dessa aprovação.
+- **Gate de implementação:** linha de base do commit anterior à correção (`0f5178d`), numa worktree temporária. A primeira pontuação reprovou (`old_pct` 99,79) por dois casos antigos que sumiram. Causas: nome de teste alterado por mim (MS-010) e teste de MS-013 removido. Corrigido: o nome original de MS-010 foi restaurado, e o teste de MS-013 voltou com o mesmo nome, exercendo a fonte financeira. A linha de base não foi refeita. Segunda pontuação: 100%, sem falhas.
+- **Gate de arquivamento:** 12 de 12 cenários cobertos. O cenário MS-016 ganhou um teste de gravação atômica, com o mesmo ID; o teste de recusa de impressão antiga continua no mesmo ID, porque o requisito tem o título "válida só para a impressão atual".
+- **Arquivamento:** `openspec archive fix-multislice-review --yes` em `2026-10-24-fix-multislice-review`. Specs principais: 5 requisitos adicionados e 2 modificados em `multislice-run`.
+- **Ajuste de teste registrado:** o teste MS-013 de custo com relatório foi retirado da forma antiga, porque o relatório lê os mesmos eventos. A intenção (custo diferente dos eventos é divergência) passou a ser exercida pelo consumo do estado contra os eventos no modo financeiro.

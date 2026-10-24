@@ -13,7 +13,7 @@ const NODE_REQUIRED_MAJOR = 22;
 const NODE_NOT_VERIFIED = 'Node >= 22: não verificado';
 const NODE_LINE_IN_USE = 'Node 22.x em uso';
 const ACCEPTED = 'accepted';
-const FAILED = 'failed';
+const SUCCESS_STATUSES = ['ok', 'success', 'accepted'];
 const PASS = 'pass';
 const NONDETERMINISM_OPEN = 'aberto';
 const NONDETERMINISM_CAUSE = 'não identificada';
@@ -93,7 +93,9 @@ function costSummary(events, state = null) {
 // pelas entregas aceitas. Com custo incompleto, o valor parcial é rotulado e não vira total.
 function deliverySummary(events, cost) {
   const accepted = new Set(events.filter((event) => event.status === ACCEPTED && event.delivery).map((event) => event.delivery));
-  const failedAttempts = events.filter((event) => event.status === FAILED).length;
+  // Tentativa malsucedida = invocação paga que não deu resultado de sucesso (negação, erro, quota, falha).
+  // Validação final reprovada não é tentativa de chamada: fica de fora desta conta.
+  const failedAttempts = invocationSummary(events).failed;
   const spent = round(cost.known_usd + cost.estimated_usd);
   const perAccepted = accepted.size === 0 ? null : round(spent / accepted.size);
   return {
@@ -207,9 +209,32 @@ function stateSummary(state) {
 }
 
 // Relatório derivado: função pura sobre eventos, estado e runtime.
+// Medição de invocações a partir dos eventos (fonte real): houve negação e invocação falhou são contagens separadas.
+// Uma invocação pode ter negação e ainda terminar com sucesso (recuperada); a falha é outra conta.
+function invocationSummary(events) {
+  const paidCalls = events.filter((event) => event.function === 'invocacao' && event.paid !== false);
+  // Evento antigo (antes da lista de negações) com status permission_denied conta como uma negação.
+  const denials = (event) => {
+    const listed = Array.isArray(event.permission_denials) ? event.permission_denials.length : 0;
+    if (listed > 0) return listed;
+    return event.status === 'permission_denied' ? 1 : 0;
+  };
+  const denied = paidCalls.filter((event) => denials(event) > 0);
+  const succeeded = (event) => SUCCESS_STATUSES.includes(event.status);
+  return {
+    measured: paidCalls.length,
+    with_denials: denied.length,
+    denials_total: sum(denied.map(denials)),
+    recovered: denied.filter(succeeded).length,
+    failed: paidCalls.filter((event) => !succeeded(event)).length,
+    failed_with_denials: denied.filter((event) => !succeeded(event)).length,
+  };
+}
+
 export function buildReport({ change, events, state = null, runtime = currentRuntime(), generatedAt = new Date().toISOString() }) {
   const cost = costSummary(events, state);
   return {
+    invocations: invocationSummary(events),
     schema: REPORT_SCHEMA,
     change,
     generated_at: generatedAt,

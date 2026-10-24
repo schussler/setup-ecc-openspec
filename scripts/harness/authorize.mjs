@@ -28,7 +28,14 @@ const EXCEPTION = 'exception';
 // Aprovação pela conversa (simplify-approval-and-execution): procedimento gravado em `procedure` e
 // frase que o usuário precisa dizer por caminho. O caminho 1 não grava registro (o pedido explícito basta).
 const CONVERSATION_PROCEDURE = 'conversa';
-const CONVERSATION_PHRASES = Object.freeze({ 2: 'pode fazer', 3: 'aprovado' });
+// Intenções de aprovação por caminho: sequências de palavras inteiras, comparadas por igualdade (nunca por
+// substring). Uma intenção só vale se a frase inteira for afirmativa: negação ou pergunta em qualquer parte recusa.
+const CONVERSATION_INTENTS = Object.freeze({
+  2: [['pode', 'fazer'], ['pode', 'implementar'], ['aprovo'], ['aprovado']],
+  3: [['aprovado'], ['aprovo'], ['pode', 'implementar']],
+});
+// Palavras que negam ou tornam a frase ambígua. Qualquer uma delas, em qualquer posição, recusa a aprovação.
+const NEGATIVE_WORDS = Object.freeze(['nao', 'desaprovo', 'desaprovado', 'desaprova', 'reprovo', 'reprovado', 'recuso', 'rejeito', 'cancelo']);
 
 // Finalidades de autorização "revision" (D32, lista fechada). Cada uma permite só o que está descrito.
 // O escopo exigido e as recusas são conferidos em assertPurposeScope; a conferência contra o item
@@ -324,7 +331,17 @@ function commitRecord(root, change, path, before, record) {
   writeFileAtomic(join(localDir(root, change), AUTHORIZATIONS_STAMP), `${createHash('sha256').update(expected).digest('hex')}\n`);
 }
 
-const normalizePhrase = (text) => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
+const normalizePhrase = (text) => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+const wordsOf = (text) => normalizePhrase(text).split(/[^a-z0-9-]+/).filter(Boolean);
+const containsSequence = (words, sequence) => words.some((_, index) => sequence.every((word, offset) => words[index + offset] === word));
+
+// Verdadeiro só quando a instrução afirma uma intenção do caminho e não contém negação nem pergunta.
+export function expressesApproval(instruction, path) {
+  if (normalizePhrase(instruction).includes('?')) return false;
+  const words = wordsOf(instruction);
+  if (words.some((word) => NEGATIVE_WORDS.includes(word))) return false;
+  return CONVERSATION_INTENTS[path].some((sequence) => containsSequence(words, sequence));
+}
 
 // Registra a aprovação de contrato recebida na conversa (caminhos 2 e 3). Não usa TTY nem código de
 // confirmação. A instrução do usuário precisa conter a frase do caminho: texto de arquivo ou de
@@ -333,12 +350,12 @@ export function recordConversationApproval(root, change, {
   path, instruction, approver, reason, now, author,
 } = {}) {
   assertChangeName(change);
-  const phrase = CONVERSATION_PHRASES[path];
-  if (phrase === undefined) {
+  const intents = CONVERSATION_INTENTS[path];
+  if (intents === undefined) {
     throw new ConfigError('caminho 1 não grava aprovação: o pedido explícito já autoriza o ajuste; nada foi gravado');
   }
-  if (!nonEmpty(instruction) || !normalizePhrase(instruction).includes(phrase)) {
-    throw new ConfigError(`instrução do usuário precisa conter "${phrase}" para o caminho ${path}; nada foi gravado`);
+  if (!nonEmpty(instruction) || !expressesApproval(instruction, path)) {
+    throw new ConfigError(`instrução do usuário precisa afirmar uma aprovação completa para o caminho ${path}, sem negação nem pergunta; nada foi gravado`);
   }
   const dir = changeDir(root, change);
   if (!existsSync(dir)) throw new ConfigError(`change ${change} não existe em openspec/changes; nada foi gravado`);

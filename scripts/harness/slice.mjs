@@ -4,6 +4,8 @@
 // O runner novo não para por contagem de falhas (RC-041); a regra SG-018 é só legada (gate-store).
 // O gate é injetado (evaluate): este módulo não executa scripts/gates nem grava veredito. Cada avaliação
 // passa pelo guarda (gate-guard.mjs): prazo max_seconds_per_gate, sinais e término confirmado (D8, D25).
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { changeDir } from './identity.mjs';
 import { writeMilestoneCheckpoint } from './checkpoint.mjs';
 import { countGateEvaluation, dispatchCorrection } from './counters.mjs';
@@ -19,6 +21,33 @@ import { guardedEvaluation, pendingTermination } from './gate-guard.mjs';
 const DEFAULT_GATE = 'implement';
 // Fatias obrigatórias da execução (C1, SP-010): a execução só aprova quando todas estão aprovadas e a validação final passa.
 export const REQUIRED_SLICES = Object.freeze(['implement']);
+
+const SLICE_PREFIX = '## Fatia: ';
+const SCENARIOS_LINE = /^- Cenários: (.+)$/m;
+
+// Fatias declaradas em tasks.md (add-multislice-run, MS-001, MS-002, MS-008): cada seção "## Fatia: <nome>" vai até
+// o próximo cabeçalho "## ". Lista vazia é o modo legado (uma fatia implement). Ordem do arquivo = ordem de execução.
+export function declaredSlices(text) {
+  return text.split(/^(?=## )/m)
+    .filter((section) => section.startsWith(SLICE_PREFIX))
+    .map((section) => {
+      const name = section.split('\n')[0].slice(SLICE_PREFIX.length).trim();
+      const line = section.match(SCENARIOS_LINE);
+      const scenarios = line ? line[1].split(',').map((id) => id.trim()).filter(Boolean) : [];
+      return { name, scenarios };
+    });
+}
+
+// Fatia multifatia aprovada: o registro guarda o nome da tarefa (task), não só o gate de ciclo.
+export function approvedTask(state, task) {
+  return (state.slice_approvals ?? []).some((item) => item.task === task);
+}
+
+// Lê as fatias da change; sem tasks.md, a lista é vazia (modo legado).
+export function sliceDeclarations(root, change) {
+  const file = join(changeDir(root, change), 'tasks.md');
+  return existsSync(file) ? declaredSlices(readFileSync(file, 'utf8')) : [];
+}
 const NO_SNAPSHOT = async () => null;
 
 // Parada acrescenta o motivo ao histórico do estado, como no runner (relatório de paradas, TE-004).
@@ -34,11 +63,12 @@ function moveTo(root, change, to, stopReason = null) {
 
 // Aprovação de fatia (C1, SP-010): só parte de awaiting_gate, pela tabela. O registro guarda gate,
 // tentativa e impressão avaliada; o checkpoint de fatia é gravado depois da persistência. Não aprova a execução.
-export function approveSlice(root, change, { gate, attempt = null, fingerprint = null, cases = null }) {
+export function approveSlice(root, change, { gate, task = null, attempt = null, fingerprint = null, cases = null }) {
   const current = loadState(root, change);
   const result = applyTransition(current, STATE_APPROVED);
   if (!result.ok) return { ok: false, reason: result.reason, from_state: current.state };
-  const record = { slice: gate, attempt, fingerprint, cases: cases ?? null, at: new Date().toISOString() };
+  // Fatia e tarefa são gravadas na mesma escrita (MS-016): sem registro separado de identidade.
+  const record = { slice: gate, task, attempt, fingerprint, cases: cases ?? null, at: new Date().toISOString() };
   const saved = saveState(root, change, { ...result.state, slice_approvals: [...(current.slice_approvals ?? []), record] });
   writeMilestoneCheckpoint(changeDir(root, change), saved, 'slice_approved');
   return { ok: true, state: saved, slice: record };
@@ -87,20 +117,21 @@ function stopAt(root, change, outcome, stopReason) {
 }
 
 // A confirmação pode trazer a tentativa, a impressão avaliada e os casos (cli-run.mjs); o registro os guarda.
-function approve(root, change, outcome, gate, confirmation = {}) {
+function approve(root, change, outcome, scope, confirmation = {}) {
   const approved = approveSlice(root, change, {
-    gate, attempt: confirmation.attempt ?? null, fingerprint: confirmation.fingerprint ?? null, cases: confirmation.cases ?? null,
+    gate: scope.gate, task: scope.task, attempt: confirmation.attempt ?? null, fingerprint: confirmation.fingerprint ?? null, cases: confirmation.cases ?? null,
   });
   if (!approved.ok) throw new ConfigError(`aprovação de fatia recusada (${approved.reason}) a partir de "${approved.from_state}"`);
   return { ...outcome, state: STATE_APPROVED, stop_reason: null };
 }
 
 // Confirmação com o mesmo código: divergência vai a diagnosing e não aprova (RC-016).
-async function confirmOrDiagnose(root, change, evaluate, gate, outcome, guard) {
+async function confirmOrDiagnose(root, change, evaluate, scope, outcome, guard) {
+  const { gate } = scope;
   const guarded = await evaluateOnce(root, change, evaluate, gate, outcome, guard, 'diagnostico');
   if (guarded.status !== 'evaluated') return unevaluated(outcome, guarded);
   const confirmation = guarded.verdict;
-  if (confirmation.outcome === 'passed') return approve(root, change, outcome, gate, confirmation);
+  if (confirmation.outcome === 'passed') return approve(root, change, outcome, scope, confirmation);
   updateCounters(root, change, (counters) => ({
     ...counters, diagnostics: { ...counters.diagnostics, [gate]: (counters.diagnostics[gate] ?? 0) + 1 },
   }));
@@ -109,9 +140,11 @@ async function confirmOrDiagnose(root, change, evaluate, gate, outcome, guard) {
 }
 
 // Despacha uma correção: consome o limite, checa ação duplicada e grava antes do processo.
-function dispatchCorrectionOrStop(root, change, gate, signature, hypothesis, outcome) {
+// Correções contam por escopo (fatia:gate, MS-018): uma fatia não consome o limite de outra.
+function dispatchCorrectionOrStop(root, change, scope, signature, hypothesis, outcome) {
+  const { gate, correctionKey } = scope;
   const max = loadPolicy(root).max_corrections_per_gate;
-  const dispatched = dispatchCorrection(loadState(root, change), gate, max);
+  const dispatched = dispatchCorrection(loadState(root, change), correctionKey, max);
   if (!dispatched.ok) return { stop: 'correction_limit' };
   // A hipótese faz parte do descritor: hipóteses diferentes são ações diferentes (RC-014, RC-015).
   const action = checkAction(dispatched.state.counters, `correcao:${gate}:${signature}:${hypothesis ?? 'sem-hipotese'}`, null);
@@ -122,7 +155,10 @@ function dispatchCorrectionOrStop(root, change, gate, signature, hypothesis, out
 }
 
 function recordCorrection(root, change, gate, producedChange) {
-  updateCounters(root, change, (counters) => ({ ...counters, last_correction: { gate, produced_change: producedChange } }));
+  updateCounters(root, change, (counters) => ({
+    ...counters, last_correction: { gate, produced_change: producedChange },
+    corrections_total: (counters.corrections_total ?? 0) + 1,
+  }));
 }
 
 // Gate retomado (gate_rerun_pending, D8): a fatia começa pela avaliação do gate, sem nova invocação.
@@ -141,8 +177,9 @@ async function firstOutcome(root, change, stepOptions) {
 export async function runSlice(options) {
   const {
     root, change, evaluate, gate = DEFAULT_GATE, prompt, correctionPrompt, snapshot = NO_SNAPSHOT, protect,
-    gateTimeoutMs, gateKillGraceMs, gateTerminate, signalSource, ...stepOptions
+    task = null, correctionKey = gate, gateTimeoutMs, gateKillGraceMs, gateTerminate, signalSource, ...stepOptions
   } = options;
+  const scope = { gate, task, correctionKey };
   const guard = Object.fromEntries(Object.entries({
     timeoutMs: gateTimeoutMs, killGraceMs: gateKillGraceMs, terminate: gateTerminate, signalSource,
   }).filter(([, value]) => value !== undefined));
@@ -160,13 +197,15 @@ export async function runSlice(options) {
       return { ...outcome, state: STATE_FORBIDDEN, stop_reason: 'protected_change', protected_changes: protectedChanges };
     }
     if (verdict.outcome === 'human_decision_needed') return stopAt(root, change, outcome, 'human_decision_needed');
-    if (verdict.outcome === 'passed') return confirmOrDiagnose(root, change, evaluate, gate, outcome, guard);
+    if (verdict.outcome === 'passed') return confirmOrDiagnose(root, change, evaluate, scope, outcome, guard);
+    // Negação de permissão com gate reprovado (MS-010): o problema é de permissão, não de código. Para sem correção.
+    if ((outcome.result?.permission_denials ?? []).length > 0) return stopAt(root, change, outcome, 'permission_denied');
 
     const signature = symptomSignature({ gate, failures: verdict.failures, errorClass: verdict.errorClass });
     const repeat = recordSymptom(loadState(root, change).counters, signature);
     updateCounters(root, change, () => repeat.counters);
     if (repeat.stop) return stopAt(root, change, outcome, repeat.stop_reason);
-    const dispatch = dispatchCorrectionOrStop(root, change, gate, signature, verdict.hypothesis ?? null, outcome);
+    const dispatch = dispatchCorrectionOrStop(root, change, scope, signature, verdict.hypothesis ?? null, outcome);
     if (dispatch.stop) return stopAt(root, change, outcome, dispatch.stop);
 
     const before = await timed(root, change, 'ferramenta', snapshot);

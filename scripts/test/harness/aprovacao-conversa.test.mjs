@@ -79,9 +79,10 @@ test('[AP-004] caminho 2 com pode fazer', () => {
   assert.equal(record.scope.path, 2);
   assert.equal(record.instruction, 'Pode fazer, segue o plano.');
   assert.equal(existsSync(authPath(dir)), true);
-  // "aprovado" não é a frase do caminho 2.
+  // Alteração justificada: "aprovado" passa a valer também no caminho 2 (intenção de aprovação, não palavra fixa).
+  // Continua recusada a instrução sem intenção de aprovação.
   const other = makeChange();
-  assert.throws(() => recordConversationApproval(other.root, CHANGE, approval(other.root, { path: 2, instruction: 'Aprovado' })), ConfigError);
+  assert.throws(() => recordConversationApproval(other.root, CHANGE, approval(other.root, { path: 2, instruction: 'Segue o plano.' })), ConfigError);
 });
 
 test('[AP-005] caminho 3 com aprovado', () => {
@@ -149,4 +150,39 @@ test('contrato aceita aprovação de conversa com hash atual e recusa hash antig
   assert.deepEqual(approvalErrors(), []);
   writeFileSync(join(dir, 'proposal.md'), '# Proposta alterada\n');
   assert.notDeepEqual(approvalErrors(), []);
+});
+
+test('[AP-012] aceita intenções de aprovação por caminho, incluindo "aprovo" e "pode implementar"', () => {
+  const cases = [
+    { path: 3, instruction: 'Aprovo.' },
+    { path: 3, instruction: 'Pode implementar, segue.' },
+    { path: 2, instruction: 'aprovo o ajuste' },
+    { path: 2, instruction: 'Pode implementar' },
+  ];
+  for (const item of cases) {
+    const { root } = makeChange();
+    const record = recordConversationApproval(root, CHANGE, approval(root, item));
+    assert.equal(record.scope.path, item.path, item.instruction);
+  }
+});
+
+test('[AP-013] negação não conta como aprovação', () => {
+  for (const instruction of ['Não aprovo.', 'nao aprovado por enquanto', 'Não pode implementar']) {
+    const { root } = makeChange();
+    assert.throws(() => recordConversationApproval(root, CHANGE, approval(root, { instruction })), ConfigError, instruction);
+  }
+});
+
+test('[AP-014] desaprovação e palavras que só contêm uma intenção não autorizam', () => {
+  for (const instruction of ['Desaprovo.', 'Desaprovado o escopo.', 'Reaprovado.', 'Pode implementar?', 'Aprovo ou não, depende.']) {
+    const { root } = makeChange();
+    assert.throws(() => recordConversationApproval(root, CHANGE, approval(root, { instruction })), ConfigError, instruction);
+  }
+});
+
+test('[AP-015] a intenção vale como palavra inteira: "aprovos" e "implementar" sozinho não autorizam', () => {
+  for (const instruction of ['Aprovos isso.', 'Implementar, por favor.']) {
+    const { root } = makeChange();
+    assert.throws(() => recordConversationApproval(root, CHANGE, approval(root, { instruction })), ConfigError, instruction);
+  }
 });

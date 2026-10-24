@@ -1,0 +1,42 @@
+[
+  {
+    "id": "bbe27f16-4afb-408d-aa40-0ff8d4fa73fc",
+    "kind": "revision",
+    "origin": "human",
+    "procedure": "conversa",
+    "purpose": "contract_approval",
+    "scope": {
+      "contract_approval": true,
+      "path": 3,
+      "change": "add-multislice-run"
+    },
+    "reason": "contrato do harness aprovado pela conversa (escopo acrescentado)",
+    "approver": "Douglas",
+    "author": "schussler",
+    "recorded_at": "2026-10-24T19:24:15.910Z",
+    "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
+    "contract_hash": "74506be0833095479bd232af45218f6bb35462a94e7cc81f42be7a0be0741ebe",
+    "contract_version": 1,
+    "instruction": "Aprovado: pode implementar e validar add-multislice-run."
+  },
+  {
+    "id": "56ca3490-0b05-4a3d-8c0a-ebc20728bc4a",
+    "kind": "revision",
+    "origin": "human",
+    "procedure": "conversa",
+    "purpose": "contract_approval",
+    "scope": {
+      "contract_approval": true,
+      "path": 3,
+      "change": "add-multislice-run"
+    },
+    "reason": "nova versão do contrato: MS-010 revisado e MS-014 após validação real",
+    "approver": "Douglas",
+    "author": "schussler",
+    "recorded_at": "2026-10-24T19:44:17.947Z",
+    "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
+    "contract_hash": "2a0bc59318eb43012caadcf3d371d72ae1e322b77ca72635f204e6486e24b088",
+    "contract_version": 2,
+    "instruction": "Aprovado: pode implementar e validar add-multislice-run."
+  }
+]

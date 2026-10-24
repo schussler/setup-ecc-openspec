@@ -5,7 +5,10 @@
 // (arquivo onde cada chamada vira uma linha JSON com os argumentos).
 // FAKE_CLAUDE_TOUCH com FAKE_CLAUDE_TOUCH_ON_CALL=<n>: na n-ésima chamada registrada no log,
 // cria o arquivo FAKE_CLAUDE_TOUCH no diretório atual (a "correção" simulada).
-import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
+// FAKE_CLAUDE_WRITE (JSON: [{path, content}]) com FAKE_CLAUDE_WRITE_ON_CALL=<n>: na n-ésima chamada grava os
+// arquivos relativos ao diretório atual (outra forma de correção simulada, com conteúdo arbitrário).
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 
 const DEFAULT_OUTPUT = { type: 'result', subtype: 'success', is_error: false, result: 'ok' };
 const logPath = process.env.FAKE_CLAUDE_LOG;
@@ -15,6 +18,17 @@ const touch = process.env.FAKE_CLAUDE_TOUCH;
 if (touch && logPath) {
   const calls = readFileSync(logPath, 'utf8').split('\n').filter(Boolean).length;
   if (calls === Number(process.env.FAKE_CLAUDE_TOUCH_ON_CALL)) writeFileSync(touch, '');
+}
+
+const write = process.env.FAKE_CLAUDE_WRITE;
+if (write && logPath) {
+  const calls = readFileSync(logPath, 'utf8').split('\n').filter(Boolean).length;
+  if (calls === Number(process.env.FAKE_CLAUDE_WRITE_ON_CALL)) {
+    for (const file of JSON.parse(write)) {
+      mkdirSync(dirname(file.path), { recursive: true });
+      writeFileSync(file.path, file.content);
+    }
+  }
 }
 
 if (process.env.FAKE_CLAUDE_HANG === '1') {

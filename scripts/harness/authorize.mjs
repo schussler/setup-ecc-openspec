@@ -25,6 +25,10 @@ const PROBE_RESULTS = ['enforced', 'not_enforced', 'inconclusive'];
 const SHA256_HEX = /^[0-9a-f]{64}$/;
 const CONTRACT_APPROVAL = 'contract_approval';
 const EXCEPTION = 'exception';
+// Aprovação pela conversa (simplify-approval-and-execution): procedimento gravado em `procedure` e
+// frase que o usuário precisa dizer por caminho. O caminho 1 não grava registro (o pedido explícito basta).
+const CONVERSATION_PROCEDURE = 'conversa';
+const CONVERSATION_PHRASES = Object.freeze({ 2: 'pode fazer', 3: 'aprovado' });
 
 // Finalidades de autorização "revision" (D32, lista fechada). Cada uma permite só o que está descrito.
 // O escopo exigido e as recusas são conferidos em assertPurposeScope; a conferência contra o item
@@ -306,13 +310,52 @@ export async function recordAuthorization(root, change, input, {
   const answer = await confirm(summary, code);
   if (String(answer ?? '').trim() !== code) throw new ConfigError('confirmação não confere; nada foi gravado');
   if (readRaw(path) !== before.raw) throw new ConfigError(`${FILE} mudou durante a confirmação; nada foi gravado`);
+  commitRecord(root, change, path, before, record);
+  return record;
+}
+
+// Acrescenta o registro e confere a releitura: registros anteriores e o novo devem estar íntegros (RC-040).
+function commitRecord(root, change, path, before, record) {
   const expected = serialize([...before.records, record]);
   writeFileAtomic(path, expected);
-  // Relê o arquivo gravado e confere: registros anteriores e o novo devem estar íntegros (RC-040).
   if (serialize(readExisting(path).records) !== expected) {
     throw new ConfigError(`${FILE} gravado não confere com o registro esperado; verifique o arquivo antes de continuar`);
   }
   writeFileAtomic(join(localDir(root, change), AUTHORIZATIONS_STAMP), `${createHash('sha256').update(expected).digest('hex')}\n`);
+}
+
+const normalizePhrase = (text) => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+// Registra a aprovação de contrato recebida na conversa (caminhos 2 e 3). Não usa TTY nem código de
+// confirmação. A instrução do usuário precisa conter a frase do caminho: texto de arquivo ou de
+// ferramenta não chega aqui. Uma change com aprovação de contrato já registrada não recebe outra.
+export function recordConversationApproval(root, change, {
+  path, instruction, approver, reason, now, author,
+} = {}) {
+  assertChangeName(change);
+  const phrase = CONVERSATION_PHRASES[path];
+  if (phrase === undefined) {
+    throw new ConfigError('caminho 1 não grava aprovação: o pedido explícito já autoriza o ajuste; nada foi gravado');
+  }
+  if (!nonEmpty(instruction) || !normalizePhrase(instruction).includes(phrase)) {
+    throw new ConfigError(`instrução do usuário precisa conter "${phrase}" para o caminho ${path}; nada foi gravado`);
+  }
+  const dir = changeDir(root, change);
+  if (!existsSync(dir)) throw new ConfigError(`change ${change} não existe em openspec/changes; nada foi gravado`);
+  const file = join(dir, FILE);
+  const before = readExisting(file);
+  // Nova versão só com contrato alterado (AP-007, AP-010): o hash atual não pode ser o da última aprovação.
+  const approvals = before.records.filter((record) => record?.purpose === CONTRACT_APPROVAL && record.scope?.change === change);
+  if (approvals.length > 0) {
+    const latest = approvals.reduce((best, record) => (record.contract_version > best.contract_version ? record : best));
+    if (latest.contract_hash === calculateContractHash(dir)) {
+      throw new ConfigError(`change ${change} já tem aprovação para o contrato atual (versão ${latest.contract_version}); nada foi alterado`);
+    }
+  }
+  const record = buildRecord(root, change, {
+    kind: REVISION_KIND, purpose: CONTRACT_APPROVAL, reason, approver, scope: { contract_approval: true, path }, data: { instruction },
+  }, before.records, { now, author, procedure: CONVERSATION_PROCEDURE });
+  commitRecord(root, change, file, before, record);
   return record;
 }
 
@@ -321,8 +364,10 @@ const FLAG_TO_FIELD = {
   '--total-usd': 'totalUsd', '--per-call-usd': 'perCallUsd', '--quantity': 'quantity', '--result': 'result',
   '--revokes': 'revokes', '--supersedes': 'supersedes', '--data': 'dataFile',
   '--purpose': 'purpose', '--scope-file': 'scopeFile', '--policy-key': 'policyKey',
+  '--path': 'path', '--instruction': 'instruction',
 };
-const NUMERIC_FIELDS = ['totalUsd', 'perCallUsd', 'quantity'];
+const NUMERIC_FIELDS = ['totalUsd', 'perCallUsd', 'quantity', 'path'];
+const CONVERSATION_COMMAND = 'conversa';
 const USAGE = [
   'uso: authorize.mjs record --kind <tipo> --change <change> --reason <texto> --approver <nome>',
   '  revision exige --purpose <finalidade> e --scope-file arquivo.json com o escopo (scenario, revision, cases, contract_approval)',
@@ -335,7 +380,7 @@ const USAGE = [
 
 export function parseCliArgs(argv) {
   const [command, ...rest] = argv;
-  if (command !== 'record') throw new ConfigError(USAGE);
+  if (command !== 'record' && command !== CONVERSATION_COMMAND) throw new ConfigError(USAGE);
   const values = {};
   for (let index = 0; index < rest.length; index += 2) {
     const field = FLAG_TO_FIELD[rest[index]];
@@ -347,6 +392,11 @@ export function parseCliArgs(argv) {
 
 async function main(argv) {
   const { change, dataFile, scopeFile, ...fields } = parseCliArgs(argv);
+  if (argv[0] === CONVERSATION_COMMAND) {
+    const record = recordConversationApproval(process.cwd(), change, fields);
+    process.stdout.write(`aprovação de conversa gravada: ${record.id} (caminho ${record.scope.path})\n`);
+    return;
+  }
   const data = dataFile ? JSON.parse(readFileSync(dataFile, 'utf8')) : undefined;
   const scope = scopeFile ? JSON.parse(readFileSync(scopeFile, 'utf8')) : undefined;
   const record = await recordAuthorization(process.cwd(), change, { ...fields, data, scope });

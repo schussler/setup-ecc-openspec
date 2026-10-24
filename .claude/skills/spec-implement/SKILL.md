@@ -75,6 +75,14 @@ Under `claude -p`, or when the input contains `--headless`, run the same steps w
 
 Permissions in headless mode match each command literally. Run one plain command per Bash call: no `;`, `&&`, `cd`, `$?` or shell variables. The exit status is already in the tool result. If a compound command is denied, retry it as separate plain commands before concluding that a tool is unavailable.
 
+## Execução por exceção
+
+Dentro do escopo aprovado, siga sem nova confirmação: detalhe interno reversível, edição e testes já autorizados, correção dentro dos critérios aprovados, registro de decisão já dada e correção editorial sem mudança de significado.
+
+Pare e peça decisão só quando houver mudança relevante de comportamento, escopo, risco ou aceite; decisão de negócio ou arquitetura indefinida; limite operacional atingido ou repetição improdutiva; ação destrutiva ou publicação não autorizada (push, PR); ou restrição de ferramenta que impeça continuar.
+
+Cada parada explica em linguagem curta o motivo (um dos `stop_reasons` de `.claude/harness/policy.json`), a evidência e a recomendação.
+
 ## Rules
 
 - **Never lower a gate threshold**, and never edit `scripts/gates/` or `checks` to make a gate pass.

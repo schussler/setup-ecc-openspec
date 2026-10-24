@@ -10,6 +10,8 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 - **Próximo passo (2026-10-24, `add-silent-consumption-observability`):** change `add-silent-consumption-observability` com implementação supervisionada concluída e arquivamento bloqueado pelo gate de implementação (não passou por `spec-implement`). Para arquivar, decidir como concluir esse gate (execução headless paga do `spec-implement`, ou outro caminho aprovado) e depois rodar `spec-archive`. Aprovações registradas: `add-spec-harness` v3 e `add-silent-consumption-observability` v2. Anterior: decisão sobre como fechar o gate de implementação de `add-proportional-change-flow` pelo runner (a execução está em `awaiting_decision`); arquivamento depende disso. Pendências documentais do log de 2026-10-24. Separadamente, decisão do dono sobre o ajuste mínimo de escopo para arquivar `add-spec-harness` (spec-gates F10, pipeline-benchmark PB-009, run-control limite por fatia). v1 experimental (harness v1.2 `39d7fcac…`) commitada sem arquivar. Trabalho futuro listado no log de 2026-10-24. Evidências do experimento: `~/dev/setup-ecc-openspec-experimentos/2026-10-24-add-kebab-case-helper`.
 - **Bloqueios:** orçamento de `claude -p` esgotado (60/60). Medir o efeito da orientação de comando simples no headless exige uma rodada nova de legado
 - **Pendente de autorização:** sonda paga de `--max-turns` (tarefa P.2 de `tasks.md`), com orçamento pretendido de US$ 0,05, sem teto exato. Não autorizada e não executada. Sem ela, o limite de turnos não é comprovado.
+- **Change ativa (simplify-approval-and-execution, 2026-10-24):** implementada e testada (suíte 924/924 após o ajuste). O ajuste de consolidação foi feito, mas o contrato mudou e a aprovação anterior (versão 1) não vale mais. Próximo passo: confirmação única do usuário para registrar a versão 2 pela conversa (caminho 3, frase "aprovado"); depois regerar `supervised-completion.json` e arquivar. Itens de saída preservada e interrupção não fazem parte desta change (são de `add-spec-harness`, já arquivada). Sem commit, push ou PR.
+- **Arquivadas em 2026-10-24 (conclusão supervisionada e gate pass):** `add-proportional-change-flow` (2 tarefas REFACTOR sem caixa marcada); `add-silent-consumption-observability`; `add-spec-harness` (5 tarefas abertas, incluindo P.2, a sonda paga não autorizada, e 10.3 pendente). Ponto de atenção: o registro anterior dizia que arquivar `add-spec-harness` dependia de decisão do dono sobre escopo mínimo; arquivei com base no contrato e no gate, e isso precisa de confirmação.
 - **Atualizado em:** 2026-10-24
 
 ## Gates
@@ -47,6 +49,20 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 | 2026-10-24 | add-spec-harness | archive (12.5, fluxo legado, `--legacy-write`) | 1 | — | C.1 a C.3 aplicados; nenhuma alteração de código nesta avaliação | cenários 218/218 (100%), suíte verde, `openspec validate --strict` válido | pass |
 
 ## Log
+
+### 2026-10-24 — simplify-approval-and-execution: implementação supervisionada e conclusão registrada
+
+- **Estado:** change implementada e validada localmente, sem commit, push ou PR. Arquivamento não feito (aguarda decisão do usuário).
+- **Aprovação do contrato:** registrada pela conversa com `scripts/harness/authorize.mjs conversa`, caminho 3, frase "Aprovado o escopo e as premissas.", aprovador Douglas. Registro com `procedure: conversa`, `contract_hash` `8b4bab3b…616ca4`, versão 1. Não usa TTY, e não alega autenticação forte.
+- **Premissas assumidas (não aprovadas além da frase):** diagnóstico reaproveita `stop_reason` e `symptoms`; registro de conversa reaproveita `contract_approval`; conclusão supervisionada não depende do runner; cenários MODIFIED de `spec-gates` começam na revisão 1.
+- **Implementado:** `recordConversationApproval` e o CLI `conversa` em `scripts/harness/authorize.mjs`; `scripts/harness/supervised-completion.mjs` (grava e lê `supervised-completion.json`); `scripts/gates/archive-gate.mjs` aceita a conclusão válida; `diagnoseStop` em `scripts/harness/stop-report.mjs`; seções nas skills `change-flow`, `spec-create`, `spec-implement` e `spec-archive`; seção em `.claude/harness/policy.md`.
+- **Conclusão supervisionada gravada:** suíte, lint, sintaxe, `openspec validate --strict` e contrato passaram agora; hash do contrato igual ao da aprovação. O arquivo `supervised-completion.json` fica na change, fora do git até o commit.
+- **Gate de arquivamento (pontuado, não gravado):** veredito `pass`, 21/21 cenários cobertos, avaliador `id`.
+- **Testes:** suíte completa 921/921; lint 0 erro; sintaxe 0 erro. Testes novos: `aprovacao-conversa` (8), `conclusao-supervisionada` (4), `execucao-excecao` (7), `archive-supervisionado` (3).
+- **Desvio em teste existente (justificado):** `scripts/test/harness/runner-gates.test.mjs` ([RC-029]). O invariante "skills e runner não citam `authorize.mjs`" ganhou uma exceção única: o comando `authorize.mjs conversa` em `spec-create`. `recordAuthorization` e `authorize.mjs record` continuam proibidos em todo lugar. Motivo: AP-006 exige que a aprovação da conversa seja registrada pelo agente. A asserção foi estreitada, não removida.
+- **Vereditos não alterados:** `gates.json` e `authorizations.json` de `add-spec-harness`, `add-silent-consumption-observability` e `add-proportional-change-flow` permanecem como estavam. O diff dessas pastas está vazio.
+- **Próximo passo:** decidir (1) se `spec-archive simplify-approval-and-execution` deve rodar agora e (2) se a conclusão supervisionada deve ser gerada para as três changes abertas. Cada uma depende do próprio contrato e da própria evidência; nada foi feito nelas.
+- **Não feito:** commit, push, PR, chamada paga, execução headless, arquivamento, alteração de orçamento ou de limites.
 
 ### 2026-10-24 — add-silent-consumption-observability: implementação supervisionada concluída; arquivamento bloqueado
 

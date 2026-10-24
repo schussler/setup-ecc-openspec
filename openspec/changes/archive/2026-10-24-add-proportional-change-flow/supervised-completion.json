@@ -1,0 +1,32 @@
+{
+  "change": "add-proportional-change-flow",
+  "recorded_at": "2026-10-24T17:44:54.121Z",
+  "contract_hash": "9438f7052c26a3ff9bbc9ef43ca926ab9ec7d9c05e204a09955e4e25406a0c88",
+  "evidence": [
+    {
+      "name": "suite",
+      "command": "node --test \"scripts/test/**/*.test.mjs\"",
+      "result": "pass"
+    },
+    {
+      "name": "lint",
+      "command": "node scripts/gates/lint.mjs",
+      "result": "pass"
+    },
+    {
+      "name": "syntax",
+      "command": "node scripts/gates/syntax-check.mjs scripts .claude/skills/template-migrate",
+      "result": "pass"
+    },
+    {
+      "name": "validate_strict",
+      "command": "openspec validate add-proportional-change-flow --strict",
+      "result": "pass"
+    },
+    {
+      "name": "contract",
+      "command": "checkContract(openspec/changes/add-proportional-change-flow)",
+      "result": "pass"
+    }
+  ]
+}

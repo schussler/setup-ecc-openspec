@@ -67,9 +67,13 @@ No caminho 2 apresente um contrato curto com objetivo, escopo, critérios de ace
 
 A execução supervisionada nesta versão é uma limitação declarada, e não significa custo zero. A classificação de risco não depende do modo de execução.
 
+Aprovação do caminho 2: "pode fazer" autoriza o escopo apresentado. O registro é gravado pelo comando de conversa de `spec-create`, com `--path 2`.
+
 ## Caminho 3: mudança funcional ou arquitetural
 
 No caminho 3 use `spec-create`, com aprovação formal do contrato e os gates atuais. Não pule gates, mesmo para um pedido que parece pequeno.
+
+Aprovação do caminho 3: "aprovado" autoriza o escopo apresentado no hash atual do contrato, registrada pela conversa com `--path 3`, conforme `spec-create`.
 
 ## Verificação proporcional
 

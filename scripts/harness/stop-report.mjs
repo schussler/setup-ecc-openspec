@@ -43,3 +43,24 @@ export function buildStopReport({ outcome, state = null, objective = null, hypot
     next_step: nextStep ?? 'registrar a decisão em authorizations.json e rodar o runner novamente',
   };
 }
+
+// Diagnóstico curto de uma parada (simplify-approval-and-execution, EX-005 a EX-007). Motivo, evidência e
+// recomendação saem juntos. Motivo fora de stop_reasons vira config_error. Repetição acima de
+// max_diagnostics_per_signature vira human_decision_needed, sem nova tentativa.
+export function diagnoseStop({ stopReason, evidence, recommendation, repeats = 0 }, policy) {
+  if (!policy.stop_reasons.includes(stopReason)) {
+    return {
+      stop_reason: 'config_error',
+      evidence: `motivo fora de stop_reasons: ${stopReason}`,
+      recommendation: 'corrigir o motivo de parada para um valor de stop_reasons em .claude/harness/policy.json',
+    };
+  }
+  if (repeats > policy.max_diagnostics_per_signature) {
+    return {
+      stop_reason: 'human_decision_needed',
+      evidence: `${evidence}; repetido ${repeats} vezes, acima de max_diagnostics_per_signature`,
+      recommendation: 'decidir o bloqueio antes de nova tentativa',
+    };
+  }
+  return { stop_reason: stopReason, evidence, recommendation };
+}

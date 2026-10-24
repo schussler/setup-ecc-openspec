@@ -102,7 +102,8 @@ test('a tabela Gates do issue-tracker é derivada e não se edita à mão', () =
 test('[10.3 pendente] remoção do --legacy-write continua pendente do marco e da confirmação de ausência de execução legacy', () => {
   // Quando o marco 13 estiver registrado e não houver execução legacy ativa, esta
   // verificação é substituída pelo teste de remoção. Até lá, o flag permanece.
-  const tasks = readRepoFile('openspec/changes/add-spec-harness/tasks.md');
+  // A change foi arquivada (simplify-approval-and-execution, 9.6): a tarefa fica no caminho do arquivo.
+  const tasks = readRepoFile('openspec/changes/archive/2026-10-24-add-spec-harness/tasks.md');
   assert.match(tasks, /- \[ \] 10\.3 /);
   const gate = readRepoFile('scripts/gates/implement-gate.mjs');
   assert.match(gate, /legacy-write/);

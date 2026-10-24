@@ -1,0 +1,32 @@
+{
+  "change": "simplify-approval-and-execution",
+  "recorded_at": "2026-10-24T18:06:05.789Z",
+  "contract_hash": "f5dc411ae0c58df3a89fb406d835911bf1b322586ff5c60f510e012d1e40a11c",
+  "evidence": [
+    {
+      "name": "suite",
+      "command": "node --test \"scripts/test/**/*.test.mjs\"",
+      "result": "pass"
+    },
+    {
+      "name": "lint",
+      "command": "node scripts/gates/lint.mjs",
+      "result": "pass"
+    },
+    {
+      "name": "syntax",
+      "command": "node scripts/gates/syntax-check.mjs scripts .claude/skills/template-migrate",
+      "result": "pass"
+    },
+    {
+      "name": "validate_strict",
+      "command": "openspec validate simplify-approval-and-execution --strict",
+      "result": "pass"
+    },
+    {
+      "name": "contract",
+      "command": "checkContract(openspec/changes/simplify-approval-and-execution)",
+      "result": "pass"
+    }
+  ]
+}

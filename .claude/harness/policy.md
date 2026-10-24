@@ -86,3 +86,9 @@ node .claude/skills/template-migrate/legacy-run.mjs restore --change <change> --
 ```
 
 O comando mostra o resumo e pede o código de confirmação, como o `authorize.mjs record`. Recusa sem alterar arquivos quando não há terminal interativo, quando falta aprovador ou motivo, quando o hash da cópia não confere com `pre_migration_sha256` do checkpoint de migração, quando a confirmação não confere ou quando o lock da change está ocupado. O `run-state.json` legado guardado na cópia não volta: o modo é imutável (RS-008). Com reservas abertas, a execução restaurada fica em `awaiting_decision` com `reconciliation_required` até a reconciliação pelo `cli.mjs reconcile`.
+
+## Aprovação pela conversa e conclusão supervisionada (simplify-approval-and-execution)
+
+- A aprovação de contrato de change nova pode vir da conversa, registrada com `procedure: conversa` em `authorizations.json`. Vale só para uma change sem aprovação de contrato anterior. O caminho 1 não grava registro. Aprovações de TTY já existentes continuam válidas.
+- A conclusão supervisionada grava `supervised-completion.json` com as evidências atuais (suíte, lint, sintaxe, `validate --strict` e contrato). Ela substitui o veredito `pass` do gate de implementação só para o hash atual do contrato, e nunca altera `gates.json`.
+- Os parâmetros de orçamento, limites, reserva e caminhos protegidos não mudam com esta regra. Os motivos de parada continuam os da chave `stop_reasons`.

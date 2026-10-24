@@ -171,7 +171,16 @@ test('[RC-029] runner e skills não importam nem chamam o registro de autorizaç
   const files = dirs.flatMap((dir) => readdirSync(dir, { recursive: true }).map((name) => join(dir, name)))
     .filter((path) => /\.(mjs|md)$/.test(path) && statSync(path).isFile())
     .filter((path) => !path.endsWith(join('scripts', 'harness', 'authorize.mjs')));
-  const offenders = files.filter((path) => /authorize\.mjs|recordAuthorization/.test(readFileSync(path, 'utf8')))
-    .map((path) => relative(REPO_ROOT, path));
+  // Exceção única (simplify-approval-and-execution, AP-006): o comando `authorize.mjs conversa` da skill
+  // spec-create registra a aprovação de contrato dada pelo usuário na conversa. Só essa linha é removida
+  // da conferência; `recordAuthorization` e `authorize.mjs record` continuam proibidos em todo lugar.
+  const CONVERSATION_COMMAND = /node scripts\/harness\/authorize\.mjs conversa [^\n`]*/;
+  const offenders = files.filter((path) => {
+    const text = readFileSync(path, 'utf8').replace(new RegExp(CONVERSATION_COMMAND.source, 'g'), '');
+    return /authorize\.mjs|recordAuthorization/.test(text);
+  }).map((path) => relative(REPO_ROOT, path));
   assert.deepEqual(offenders, []);
+  const conversation = files.filter((path) => CONVERSATION_COMMAND.test(readFileSync(path, 'utf8')))
+    .map((path) => relative(REPO_ROOT, path));
+  assert.deepEqual(conversation, [join('.claude', 'skills', 'spec-create', 'SKILL.md')]);
 });

@@ -13,6 +13,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { localDir } from '../harness/identity.mjs';
+import { readSupervisedCompletion } from '../harness/supervised-completion.mjs';
 import { ChecksError, listTestFiles, loadChecks, runCommand, runSuite, walkFiles } from './checks.mjs';
 import {
   assertLegacyWrite, changeDir, decideVerdict, gateResult, isMain, parseArgs, pct, readGates, runCli, writeGates,
@@ -201,8 +202,11 @@ export async function evaluateArchive({ root, change, specsDir, implementationAp
 export async function scoreArchive({ root, change, note = '', legacyWrite = false }) {
   if (legacyWrite) assertLegacyWrite(root, change);
   const gates = readGates(root, change);
-  const approved = gates.implement?.attempts?.at(-1)?.verdict === 'pass';
-  const specsDir = join(changeDir(root, change), 'specs');
+  const dir = changeDir(root, change);
+  // Conclusão supervisionada (simplify-approval-and-execution) substitui o veredito de implementação,
+  // sem alterar gates.json. O registro só vale para o hash atual do contrato.
+  const approved = gates.implement?.attempts?.at(-1)?.verdict === 'pass' || readSupervisedCompletion(dir).valid;
+  const specsDir = join(dir, 'specs');
   const result = await evaluateArchive({ root, change, specsDir, implementationApproved: approved });
   const previous = gates.archive?.attempts ?? [];
   const attempt = {

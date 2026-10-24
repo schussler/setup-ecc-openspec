@@ -23,7 +23,7 @@ export const STATES = Object.freeze([
 // Mesma ordem e conteúdo da chave `stop_reasons` de policy.json (testado em f6-machine).
 export const STOP_REASONS = Object.freeze([
   'correction_limit', 'budget_exhausted', 'budget_reserve_insufficient', 'repeated_symptom',
-  'protected_change', 'config_error', 'invalid_evidence', 'quota_unavailable', 'time_limit',
+  'protected_change', 'config_error', 'invalid_evidence', 'quota_unavailable', 'permission_denied', 'time_limit',
   'human_decision_needed', 'stale_lock', 'lock_held', 'reconciliation_required', 'mode_mismatch',
   'timeout_unclassified', 'authorization_required', 'lock_unreadable',
 ]);

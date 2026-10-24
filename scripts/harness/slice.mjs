@@ -4,6 +4,8 @@
 // O runner novo não para por contagem de falhas (RC-041); a regra SG-018 é só legada (gate-store).
 // O gate é injetado (evaluate): este módulo não executa scripts/gates nem grava veredito. Cada avaliação
 // passa pelo guarda (gate-guard.mjs): prazo max_seconds_per_gate, sinais e término confirmado (D8, D25).
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { changeDir } from './identity.mjs';
 import { writeMilestoneCheckpoint } from './checkpoint.mjs';
 import { countGateEvaluation, dispatchCorrection } from './counters.mjs';
@@ -19,6 +21,42 @@ import { guardedEvaluation, pendingTermination } from './gate-guard.mjs';
 const DEFAULT_GATE = 'implement';
 // Fatias obrigatórias da execução (C1, SP-010): a execução só aprova quando todas estão aprovadas e a validação final passa.
 export const REQUIRED_SLICES = Object.freeze(['implement']);
+
+const SLICE_PREFIX = '## Fatia: ';
+const SCENARIOS_LINE = /^- Cenários: (.+)$/m;
+
+// Fatias declaradas em tasks.md (add-multislice-run, MS-001, MS-002, MS-008): cada seção "## Fatia: <nome>" vai até
+// o próximo cabeçalho "## ". Lista vazia é o modo legado (uma fatia implement). Ordem do arquivo = ordem de execução.
+export function declaredSlices(text) {
+  return text.split(/^(?=## )/m)
+    .filter((section) => section.startsWith(SLICE_PREFIX))
+    .map((section) => {
+      const name = section.split('\n')[0].slice(SLICE_PREFIX.length).trim();
+      const line = section.match(SCENARIOS_LINE);
+      const scenarios = line ? line[1].split(',').map((id) => id.trim()).filter(Boolean) : [];
+      return { name, scenarios };
+    });
+}
+
+// Fatia multifatia aprovada: o registro guarda o nome da tarefa (task), não só o gate de ciclo.
+export function approvedTask(state, task) {
+  return (state.slice_approvals ?? []).some((item) => item.task === task);
+}
+
+// Acrescenta a tarefa ao registro que acabou de ser gravado pela aprovação (approveSlice).
+export function tagSliceApproval(root, change, task) {
+  const current = loadState(root, change);
+  const approvals = current.slice_approvals ?? [];
+  if (approvals.length === 0) return current;
+  const last = approvals.at(-1);
+  return saveState(root, change, { ...current, slice_approvals: [...approvals.slice(0, -1), { ...last, task }] });
+}
+
+// Lê as fatias da change; sem tasks.md, a lista é vazia (modo legado).
+export function sliceDeclarations(root, change) {
+  const file = join(changeDir(root, change), 'tasks.md');
+  return existsSync(file) ? declaredSlices(readFileSync(file, 'utf8')) : [];
+}
 const NO_SNAPSHOT = async () => null;
 
 // Parada acrescenta o motivo ao histórico do estado, como no runner (relatório de paradas, TE-004).
@@ -161,6 +199,8 @@ export async function runSlice(options) {
     }
     if (verdict.outcome === 'human_decision_needed') return stopAt(root, change, outcome, 'human_decision_needed');
     if (verdict.outcome === 'passed') return confirmOrDiagnose(root, change, evaluate, gate, outcome, guard);
+    // Negação de permissão com gate reprovado (MS-010): o problema é de permissão, não de código. Para sem correção.
+    if ((outcome.result?.permission_denials ?? []).length > 0) return stopAt(root, change, outcome, 'permission_denied');
 
     const signature = symptomSignature({ gate, failures: verdict.failures, errorClass: verdict.errorClass });
     const repeat = recordSymptom(loadState(root, change).counters, signature);

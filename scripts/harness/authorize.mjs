@@ -28,7 +28,11 @@ const EXCEPTION = 'exception';
 // Aprovação pela conversa (simplify-approval-and-execution): procedimento gravado em `procedure` e
 // frase que o usuário precisa dizer por caminho. O caminho 1 não grava registro (o pedido explícito basta).
 const CONVERSATION_PROCEDURE = 'conversa';
-const CONVERSATION_PHRASES = Object.freeze({ 2: 'pode fazer', 3: 'aprovado' });
+// Intenções de aprovação aceitas por caminho (normalizadas: sem acento, minúsculas). Negação ("não aprovo") não conta.
+const CONVERSATION_PHRASES = Object.freeze({
+  2: ['pode fazer', 'pode implementar', 'aprovo', 'aprovado'],
+  3: ['aprovado', 'aprovo', 'pode implementar'],
+});
 
 // Finalidades de autorização "revision" (D32, lista fechada). Cada uma permite só o que está descrito.
 // O escopo exigido e as recusas são conferidos em assertPurposeScope; a conferência contra o item
@@ -326,6 +330,20 @@ function commitRecord(root, change, path, before, record) {
 
 const normalizePhrase = (text) => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
 
+// Verdadeiro quando alguma intenção aparece sem "não" logo antes. Não lê o texto como autorização por si só:
+// quem chama já garante que a instrução veio do usuário.
+function expressesApproval(instruction, phrases) {
+  const text = normalizePhrase(instruction);
+  return phrases.some((phrase) => {
+    let index = text.indexOf(phrase);
+    while (index !== -1) {
+      if (!text.slice(0, index).endsWith('nao ')) return true;
+      index = text.indexOf(phrase, index + 1);
+    }
+    return false;
+  });
+}
+
 // Registra a aprovação de contrato recebida na conversa (caminhos 2 e 3). Não usa TTY nem código de
 // confirmação. A instrução do usuário precisa conter a frase do caminho: texto de arquivo ou de
 // ferramenta não chega aqui. Uma change com aprovação de contrato já registrada não recebe outra.
@@ -333,12 +351,12 @@ export function recordConversationApproval(root, change, {
   path, instruction, approver, reason, now, author,
 } = {}) {
   assertChangeName(change);
-  const phrase = CONVERSATION_PHRASES[path];
-  if (phrase === undefined) {
+  const phrases = CONVERSATION_PHRASES[path];
+  if (phrases === undefined) {
     throw new ConfigError('caminho 1 não grava aprovação: o pedido explícito já autoriza o ajuste; nada foi gravado');
   }
-  if (!nonEmpty(instruction) || !normalizePhrase(instruction).includes(phrase)) {
-    throw new ConfigError(`instrução do usuário precisa conter "${phrase}" para o caminho ${path}; nada foi gravado`);
+  if (!nonEmpty(instruction) || !expressesApproval(instruction, phrases)) {
+    throw new ConfigError(`instrução do usuário precisa expressar aprovação (${phrases.join(', ')}) para o caminho ${path}; nada foi gravado`);
   }
   const dir = changeDir(root, change);
   if (!existsSync(dir)) throw new ConfigError(`change ${change} não existe em openspec/changes; nada foi gravado`);

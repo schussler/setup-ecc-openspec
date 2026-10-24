@@ -55,6 +55,7 @@
     "config_error",
     "invalid_evidence",
     "quota_unavailable",
+    "permission_denied",
     "time_limit",
     "human_decision_needed",
     "stale_lock",

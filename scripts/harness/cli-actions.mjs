@@ -216,12 +216,17 @@ export async function validateFinal({ root, change, validate = validateChange, n
   const blocked = requireRunner(state);
   if (blocked) return blocked;
   const limitMs = timeLimitMs(root, state);
-  const pending = REQUIRED_SLICES.filter((slice) => !sliceApproved(state, slice));
+  const required = state.required_slices ?? REQUIRED_SLICES;
+  const pending = required.filter((slice) => !sliceApproved(state, slice));
   const base = { execution_id: state.execution_id, pending_slices: pending };
   if ((state.active_ms ?? 0) >= limitMs) {
     stopForTime(root, change);
     recordFinalValidation(root, change, { executionId: state.execution_id, approved: false, verdict: null, cases: [], stops: [TIME_LIMIT] });
     return { status: 'stop', verdict: null, stop_reason: TIME_LIMIT, execution_approved: false, ...base };
+  }
+  // Fatia pendente recusa antes de rodar a suíte (MS-006): a validação final não serve para execução incompleta.
+  if (pending.length > 0) {
+    return { status: 'refused', ...base, execution_approved: false, message: 'há fatias obrigatórias sem aprovação: validação final não executada (SP-010)' };
   }
   const started = now();
   const outcome = await validate({ root, change, executionId: state.execution_id, runtime: defaultRuntime() });
@@ -230,7 +235,7 @@ export async function validateFinal({ root, change, validate = validateChange, n
   const executionApproved = outcome.verdict === 'pass' && pending.length === 0 && !overLimit;
   saveState(root, change, {
     ...requireState(root, change),
-    execution_approval: executionApproved ? { execution_id: state.execution_id, approved_at: new Date().toISOString(), verdict: 'pass', slices: [...REQUIRED_SLICES] } : null,
+    execution_approval: executionApproved ? { execution_id: state.execution_id, approved_at: new Date().toISOString(), verdict: 'pass', slices: [...required] } : null,
   });
   if (overLimit) stopForTime(root, change);
   recordFinalValidation(root, change, {
@@ -243,12 +248,11 @@ export async function validateFinal({ root, change, validate = validateChange, n
   });
   if (overLimit) return { status: 'stop', ...base, message: 'tempo ativo total ultrapassado na validação final: execução não aprovada (RC-026)' };
   if (outcome.verdict !== 'pass') return { status: outcome.verdict, ...base };
-  if (pending.length > 0) return { status: 'refused', ...base, message: 'validação final aprovada, mas há fatias obrigatórias sem aprovação (SP-010)' };
   return { status: 'pass', ...base };
 }
 
 function sliceApproved(state, slice) {
-  return (state.slice_approvals ?? []).some((item) => item.slice === slice);
+  return (state.slice_approvals ?? []).some((item) => (item.task ?? item.slice) === slice);
 }
 
 // Marco de checkpoint (D18, B.1): archived só depois de validação final aprovada (D18 passo 1).

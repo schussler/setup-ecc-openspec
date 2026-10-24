@@ -72,6 +72,15 @@ function outcome(status, fields) {
   return { status, stop_reason: STOP_REASON_BY_STATUS[status] ?? null, cause: null, ...fields };
 }
 
+// Negações de permissão da sessão, sem o conteúdo dos comandos (podem trazer dados sensíveis).
+export function permissionDenialsOf(json) {
+  const denials = Array.isArray(json?.permission_denials) ? json.permission_denials : [];
+  return denials.map((denial) => ({
+    tool_name: typeof denial?.tool_name === 'string' ? denial.tool_name : null,
+    command_head: typeof denial?.tool_input?.command === 'string' ? denial.tool_input.command.trim().split(/\s+/)[0] : null,
+  }));
+}
+
 // Classifica a saída do processo. Só a causa identificada vira status especial;
 // is_error sem causa é 'error' sem causa (HE-006).
 function classify({ code, json, durationMs, stderr }) {
@@ -87,8 +96,15 @@ function classify({ code, json, durationMs, stderr }) {
     session_id: json.session_id ?? null,
   };
   if (typeof json.result === 'string' && QUOTA.test(json.result)) return outcome('quota_unavailable', fields);
-  if (json.is_error || code !== 0) return outcome('error', { ...fields, cause: json.subtype ?? null });
-  return outcome('success', fields);
+  // Negações registradas sem conteúdo do comando (MS-010): nome da ferramenta e primeira palavra do comando.
+  const denials = permissionDenialsOf(json);
+  if (json.is_error || code !== 0) return outcome('error', { ...fields, permission_denials: denials, cause: json.subtype ?? null });
+  return outcome('success', { ...fields, permission_denials: denials });
+}
+
+// Classifica uma saída já capturada (usado pelos testes de negação de permissão e pelo runner).
+export function parseHarnessOutput({ code, stdout, durationMs, stderr }) {
+  return classify({ code, json: parseLastLine(stdout), durationMs, stderr });
 }
 
 // Executa o binário (o simulador nos testes) e devolve o resultado classificado.

@@ -674,3 +674,32 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 ## Paradas
 
 Nenhuma.
+
+### 2026-10-24 — Escopo incompleto: execução multifatia e validação no piloto (não iniciada)
+
+- **Estado:** dois ajustes locais, sem commit, sem change: `--claude-bin` com espaços (executável existente, array JSON ou comando separado) e intenções de aprovação por caminho com recusa de negação. Suíte 931/931, lint e sintaxe 0. Patch em `ajustes-aprovacao-e-claude-bin.patch` na pasta de scratchpad da sessão.
+- **Não feito:** execução multifatia sequencial (`REQUIRED_SLICES = ['implement']` ainda é único); preflight; reutilização de autorização vigente; negação de permissão como bloqueio operacional; percurso integrado com duas fatias, falha simulada e retomada; registro de verificações humanas; conciliação de contagens e consumo; validação real no piloto.
+- **Piloto:** `/Users/schussler/dev/harness-pilot` não foi alterado. Não tem commits; todo o conteúdo está como não rastreado, e precisa ser preservado antes de qualquer atualização.
+- **Processo:** os ajustes foram feitos sem contrato de change; não foram commitados. Antes de virar marco, precisam entrar numa change com contrato validado.
+- **Sem:** chamadas de modelo, push, PR, merge ou deploy nesta rodada.
+
+### 2026-10-24 — add-multislice-run: percurso multifatia validado localmente; piloto bloqueado
+
+- **Change:** `openspec/changes/add-multislice-run`, válida no `openspec validate`. Os dois ajustes anteriores estão registrados como feitos antes do contrato, sem RED retroativo.
+- **Implementado:** fatias declaradas em `tasks.md` (`## Fatia: <nome>`, com `- Cenários: <IDs>`); execução sequencial com retomada pelas aprovações; aprovação exige os cenários da fatia; validação final recusa com pendência antes da suíte.
+- **Testes:** 5 novos (`multislice-slices`, `multislice-run`), com RED observado antes da implementação. Suíte 936/936, lint 0, sintaxe 0. O percurso integrado usa o CLI com raiz em caminho com espaço, `--claude-bin` em JSON e o simulador.
+- **Não feito:** conciliação de consumo entre estado, eventos e relatório; preflight; bloqueios operacionais; invalidação de fatias; execução real no piloto.
+- **Bloqueio do piloto:** falta a aprovação de contrato pela conversa (frase do usuário) e o valor do orçamento para chamadas reais. Não foram fabricados.
+- **Piloto preservado:** `harness-pilot-preservado-antes-multifatia.tar.gz` (sha256 `978d9f6a…c654`) na pasta de scratchpad da sessão. Nenhuma alteração no piloto.
+- **Sem:** commit, push, PR ou merge nesta rodada.
+
+### 2026-10-24 — add-multislice-run: validação real multifatia no piloto concluída
+
+- **Piloto:** `add-pending-summary` (duas fatias dependentes: filtro de pendentes e contagem por prioridade), `claude -p` 2.1.310 pela assinatura, modo observação, sem orçamento financeiro e sem API paga. Execução aprovada, validação final `pass`.
+- **Invocações:** 3 (duas com sucesso, US$ 0,023862 e US$ 0,017355; uma negada, US$ 0,023007). Custo conhecido US$ 0,064225, igual à soma dos eventos, ao relatório e ao contador do estado. Conciliação `reconciled`.
+- **Permissão:** a primeira invocação teve uma negação de comando composto (`cat … && find … -exec`). O modelo repetiu os comandos separadamente e concluiu a fatia. Por isso a negação só é registrada; vira parada `permission_denied` quando o gate reprova a fatia (MS-010 revisado e MS-014).
+- **Contrato do piloto:** a primeira validação final parou por falta da declaração `Comportamento novo` (HI-010) no `proposal.md`. Corrigido com nova versão de aprovação. As duas fatias foram revalidadas pelo gate, sem chamada ao modelo, e mantiveram a aprovação.
+- **Correção no relatório:** `failed_attempts` contava só eventos `failed` (validações finais), e a invocação negada ficava de fora. Agora conta invocações pagas sem sucesso. Teste em `multislice-conciliation`.
+- **Verificação:** suíte do harness 960/960, lint 0, sintaxe 0. Suíte do piloto 35/35 (31 + 4 novos), lint 0, check 0.
+- **Preparos locais:** commit base `df1f284` no piloto, criado para o git do runner (reversível). Backup persistente em `/Users/schussler/dev/harness-pilot-backups/2026-10-24-pre-multifatia/` (sha256 do tar `08459d5a…c654`).
+- **Limitações:** o piloto está em caminho sem espaço (o caminho com espaço ficou só no teste integrado com simulador); a change do piloto não foi arquivada; revalidação roda o gate sem a proteção de prazo do guarda; interrupção durante o real não foi testada; nada commitado, sem push, PR ou merge.

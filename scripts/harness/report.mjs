@@ -13,7 +13,7 @@ const NODE_REQUIRED_MAJOR = 22;
 const NODE_NOT_VERIFIED = 'Node >= 22: não verificado';
 const NODE_LINE_IN_USE = 'Node 22.x em uso';
 const ACCEPTED = 'accepted';
-const FAILED = 'failed';
+const SUCCESS_STATUSES = ['ok', 'success', 'accepted'];
 const PASS = 'pass';
 const NONDETERMINISM_OPEN = 'aberto';
 const NONDETERMINISM_CAUSE = 'não identificada';
@@ -93,7 +93,10 @@ function costSummary(events, state = null) {
 // pelas entregas aceitas. Com custo incompleto, o valor parcial é rotulado e não vira total.
 function deliverySummary(events, cost) {
   const accepted = new Set(events.filter((event) => event.status === ACCEPTED && event.delivery).map((event) => event.delivery));
-  const failedAttempts = events.filter((event) => event.status === FAILED).length;
+  // Tentativa malsucedida = invocação paga que não deu resultado de sucesso (negação, erro, quota, falha).
+  // Validação final reprovada não é tentativa de chamada: fica de fora desta conta.
+  const failedAttempts = events.filter((event) => event.function === 'invocacao' && event.paid !== false
+    && !SUCCESS_STATUSES.includes(event.status)).length;
   const spent = round(cost.known_usd + cost.estimated_usd);
   const perAccepted = accepted.size === 0 ? null : round(spent / accepted.size);
   return {

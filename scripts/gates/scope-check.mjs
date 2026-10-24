@@ -5,6 +5,8 @@
 // Without --scoped, reads `scoped_paths` from template.json.
 // Exit: 0 pass, 1 fail, 3 error.
 import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { ChecksError, readManifest } from './checks.mjs';
 import { parseArgs, runCli, isMain } from './gate-store.mjs';
 
@@ -20,6 +22,28 @@ function inScope(file, scoped) {
   return scoped.some((path) => (path.endsWith('/') ? file.startsWith(path) : file === path || file.startsWith(`${path}/`)));
 }
 
+// Arquivos operacionais (policy.json -> excluded_paths) não são escopo: nem entram na lista.
+// Padrão com barra final vale para um segmento de diretório; padrão com barra interna vale para o
+// caminho inteiro a partir da raiz (ex.: docs/agents/issue-tracker.md); padrão com * vale para o nome.
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const globOf = (pattern) => new RegExp(`^${pattern.split('*').map(escapeRegExp).join('.*')}$`);
+
+export function readExcludedPaths(root) {
+  const path = join(root, '.claude', 'harness', 'policy.json');
+  if (!existsSync(path)) return [];
+  return JSON.parse(readFileSync(path, 'utf8')).excluded_paths ?? [];
+}
+
+export function isExcluded(file, patterns) {
+  const segments = file.split('/');
+  const name = segments.at(-1);
+  return patterns.some((pattern) => {
+    if (pattern.endsWith('/')) return segments.slice(0, -1).includes(pattern.slice(0, -1));
+    if (pattern.includes('/')) return globOf(pattern).test(file);
+    return globOf(pattern).test(name);
+  });
+}
+
 export function outOfScope(files, scoped) {
   return files.filter((file) => !inScope(file, scoped));
 }
@@ -27,7 +51,8 @@ export function outOfScope(files, scoped) {
 export function checkScope({ root, base, scoped }) {
   if (!base) throw new ChecksError('scope-check precisa de --base <ref>');
   if (!scoped?.length) throw new ChecksError('scoped_paths vazio: passe --scoped ou defina scoped_paths em template.json');
-  const files = changedFiles(root, base);
+  const excluded = readExcludedPaths(root);
+  const files = changedFiles(root, base).filter((file) => !isExcluded(file, excluded));
   const outside = outOfScope(files, scoped);
   return { base, scoped_paths: scoped, changed: files.length, out_of_scope: outside, verdict: outside.length === 0 ? 'pass' : 'fail' };
 }

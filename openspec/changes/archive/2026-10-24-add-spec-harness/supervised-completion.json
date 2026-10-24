@@ -1,0 +1,32 @@
+{
+  "change": "add-spec-harness",
+  "recorded_at": "2026-10-24T17:49:12.743Z",
+  "contract_hash": "9309f6572beee0c106ac379b13917280cc63b2b2d0fd166c4ced017a85e768b8",
+  "evidence": [
+    {
+      "name": "suite",
+      "command": "node --test \"scripts/test/**/*.test.mjs\"",
+      "result": "pass"
+    },
+    {
+      "name": "lint",
+      "command": "node scripts/gates/lint.mjs",
+      "result": "pass"
+    },
+    {
+      "name": "syntax",
+      "command": "node scripts/gates/syntax-check.mjs scripts .claude/skills/template-migrate",
+      "result": "pass"
+    },
+    {
+      "name": "validate_strict",
+      "command": "openspec validate add-spec-harness --strict",
+      "result": "pass"
+    },
+    {
+      "name": "contract",
+      "command": "checkContract(openspec/changes/add-spec-harness)",
+      "result": "pass"
+    }
+  ]
+}

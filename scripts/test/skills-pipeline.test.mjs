@@ -59,6 +59,16 @@ test('skills spec delegam ao opsx', () => {
   }
 });
 
+test('[SP-001] skills spec delegam ao opsx, declaram que o runner conduz a execução autônoma e que os gates não podem ser pulados', () => {
+  const pairs = { 'spec-create': '/opsx:propose', 'spec-implement': '/opsx:apply', 'spec-archive': '/opsx:archive' };
+  for (const [name, command] of Object.entries(pairs)) {
+    const text = skill(name);
+    assert.ok(text.includes(`thin wrapper over \`${command}\``), `${name} delega a ${command}`);
+    assert.match(text, /[Rr]un autonomously, this step is conducted by the runner \(`scripts\/harness\/`\)/, `${name} declara o runner`);
+    assert.match(text, /gate cannot be skipped, also not in headless mode/, `${name} declara que o gate não pode ser pulado`);
+  }
+});
+
 test('spec-archive roda gate antes de arquivar', () => {
   const text = steps(skill('spec-archive'));
   const gate = text.indexOf('archive-gate.mjs');

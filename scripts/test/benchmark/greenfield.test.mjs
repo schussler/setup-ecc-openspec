@@ -82,7 +82,7 @@ test('bootstrap reprova projeto que herdou change ou spec do template', async ()
   const target = writeTree(makeTempDir(), {
     'template.json': { checks: task.checks },
     'docs/agents/architecture.md': '', 'docs/agents/domain.md': '', 'docs/agents/issue-tracker.md': '',
-    '.claude/settings.json': '{}', 'scripts/gates/implement-gate.mjs': '',
+    '.claude/settings.json': '{}', 'scripts/gates/implement-gate.mjs': '', 'scripts/harness/process-group.mjs': '',
     'openspec/changes/add-matt-skills-and-benchmark/proposal.md': 'x',
     'openspec/specs/agent-context/spec.md': 'x',
   });
@@ -118,7 +118,7 @@ test('bootstrap ignora diretorios vazios deixados pelo git mv', async () => {
   const target = writeTree(makeTempDir(), {
     'template.json': { checks: task.checks },
     'docs/agents/architecture.md': '', 'docs/agents/domain.md': '', 'docs/agents/issue-tracker.md': '',
-    '.claude/settings.json': '{}', 'scripts/gates/implement-gate.mjs': '',
+    '.claude/settings.json': '{}', 'scripts/gates/implement-gate.mjs': '', 'scripts/harness/process-group.mjs': '',
     'openspec/changes/archive/.gitkeep': '',
   });
   mkdirSync(join(target, 'templates/docs'), { recursive: true });

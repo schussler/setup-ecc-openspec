@@ -6,11 +6,14 @@
 // removed or overwritten.
 // Usage:
 //   node .claude/skills/template-migrate/migrate.mjs plan --template <clone> [--project <dir>]
+//   node .claude/skills/template-migrate/migrate.mjs check-update --template <clone> [--project <dir>]
 //   node .claude/skills/template-migrate/migrate.mjs apply --template <clone> --items managed,docs-agents,checks,settings,claude-md
 //     [--checks-test "<cmd>"] [--checks-test-file "<cmd>"] [--checks-lint "<cmd>"] [--checks-typecheck "<cmd>"] [--checks-coverage "<cmd>"]
+//     [--checks-test-report "<cmd que imprime TAP>"] [--checks-suite <id>] [--checks-format tap]
 import { cpSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { copyOver, describeGaps, stagedGaps } from './distribution.mjs';
 
 export const ITEMS = Object.freeze(['managed', 'docs-agents', 'checks', 'settings', 'claude-md']);
 const REQUIRED_CHECKS = ['test', 'lint', 'typecheck'];
@@ -125,15 +128,84 @@ function docsAgentsItem(template, project) {
   };
 }
 
+// --- checks.test_report (D12, D27, PM-010) ---
+
+export const SUPPORTED_FORMATS = Object.freeze(['tap']);
+const FORMAT_EXAMPLE = '"format": "tap"';
+const commandOf = (value) => (typeof value === 'string' ? value : value?.command);
+const suiteOf = (value) => (value && typeof value === 'object' ? value.suite : undefined);
+
+// Comando TAP sugerido para `node --test`; para outros comandos o usuário informa o seu.
+export function tapCandidate(testCommand) {
+  if (typeof testCommand !== 'string' || !/^node --test(\s|$)/.test(testCommand) || testCommand.includes('--test-reporter=')) return null;
+  return testCommand.replace(/^node --test/, 'node --test --test-reporter=tap');
+}
+
+// Compara checks.test com checks.test_report. Devolve o que a migração faria (`next`),
+// os erros que impedem qualquer gravação e o estado do item. Não grava nada.
+export function testReportChange(current, confirmed = {}) {
+  const local = current.test_report ?? null;
+  const testSuite = suiteOf(current.test);
+  const reportSuite = local ? local.suite : confirmed.suite;
+  const format = local ? local.format : (confirmed.format ?? 'tap');
+  const errors = [];
+  if (!SUPPORTED_FORMATS.includes(format)) {
+    errors.push(`config_error: checks.test_report.format "${format}" não suportado. Formatos suportados: ${SUPPORTED_FORMATS.join(', ')}. Exemplo: ${FORMAT_EXAMPLE}.`);
+  }
+  if (testSuite !== undefined && reportSuite !== undefined && testSuite !== reportSuite) {
+    errors.push(`config_error: checks.test declara a suite "${testSuite}" e checks.test_report declara "${reportSuite}". Use a mesma suite. Nada foi gravado.`);
+  }
+  if (!local && confirmed.test_report && reportSuite === undefined) {
+    errors.push('config_error: checks.test_report exige a suite. Informe --checks-suite (por exemplo, unit).');
+  }
+  const next = {};
+  if (typeof current.test === 'string' && reportSuite !== undefined) next.test = { command: current.test, suite: reportSuite };
+  if (!local && confirmed.test_report && reportSuite !== undefined) {
+    next.test_report = { command: confirmed.test_report, suite: reportSuite, format: 'tap' };
+  }
+  const done = Boolean(local) && typeof current.test !== 'string';
+  return {
+    status: done ? 'done' : 'needed',
+    candidate: local ? null : tapCandidate(commandOf(current.test)),
+    errors,
+    next,
+  };
+}
+
+// Valores já definidos localmente que a confirmação quer trocar: nada é sobrescrito,
+// e cada diferença fica registrada para o relatório.
+export function preservedChecks(current, confirmed = {}) {
+  const diffs = [];
+  for (const key of [...REQUIRED_CHECKS, ...OPTIONAL_CHECKS]) {
+    const local = commandOf(current[key]);
+    if (local && confirmed[key] && confirmed[key] !== local) diffs.push({ key: `checks.${key}`, local, proposed: confirmed[key] });
+  }
+  const local = current.test_report;
+  if (local && confirmed.test_report && confirmed.test_report !== local.command) {
+    diffs.push({ key: 'checks.test_report.command', local: local.command, proposed: confirmed.test_report });
+  }
+  return diffs;
+}
+
 function checksItem(project, confirmed) {
   const manifest = readJson(join(project, 'template.json'));
   const current = manifest.checks ?? {};
-  const filled = (key) => typeof current[key] === 'string' && current[key].trim() !== '';
+  const filled = (key) => typeof commandOf(current[key]) === 'string' && commandOf(current[key]).trim() !== '';
+  const report = testReportChange(current, confirmed);
+  const requiredDone = REQUIRED_CHECKS.every(filled);
   return {
-    status: REQUIRED_CHECKS.every(filled) ? 'done' : 'needed',
-    details: { current, detected: detectChecks(project) },
+    // Projeto sem checks.test_report segue em modo legado (D27): o item fica done pelos
+    // comandos obrigatórios, e a pendência do test_report aparece em details e em pending.
+    status: requiredDone ? 'done' : 'needed',
+    pending: Object.keys(report.next).length > 0,
+    details: {
+      current,
+      detected: detectChecks(project),
+      test_report: { status: report.status, candidate: report.candidate, errors: report.errors },
+      preserved: preservedChecks(current, confirmed),
+    },
     apply(write) {
-      const next = { ...current };
+      const next = { ...current, ...report.next };
       for (const key of [...REQUIRED_CHECKS, ...OPTIONAL_CHECKS]) {
         if (filled(key)) continue;
         if (confirmed[key]) next[key] = confirmed[key];
@@ -212,7 +284,39 @@ export function plan({ template, project }) {
 
 const pick = ({ status, details }) => ({ status, details });
 
-export function apply({ template, project, items = [], checks = {} }) {
+// Aplica só os itens confirmados. Antes de escrever, roda a migração em uma cópia e recusa
+// se o resultado deixaria scripts/gates sem scripts/harness, .claude/harness ou com imports
+// fora de managed (distribuição, RS-019/D14): nada do projeto real é alterado nesse caso.
+export function apply(options) {
+  const { template, project, items = [], checks = {} } = options;
+  // Recusas de checks (PM-010 c e d) são checadas antes de qualquer escrita, inclusive dos outros itens.
+  if (items.includes('checks')) {
+    const manifest = readJson(join(project, 'template.json'), {});
+    const refusals = testReportChange(manifest.checks ?? {}, checks).errors;
+    if (refusals.length > 0) throw new Error(refusals.join(' '));
+  }
+  const gaps = stagedGaps(project, (stage) => applyItems({ template, project: stage, items, checks }));
+  if (gaps.length > 0) throw new Error(describeGaps(gaps));
+  const preserved = items.includes('checks') ? preservedChecks(readJson(join(project, 'template.json'), {}).checks ?? {}, checks) : [];
+  return { ...applyItems({ template, project, items, checks }), preserved };
+}
+
+// Atualização do template (/template-update): copia os managed do projeto para uma cópia e
+// recusa se os gates ficariam sem os módulos que importam. Não escreve no projeto.
+export function checkUpdate({ template, project }) {
+  const manifest = readJson(join(project, 'template.json'));
+  if (!manifest) throw new Error(`${join(project, 'template.json')} não existe: o projeto não é derivado do template`);
+  const managed = manifest.managed ?? [];
+  const gaps = stagedGaps(project, (stage) => {
+    for (const path of managed) {
+      if (existsSync(join(template, path))) copyOver(join(template, path), join(stage, path));
+    }
+  });
+  if (gaps.length > 0) throw new Error(describeGaps(gaps));
+  return { ok: true, managed };
+}
+
+function applyItems({ template, project, items = [], checks = {} }) {
   const unknown = items.filter((id) => !ITEMS.includes(id));
   if (unknown.length > 0) throw new Error(`itens desconhecidos: ${unknown.join(', ')}`);
   const changed = new Set();
@@ -235,7 +339,7 @@ export function apply({ template, project, items = [], checks = {} }) {
   // Items are rebuilt one at a time: managed and checks both edit template.json.
   for (const id of ITEMS.filter((item) => items.includes(item))) {
     const item = buildItems(template, project, checks)[id]();
-    if (item.status !== 'done') item.apply(write, copyTree);
+    if (item.status !== 'done' || item.pending) item.apply(write, copyTree);
   }
   return { applied: items, changed_files: [...changed].sort() };
 }
@@ -258,11 +362,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     let result;
     if (command === 'plan') result = plan({ template: options.template, project });
     else if (command === 'apply') {
-      const checks = Object.fromEntries(['test', 'test_file', 'lint', 'typecheck', 'coverage']
+      const checks = Object.fromEntries(['test', 'test_file', 'lint', 'typecheck', 'coverage', 'test_report', 'suite', 'format']
         .map((key) => [key, options[`checks-${key.replace('_', '-')}`]])
         .filter(([, value]) => value));
       result = apply({ template: options.template, project, items: (options.items ?? '').split(',').filter(Boolean), checks });
-    } else throw new Error('uso: migrate.mjs <plan|apply> --template <dir> [--project <dir>] [--items a,b] [--checks-* "<cmd>"]');
+    } else if (command === 'check-update') result = checkUpdate({ template: options.template, project });
+    else throw new Error('uso: migrate.mjs <plan|apply|check-update> --template <dir> [--project <dir>] [--items a,b] [--checks-* "<cmd>"]');
     console.log(JSON.stringify(result, null, 2));
   } catch (err) {
     console.log(JSON.stringify({ error: err.message }, null, 2));

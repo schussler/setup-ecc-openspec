@@ -90,7 +90,9 @@ O fluxo do dia a dia são quatro skills. As `spec-*` são wrappers finos sobre o
 | 3 | `spec-archive` | `scripts/gates/archive-gate.mjs` | 100% dos cenários têm teste de mesmo nome, e a suíte passa |
 | 4 | `pr` (só sob pedido) | `scripts/gates/pr-gate.mjs` | nenhuma change ativa, `git status` limpo e testes passando |
 
-Cada gate permite até 3 correções e para se a pontuação não melhorar. As tentativas ficam em `openspec/changes/<change>/gates.json` e em `docs/agents/issue-tracker.md`. Preencha `checks` em `template.json` antes do primeiro `spec-implement`.
+Cada gate permite até 3 correções e para se a pontuação não melhorar. As tentativas ficam em `openspec/changes/<change>/gates.json` (modo `legacy`, gravado pela CLI com `--legacy-write`). A tabela de gates de `docs/agents/issue-tracker.md` é derivada desse estado e não se edita à mão. Preencha `checks` em `template.json` antes do primeiro `spec-implement`.
+
+Limite de isolamento: a v1 não isola o executor do avaliador. A separação de papéis não é isolamento, o bloqueio de execução é advisory, e um executor com a mesma conta pode alterar arquivos e hashes. O runner (`scripts/harness/`) só assume execuções depois do marco de adoção, registrado por decisão humana em `docs/agents/issue-tracker.md`; até lá, todas as execuções ficam em `legacy`.
 
 Para encerrar uma sessão, `handoff` grava o ponto de restauração em `docs/agents/issue-tracker.md`, de onde a próxima sessão retoma.
 

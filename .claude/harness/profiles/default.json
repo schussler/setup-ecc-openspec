@@ -1,0 +1,10 @@
+{
+  "provisional": true,
+  "candidate_invocations_per_change": 60,
+  "candidate_invocations_per_slice": 12,
+  "candidate_usd_per_call": 2.0,
+  "candidate_usd_per_change": 30.0,
+  "candidate_seconds_per_call": 1500,
+  "candidate_seconds_per_change": 10800,
+  "candidate_diagnostics_per_signature": 2
+}

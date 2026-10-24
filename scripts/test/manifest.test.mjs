@@ -23,10 +23,14 @@ test('modelos de contexto tem campos TBD', () => {
 
 test('template declara checks do proprio repo', () => {
   const { checks } = manifest;
-  for (const key of ['test', 'lint', 'typecheck']) {
-    assert.equal(typeof checks[key], 'string', key);
-    assert.ok(checks[key].trim().length > 0, key);
+  // checks.test é objeto {command, suite} quando há checks.test_report (D27); o comando é checks.test.command.
+  const commands = { test: checks.test.command, lint: checks.lint, typecheck: checks.typecheck };
+  for (const [key, value] of Object.entries(commands)) {
+    assert.equal(typeof value, 'string', key);
+    assert.ok(value.trim().length > 0, key);
   }
+  assert.equal(checks.test.suite, checks.test_report.suite);
+  assert.equal(checks.test_report.format, 'tap');
   assert.match(checks.test_file, /\{file\}/);
 });
 

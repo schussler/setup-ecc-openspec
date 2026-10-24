@@ -1,0 +1,80 @@
+TAP version 13
+# Subtest: [AC-011] caso que passa
+ok 1 - [AC-011] caso que passa
+  ---
+  duration_ms: 0.427291
+  type: 'test'
+  ...
+# Subtest: [AC-012] caso que falha
+not ok 2 - [AC-012] caso que falha
+  ---
+  duration_ms: 0.481125
+  type: 'test'
+  location: '/tmp/tapgen/sample.test.mjs:4:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/tapgen/sample.test.mjs:4:48)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: [AC-013] caso ignorado \# SKIP
+ok 3 - [AC-013] caso ignorado \# SKIP # SKIP motivo do skip
+  ---
+  duration_ms: 0.050417
+  type: 'test'
+  ...
+# Subtest: [AC-014] caso previsto \# TODO
+not ok 4 - [AC-014] caso previsto \# TODO # TODO ainda não
+  ---
+  duration_ms: 0.103458
+  type: 'test'
+  location: '/tmp/tapgen/sample.test.mjs:6:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/tapgen/sample.test.mjs:6:77)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: [AC-015] caso filtrado
+ok 5 - [AC-015] caso filtrado
+  ---
+  duration_ms: 0.063333
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 2
+# fail 1
+# cancelled 0
+# skipped 1
+# todo 1
+# duration_ms 59.454875

@@ -1,0 +1,32 @@
+{
+  "change": "add-silent-consumption-observability",
+  "recorded_at": "2026-10-24T17:46:54.575Z",
+  "contract_hash": "0bfec198d30f34102611d583c0dde97965f02f7293f9d3d57195e2c25794777f",
+  "evidence": [
+    {
+      "name": "suite",
+      "command": "node --test \"scripts/test/**/*.test.mjs\"",
+      "result": "pass"
+    },
+    {
+      "name": "lint",
+      "command": "node scripts/gates/lint.mjs",
+      "result": "pass"
+    },
+    {
+      "name": "syntax",
+      "command": "node scripts/gates/syntax-check.mjs scripts .claude/skills/template-migrate",
+      "result": "pass"
+    },
+    {
+      "name": "validate_strict",
+      "command": "openspec validate add-silent-consumption-observability --strict",
+      "result": "pass"
+    },
+    {
+      "name": "contract",
+      "command": "checkContract(openspec/changes/add-silent-consumption-observability)",
+      "result": "pass"
+    }
+  ]
+}

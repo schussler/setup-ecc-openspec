@@ -17,7 +17,7 @@ Campo `TBD` é lacuna conhecida. Não invente o valor; registre a lacuna em `iss
 ---
 
 ## 1. Fluxo de Decisão (OpenSpec)
-- **Zero código sem spec:** Nenhuma funcionalidade ou alteração arquitetural deve ser escrita sem uma especificação em `openspec/changes/<feature>/`.
+- **Caminhos por risco:** a skill `change-flow` classifica o pedido antes de qualquer alteração. Caminho 1 (ajuste visual ou textual sem efeito funcional): registro curto em `docs/agents/issue-tracker.md`, sem change. Caminho 2 (comportamento localizado): contrato curto em `openspec/changes/<feature>/`. Caminho 3 (contrato externo, regra de negócio, dados sensíveis, autenticação, permissões, arquitetura ou dependência de risco): fluxo completo com `spec-create`.
 - **Fonte da Verdade:** Os requisitos e critérios de aceite residem em `proposal.md` e `design.md`.
 - **Roteiro de Execução:** Siga estritamente a ordem definida em `tasks.md`. Atualize o status das caixas de seleção (`- [x]`) conforme for finalizando.
 
@@ -39,6 +39,16 @@ Regras dos gates:
 - Nunca reduza um limiar. Nunca altere um teste para passar sem justificar no `issue-tracker.md`.
 - No modo headless (`claude -p`), as permissões vêm de `.claude/settings.json` (`permissions.allow`) com `--permission-mode dontAsk`. Nunca use `--dangerously-skip-permissions`. Os hooks do ECC continuam ativos: não use `--bare`.
 - Ao encerrar uma sessão, rode `handoff` para gravar o ponto de restauração.
+
+Tabela de gates (derivada dos scripts e do modo da execução; não é editada à mão):
+
+| Gate | Script | Modo `legacy` (em uso) | Modo `runner` (após o marco) |
+|------|--------|------------------------|------------------------------|
+| Implementação | `scripts/gates/implement-gate.mjs` | `score` e `baseline` com `--legacy-write` gravam `gates.json` | avaliação pedida ao runner |
+| Arquivamento | `scripts/gates/archive-gate.mjs` | com `--legacy-write` grava `gates.json` | validação final pelo `scripts/harness/validate.mjs` |
+| PR | `scripts/gates/pr-gate.mjs` | só leitura | só leitura |
+
+Limite de isolamento: a v1 não isola o executor do avaliador. A separação de papéis não é isolamento; o bloqueio de execução é advisory; um executor com a mesma conta pode alterar arquivos e hashes.
 <!-- template:pipeline:end -->
 
 ---

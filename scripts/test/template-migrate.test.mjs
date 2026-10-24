@@ -215,8 +215,9 @@ test('projeto migrado roda os gates sem erro de configuracao', { skip: !pilotAva
   const gate = (...args) => spawnSync(process.execPath, ['scripts/gates/implement-gate.mjs', ...args, '--change', 'piloto'], {
     cwd: project, encoding: 'utf8', env: { ...process.env, NODE_TEST_CONTEXT: '' },
   });
-  assert.equal(gate('baseline').status, 0);
-  const score = gate('score');
+  // SG-008: a CLI só grava gates.json com --legacy-write (repositório em modo legacy).
+  assert.equal(gate('baseline', '--legacy-write').status, 0);
+  const score = gate('score', '--legacy-write');
   assert.notEqual(JSON.parse(score.stdout).verdict, 'error', score.stdout);
 });
 

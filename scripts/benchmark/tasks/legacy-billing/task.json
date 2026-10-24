@@ -5,6 +5,11 @@
   "fixture": "legacy-billing",
   "agents_docs": "legacy-billing.agents",
   "hidden_tests": "legacy-billing.hidden",
+  "hidden_rules": {
+    "rule-architecture": "obrigatória",
+    "rule-exemption": "obrigatória",
+    "rule-rounding": "obrigatória"
+  },
   "checks": {
     "test": "node --test \"test/**/*.test.js\"",
     "test_file": "node --test {file}",

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "4fdc080c-1e13-4b46-bc01-85593ddcb292",
+    "kind": "revision",
+    "origin": "human",
+    "procedure": "conversa",
+    "purpose": "contract_approval",
+    "scope": {
+      "contract_approval": true,
+      "path": 3,
+      "change": "simplify-approval-and-execution"
+    },
+    "reason": "aprovação do contrato simplify-approval-and-execution pela conversa",
+    "approver": "Douglas",
+    "author": "schussler",
+    "recorded_at": "2026-10-24T17:27:41.515Z",
+    "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
+    "contract_hash": "8b4bab3b838f0cf8c642304a9444f214cef15fdbbb68dae5d602be5ceb616ca4",
+    "contract_version": 1,
+    "instruction": "Aprovado o escopo e as premissas."
+  },
+  {
+    "id": "9cc7a873-5e39-48c8-8d8c-eb7e7b377d92",
+    "kind": "revision",
+    "origin": "human",
+    "procedure": "conversa",
+    "purpose": "contract_approval",
+    "scope": {
+      "contract_approval": true,
+      "path": 3,
+      "change": "simplify-approval-and-execution"
+    },
+    "reason": "aprovação do contrato v2 pela conversa, com premissas técnicas e consolidação",
+    "approver": "Douglas",
+    "author": "schussler",
+    "recorded_at": "2026-10-24T18:05:27.727Z",
+    "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
+    "contract_hash": "f5dc411ae0c58df3a89fb406d835911bf1b322586ff5c60f510e012d1e40a11c",
+    "contract_version": 2,
+    "instruction": "Aprovado o contrato versão 2, incluindo as três premissas técnicas apresentadas e a consolidação antes dos artefatos."
+  }
+]

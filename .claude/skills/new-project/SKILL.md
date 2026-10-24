@@ -19,6 +19,7 @@ Used by automation and the benchmark (`claude -p`). All inputs come from argumen
 --non-interactive --target <abs path> --name <name> --description "<text>" --languages "<lang ...>"
 --checks-test "<cmd>" --checks-lint "<cmd>" --checks-typecheck "<cmd>"
 [--checks-test-file "<cmd with {file}>"] [--checks-coverage "<cmd>"]
+[--checks-test-report "<cmd that prints TAP>"] [--suite <id, default unit>]
 [--template-source <git url or local path>] [--template-branch <branch>]
 ```
 
@@ -26,7 +27,7 @@ Used by automation and the benchmark (`claude -p`). All inputs come from argumen
 - `--description` defaults to the name. `--languages` defaults to none (`common` only). A missing `checks-*` argument is written as an empty string, as in step 6.
 - `--template-source` and `--template-branch` replace `template.repo` and `template.branch` for the clone only. A local path lets a benchmark run against an unpublished branch. `template.json` in the new project still points to `template.repo`.
 - Steps 10 and 11 run without asking: show the result, then make the first commit without waiting for confirmation.
-- Under `claude -p`, `git -C <target> ...` is allowed only for that target, by `--allowedTools` from the caller. Nothing else outside the project's `.claude/settings.json` is allowed.
+- Under `claude -p`, `git -C <target> ...` is allowed only for that target, by `--allowedTools` from the caller. The caller also allows `node <target>/.claude/skills/new-project/renew-id.mjs <target>/.harness-project.json` (step 6a). Nothing else outside the project's `.claude/settings.json` is allowed.
 - Permissions match each command literally. Run one plain command per Bash call, with absolute paths. Do not use shell variables (`T=...`), `;`, `&&` or subshells. A denied command will not be allowed on a retry: report it and stop.
 - End with one line: `NEW-PROJECT: <target> <created|failed>`.
 
@@ -66,6 +67,13 @@ Collect these before creating anything. Ask for any that are missing:
    - add `"project": {"name": "<name>"}`;
    - add `"rules": ["common", <chosen languages>]`;
    - replace `checks` with the project's commands: `checks.test`, `checks.lint`, `checks.typecheck`, and `checks.test_file` and `checks.coverage` when given. For a command the user does not have yet, write an empty string. Never write `TBD` there, because it looks like a command.
+   - `checks.test` has two authorized forms (D27). Without a TAP command, write the string (legacy mode, no suite identity). With `--checks-test-report` (or a TAP command the user gives), write `checks.test` as `{"command": "<test cmd>", "suite": "<suite>"}` and `checks.test_report` as `{"command": "<TAP cmd>", "suite": "<same suite>", "format": "tap"}`. The suite is `unit` unless `--suite` says otherwise. Example: `"test_report": {"command": "node --test --test-reporter=tap \"test/**/*.test.mjs\"", "suite": "unit", "format": "tap"}`. No other `format` is accepted in v1.
+   - The gates need `scripts/harness` and `.claude/harness`, not only `scripts/gates`. Keep both in `managed`, as the template has them.
+
+6a. **Renew the project identity, ignore local state, check the distribution.**
+   - Run `node <target>/.claude/skills/new-project/renew-id.mjs <target>/.harness-project.json`. It writes a new `project_id` (UUID) and keeps the other keys. The derived project does not inherit the template's `project_id` (RS-019): it is a different project. Do not write the id by hand.
+   - Add `.harness-local/` to `<target>/.gitignore`, creating the file if it does not exist. The harness run state in `.harness-local/` is local evidence and never goes to git.
+   - Check the distribution: `<target>/scripts/gates` requires `<target>/scripts/harness` (necessary for the gates to import) and `<target>/.claude/harness`, which come with the template in step 2. If `scripts/gates` exists and either of the two is missing, stop and report which path is missing: the project would have gates that do not import.
 
 7. **Rewrite the project CLAUDE.md.** In `<target>/CLAUDE.md`:
    - replace the first line (`# Diretrizes do Repositório ...`) with `# <name>`;

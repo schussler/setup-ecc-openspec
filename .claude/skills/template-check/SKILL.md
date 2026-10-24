@@ -29,9 +29,15 @@ This skill only reads and reports. Run each check with read-only commands, and n
 
 8. **Template is on the branch that will be used.** Compare the current branch with `template.branch` in `template.json`. Warn, do not fail, if the current branch has commits that the template branch does not have. A new project clones from `template.branch`, so unmerged template work will not reach it.
 
-9. **New manifest fields are sane.** `checks.test`, `checks.lint` and `checks.typecheck` are non-empty strings, and `checks.test_file`, when present, contains `{file}`. No `template_only` entry is in `managed` or a prefix of a `managed` entry. A `template_only` entry that does not exist yet is a `NOTE`, because `openspec/specs` and `openspec/changes/archive` only appear after the first archive. `upstreams.mattpocock-skills` is a 40-character commit hash. Fail on any of these.
+9. **New manifest fields are sane.** `checks.lint` and `checks.typecheck` are non-empty strings. `checks.test` is a non-empty string or an object `{command, suite}` (check 11). `checks.test_file`, when present, contains `{file}`. No `template_only` entry is in `managed` or a prefix of a `managed` entry. A `template_only` entry that does not exist yet is a `NOTE`, because `openspec/specs` and `openspec/changes/archive` only appear after the first archive. `upstreams.mattpocock-skills` is a 40-character commit hash. Fail on any of these.
 
 10. **Template suite passes.** Run `checks.test`, `checks.lint` and `checks.typecheck` from `template.json`, in the repo root. They only read the repo and write to the system temp directory. Fail on a non-zero exit, and show the failing lines.
+
+11. **Checks formats are authorized (D27).** `checks.test` is either the legacy string, or the object `{"command": "...", "suite": "..."}`. `checks.test_report`, when present, is an object `{"command", "suite", "format"}`, and `format` is `"tap"` only in v1. Any other `format` fails with a message that names `checks.test_report.format`, lists the supported formats (`tap`) and shows the example `"format": "tap"`. When `checks.test_report` exists, `checks.test` must be an object with the same `suite`: a string or a different suite fails. The check is `validateChecksSchema` in `scripts/gates/checks.mjs`, run by `node scripts/harness/template-check.mjs`. It does not duplicate that logic.
+
+12. **Gates are distributed with what they import.** If `managed` includes `scripts/gates`, then `scripts/harness` and `.claude/harness` must exist and be managed too. Every relative import of `scripts/gates/*.mjs`, followed transitively through the imported files, must resolve to an existing file inside a `managed` path. An import that is missing, or that points outside `managed`, fails: a derived project would receive gates that do not import. The check is `distributionGaps` in `.claude/skills/template-migrate/distribution.mjs`, run by `node scripts/harness/template-check.mjs`.
+
+Checks 11 and 12 run with `node scripts/harness/template-check.mjs` in the template root. It prints `READY` or `NOT READY` and the failures. Run it as part of check 10.
 
 ## Report
 

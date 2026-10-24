@@ -62,6 +62,7 @@ export function verifyBootstrap({ target, task }) {
   for (const name of entries('openspec/changes')) problems.push(`openspec/changes/${name} herdado do template`);
   for (const name of entries('openspec/specs')) problems.push(`openspec/specs/${name} herdado do template`);
   if (!has('scripts/gates/implement-gate.mjs')) problems.push('scripts/gates ausente');
+  if (!has('scripts/harness/process-group.mjs')) problems.push('scripts/harness ausente (os gates importam dele)');
   if (has('template.json')) {
     const checks = JSON.parse(readFileSync(join(target, 'template.json'), 'utf8')).checks ?? {};
     for (const key of ['test', 'lint', 'typecheck']) if (checks[key] !== task.checks[key]) problems.push(`checks.${key} difere da tarefa`);
@@ -105,7 +106,7 @@ async function greenfieldRun(run, { task, workRoot, templateSource, templateBran
     run.gates.implement = await verifyImplementation({ dir: target, baselineFiles });
     if (run.gates.implement.passed) {
       if ((await step('spec-archive', `--headless ${task.change}`)).status === 'budget_exhausted') return finish(run, started);
-      run.gates.archive = verifyArchive({ dir: target, change: task.change });
+      run.gates.archive = await verifyArchive({ dir: target, change: task.change });
     }
   }
   run.gates.scope = verifyScope({ dir: target, base, scoped: task.scoped_paths });

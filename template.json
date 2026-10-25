@@ -1,7 +1,7 @@
 {
   "framework": {
     "package": "@k0d3r/specloop",
-    "version": "0.1.0"
+    "version": "0.1.1"
   },
   "upstreams": {
     "ecc": "2.2.3",

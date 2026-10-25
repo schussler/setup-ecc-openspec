@@ -237,7 +237,7 @@ Rode na ordem. Os passos 1 a 7 dependem de permissão de administrador no GitHub
    gh api repos/schussler/specloop/environments/npm/deployment-branch-policies --method POST -f name=main -f type=branch
    ```
 3. **Primeira publicação, manual** (o trusted publisher só pode ser configurado num pacote que já existe): com 2FA ativo na conta npm, `npm login` e, na raiz do repositório na `main`, `npm publish --access public`.
-4. **Trusted publisher:** `npm trust github @k0d3r/specloop --file publish.yml --repo schussler/specloop --env npm` (ou, no npmjs.com, Package → Settings → Trusted publishing, com o environment `npm`).
+4. **Trusted publisher:** `npm trust github @k0d3r/specloop --file publish.yml --repo schussler/specloop --env npm --allow-publish` (ou, no npmjs.com, Package → Settings → Trusted publishing, com o environment `npm`).
 5. **Bloquear publicação por token:** no npmjs.com, Package → Settings → Publishing access, escolha "Require two-factor authentication and disallow tokens", e revogue tokens antigos em Access Tokens.
 6. **Regra da `main`** (exige PR e o check `ci`, bloqueia force push e exclusão, sem exceção): `gh api repos/schussler/specloop/rulesets --method POST --input .github/rulesets/main.json`.
 7. **Workflows de quem é de fora:** em Settings → Actions → General → "Approval for running fork pull request workflows from contributors", escolha "Require approval for all outside collaborators".

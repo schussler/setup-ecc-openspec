@@ -4,7 +4,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ## Ponto de restauração
 
-- **Arquivada (use-scoped-npm-package, 2026-10-24):** pacote `@k0d3r/specloop`; gates de implementação e arquivamento em `pass` (ver `gates.json` da change arquivada). **Próximo passo:** PR desta branch (`use-scoped-npm-package`), CI verde e merge; depois, primeira publicação manual de `@k0d3r/specloop@0.1.0` (passo 3 do README) e passos 4 a 7. Repositório já renomeado para `schussler/specloop` e environment `npm` restrito à `main` (passos 1 e 2 feitos).
+- **Arquivada (use-scoped-npm-package, 2026-10-24):** pacote `@k0d3r/specloop`; gates em `pass`. Publicação inicial de `@k0d3r/specloop@0.1.0` feita pelo usuário (2026-10-25); passos 1 a 5 e 7 do README concluídos. **Próximo passo:** merge da PR `fix-trust-allow-publish` (publica 0.1.1 pela CI) e, depois, o passo 6 (regra da `main`).
 - **Arquivada (rename-to-specloop-npx, 2026-10-24):** gates de implementação e arquivamento em `pass` (ver `gates.json` da change arquivada). F5 adiada: publicação pela CI em `add-npm-publish-ci`. Sem commit.
 - **Arquivada (add-npm-publish-ci, 2026-10-24):** gates de implementação e arquivamento em `pass` (ver `gates.json` da change arquivada); spec `release-ci` criada. F4 aberta: sete passos do dono (README → Publicação) e primeira PR real. **Próximo passo:** `pr` (pedido pelo usuário em 2026-10-24).
 - **Marco de adoção registrado:** 2026-10-24 — aprovador: mantenedor. Escopo restrito: uso experimental supervisionado em Node 24.21.0/macOS, uma única fatia (`implement`). Base: aprovação do contrato `336249d1-e8e3-43e3-ac57-a35f8147f22d` (hash `9fc8fe2b…751f7a`, versão 1) e validação final aprovada em 2026-10-24T14:12:58.827Z (828 casos). Limitações mantidas: multifatia, Ctrl+C durante a invocação e caminhos com espaço em `--claude-bin` pendentes; limite de turnos não comprovado (P.2 não autorizada); PB-009 aberto; Node 22 não verificado; isolamento advisory. `--legacy-write` preservado; adoção em projetos reais não autorizada. Não é conformidade integral com o desenho original.
@@ -52,6 +52,13 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 | 2026-10-24 | add-spec-harness | archive (12.5, fluxo legado, `--legacy-write`) | 1 | — | C.1 a C.3 aplicados; nenhuma alteração de código nesta avaliação | cenários 218/218 (100%), suíte verde, `openspec validate --strict` válido | pass |
 
 ## Log
+
+### 2026-10-25 — Caminho 1: `--allow-publish` no passo 4 e versão 0.1.1
+
+- **Pedido:** confirmado pelo usuário ("sim") depois da publicação inicial.
+- **Motivo:** a documentação do `npm trust` exige ao menos uma permissão (`--allow-publish` ou `--allow-stage-publish`); o comando do README não tinha nenhuma e falharia. O usuário configurou com as duas (`npm trust list`: `publish, stage publish`).
+- **Mudança:** README → passo 4 com `--allow-publish`; `package.json` e `template.json` → `framework.version` em `0.1.1`, para o merge ser o primeiro teste real da publicação pela CI (OIDC, sem token).
+- **Estado externo:** `@k0d3r/specloop@0.1.0` publicado (shasum `79fde380…`, publicação aceita com 202 e liberada depois de alguns minutos, com a versão provisória `0.0.0-stage`); trusted publisher confirmado; bloqueio de tokens marcado pelo usuário; aprovação de workflows de fora em `all_external_contributors`. Falta o passo 6.
 
 ### 2026-10-24 — use-scoped-npm-package: F1 e F2
 

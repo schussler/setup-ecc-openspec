@@ -23,5 +23,5 @@
 
 ## 4. F4 — Após o merge (dono do repositório)
 
-- [ ] 4.1 Executar os sete passos do README na ordem
-- [ ] 4.2 Abrir a primeira PR real e registrar no `issue-tracker.md` o check `ci` e, após o merge com versão nova, a publicação com proveniência
+- [x] 4.1 Executar os sete passos do README na ordem (2026-10-25; ver `issue-tracker.md`, log "F4 concluída")
+- [x] 4.2 Abrir a primeira PR real e registrar no `issue-tracker.md` o check `ci` e, após o merge com versão nova, a publicação com proveniência (PR #4 a #6; `0.1.1` publicada pela CI com proveniência)

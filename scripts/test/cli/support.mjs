@@ -7,7 +7,9 @@ import { join } from 'node:path';
 import { REPO_ROOT, makeTempDir, readManifest, writeTree } from '../helpers.mjs';
 
 export const BIN = join(REPO_ROOT, 'bin', 'specloop.mjs');
-export const PACKAGE_VERSION = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')).version;
+const PACKAGE = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8'));
+export const PACKAGE_NAME = PACKAGE.name;
+export const PACKAGE_VERSION = PACKAGE.version;
 
 const GIT_ENV = {
   GIT_AUTHOR_NAME: 'teste', GIT_AUTHOR_EMAIL: 'teste@example.com',

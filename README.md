@@ -10,10 +10,10 @@ Um único CLI instala e atualiza o framework. Não é preciso clonar este reposi
 
 | Comando | Quando usar | O que faz |
 |---------|-------------|-----------|
-| `npx specloop init <dir>` | começar um projeto novo | cria `<dir>` (vazio ou inexistente) com git, o toolset, os modelos de `docs/agents/`, `template.json` e o primeiro commit |
-| `npx specloop adopt` | seguir um projeto existente | mostra o plano (toolset, `docs/agents/`, `checks`, permissões, blocos do `CLAUDE.md`) e aplica só os itens que você confirmar, sem remover nada |
-| `npx specloop install` | só o toolset no repositório atual | copia os caminhos `managed` (rules, agents, skills, comandos, gates e harness); não toca em `CLAUDE.md`, `docs/agents/` nem `.claude/settings.json` |
-| `npx specloop@latest update` | buscar atualização do framework | mostra o que muda nos caminhos `managed`, aplica após confirmação e grava a versão em `template.json` → `framework` |
+| `npx @k0d3r/specloop init <dir>` | começar um projeto novo | cria `<dir>` (vazio ou inexistente) com git, o toolset, os modelos de `docs/agents/`, `template.json` e o primeiro commit |
+| `npx @k0d3r/specloop adopt` | seguir um projeto existente | mostra o plano (toolset, `docs/agents/`, `checks`, permissões, blocos do `CLAUDE.md`) e aplica só os itens que você confirmar, sem remover nada |
+| `npx @k0d3r/specloop install` | só o toolset no repositório atual | copia os caminhos `managed` (rules, agents, skills, comandos, gates e harness); não toca em `CLAUDE.md`, `docs/agents/` nem `.claude/settings.json` |
+| `npx @k0d3r/specloop@latest update` | buscar atualização do framework | mostra o que muda nos caminhos `managed`, aplica após confirmação e grava a versão em `template.json` → `framework` |
 
 Opções comuns:
 - `--yes`: confirma tudo sem perguntar (automação e modo headless).
@@ -55,13 +55,13 @@ Cada projeto SpecLoop guarda um `template.json` com a origem (`framework.package
 
 | Skill | Onde rodar | O que faz |
 |-------|-----------|-----------|
-| `/template-update` | projeto SpecLoop | Chama `npx specloop update`: compara os caminhos gerenciados com o pacote, mostra o que mudaria e aplica só depois da sua confirmação |
-| `/template-migrate` | projeto SpecLoop | Chama `npx specloop adopt`. Traz o que o `/template-update` não escreve: blocos do pipeline no `CLAUDE.md`, `docs/agents/`, permissões em `.claude/settings.json`, `checks` e caminhos gerenciados novos (como `scripts/gates`). Mostra o plano e aplica item a item, só com confirmação, sem remover nada |
+| `/template-update` | projeto SpecLoop | Chama `npx @k0d3r/specloop update`: compara os caminhos gerenciados com o pacote, mostra o que mudaria e aplica só depois da sua confirmação |
+| `/template-migrate` | projeto SpecLoop | Chama `npx @k0d3r/specloop adopt`. Traz o que o `/template-update` não escreve: blocos do pipeline no `CLAUDE.md`, `docs/agents/`, permissões em `.claude/settings.json`, `checks` e caminhos gerenciados novos (como `scripts/gates`). Mostra o plano e aplica item a item, só com confirmação, sem remover nada |
 | `/template-check` | este repositório | Valida o manifest, os caminhos, as versões e a ausência de caminhos pessoais e segredos |
 | `/upstream-sync-check` | este repositório | Compara rules, agents, skills e workflows com os upstreams ECC, OpenSpec e `mattpocock/skills` e lista o que está desatualizado |
 | `/toolset-retro` | qualquer um | Retrospectiva do toolset `.claude/` ao fim de uma sessão |
 
-Em um projeto criado antes do pipeline com gates, rode `npx specloop@latest update` e depois `npx specloop adopt`.
+Em um projeto criado antes do pipeline com gates, rode `npx @k0d3r/specloop@latest update` e depois `npx @k0d3r/specloop adopt`.
 
 Para corrigir uma rule de origem ECC só num projeto, não edite o arquivo de origem: ele é sobrescrito na próxima atualização. Crie a rule local em `.claude/rules/project/`, que é um caminho próprio do projeto.
 
@@ -162,9 +162,9 @@ Agentes especializados (`common/agents.md`) apoiam cada etapa: **planner** (plan
 | `/spec-archive [nome]` | Gate de arquivamento, arquivamento e sync das specs |
 | `/pr` | PR com gate e confirmação; só sob pedido |
 | `/handoff` | Grava o ponto de restauração para a próxima sessão |
-| `/new-project` | Criar um projeto novo (chama `npx specloop init`) |
-| `/template-update` | Atualizar um projeto (chama `npx specloop update`) |
-| `/template-migrate` | Adotar o pipeline num projeto existente (chama `npx specloop adopt`) |
+| `/new-project` | Criar um projeto novo (chama `npx @k0d3r/specloop init`) |
+| `/template-update` | Atualizar um projeto (chama `npx @k0d3r/specloop update`) |
+| `/template-migrate` | Adotar o pipeline num projeto existente (chama `npx @k0d3r/specloop adopt`) |
 | `/template-check` | Validar o framework antes de publicá-lo |
 | `/upstream-sync-check` | Ver o que está desatualizado em relação ao ECC, ao OpenSpec e ao `mattpocock/skills` |
 | `/toolset-retro [foco]` | Retrospectiva do toolset `.claude/` ao fim de uma sessão: aplica ajustes e adia o resto como change |
@@ -192,7 +192,7 @@ Agentes especializados (`common/agents.md`) apoiam cada etapa: **planner** (plan
 ├── .github/                 # CI de PR, publicação no npm e regra da main (só no repositório)
 ├── package.json             # Pacote npm specloop (bin e files)
 ├── template.json            # Versão do framework, upstreams, managed/owned/template_only e checks
-├── bin/specloop.mjs         # CLI: npx specloop <install|init|adopt|update>
+├── bin/specloop.mjs         # CLI: npx @k0d3r/specloop <install|init|adopt|update>
 ├── docs/agents/             # Contexto do agente (do template; projetos recebem os modelos)
 ├── templates/docs/agents/   # Modelos TBD copiados pelo init e pelo adopt
 ├── scripts/
@@ -219,7 +219,7 @@ Agentes especializados (`common/agents.md`) apoiam cada etapa: **planner** (plan
 
 ## Publicação
 
-O pacote `specloop` é publicado no npm pela CI, nunca da máquina de alguém (exceto a primeira vez). O fluxo:
+O pacote `@k0d3r/specloop` é publicado no npm pela CI, nunca da máquina de alguém (exceto a primeira vez). O fluxo:
 
 1. Toda mudança chega à `main` por PR. O workflow `ci` (`.github/workflows/ci.yml`) roda `test`, `lint` e `typecheck` de `template.json` → `checks` sem nenhuma credencial, e o merge exige o check `ci` verde.
 2. O merge dispara `.github/workflows/publish.yml`, no environment `npm`. Ele roda os checks de novo e `scripts/ci/should-publish.mjs`: se a versão do `package.json` ainda não está no npm, publica com `npm publish --provenance --access public` por trusted publishing (OIDC, sem token); se já está, não faz nada. Para publicar, suba a versão do `package.json` na PR.
@@ -237,7 +237,7 @@ Rode na ordem. Os passos 1 a 7 dependem de permissão de administrador no GitHub
    gh api repos/schussler/specloop/environments/npm/deployment-branch-policies --method POST -f name=main -f type=branch
    ```
 3. **Primeira publicação, manual** (o trusted publisher só pode ser configurado num pacote que já existe): com 2FA ativo na conta npm, `npm login` e, na raiz do repositório na `main`, `npm publish --access public`.
-4. **Trusted publisher:** `npm trust github specloop --file publish.yml --repo schussler/specloop --env npm` (ou, no npmjs.com, Package → Settings → Trusted publishing, com o environment `npm`).
+4. **Trusted publisher:** `npm trust github @k0d3r/specloop --file publish.yml --repo schussler/specloop --env npm` (ou, no npmjs.com, Package → Settings → Trusted publishing, com o environment `npm`).
 5. **Bloquear publicação por token:** no npmjs.com, Package → Settings → Publishing access, escolha "Require two-factor authentication and disallow tokens", e revogue tokens antigos em Access Tokens.
 6. **Regra da `main`** (exige PR e o check `ci`, bloqueia force push e exclusão, sem exceção): `gh api repos/schussler/specloop/rulesets --method POST --input .github/rulesets/main.json`.
 7. **Workflows de quem é de fora:** em Settings → Actions → General → "Approval for running fork pull request workflows from contributors", escolha "Require approval for all outside collaborators".

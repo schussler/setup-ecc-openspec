@@ -1,5 +1,5 @@
 {
-  "name": "specloop",
+  "name": "@k0d3r/specloop",
   "version": "0.1.0",
   "description": "Framework de desenvolvimento orientado a specs para Claude Code: OpenSpec + ECC com pipeline de gates verificáveis.",
   "license": "MIT",

@@ -29,3 +29,12 @@ test('[SL-010] pacote contem so o permitido', () => {
   }
   assert.equal('dependencies' in JSON.parse(readRepoFile('package.json')), false);
 });
+
+test('[SL-018] pacote com escopo e bin specloop', () => {
+  const pkg = JSON.parse(readRepoFile('package.json'));
+  assert.equal(pkg.name, '@k0d3r/specloop');
+  assert.deepEqual(pkg.bin, { specloop: 'bin/specloop.mjs' });
+  assert.equal(readManifest().framework.package, '@k0d3r/specloop');
+  const output = execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: REPO_ROOT, encoding: 'utf8' });
+  assert.equal(JSON.parse(output)[0].name, '@k0d3r/specloop');
+});

@@ -4,6 +4,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ## Ponto de restauração
 
+- **Arquivada (use-scoped-npm-package, 2026-10-24):** pacote `@k0d3r/specloop`; gates de implementação e arquivamento em `pass` (ver `gates.json` da change arquivada). **Próximo passo:** PR desta branch (`use-scoped-npm-package`), CI verde e merge; depois, primeira publicação manual de `@k0d3r/specloop@0.1.0` (passo 3 do README) e passos 4 a 7. Repositório já renomeado para `schussler/specloop` e environment `npm` restrito à `main` (passos 1 e 2 feitos).
 - **Arquivada (rename-to-specloop-npx, 2026-10-24):** gates de implementação e arquivamento em `pass` (ver `gates.json` da change arquivada). F5 adiada: publicação pela CI em `add-npm-publish-ci`. Sem commit.
 - **Arquivada (add-npm-publish-ci, 2026-10-24):** gates de implementação e arquivamento em `pass` (ver `gates.json` da change arquivada); spec `release-ci` criada. F4 aberta: sete passos do dono (README → Publicação) e primeira PR real. **Próximo passo:** `pr` (pedido pelo usuário em 2026-10-24).
 - **Marco de adoção registrado:** 2026-10-24 — aprovador: mantenedor. Escopo restrito: uso experimental supervisionado em Node 24.21.0/macOS, uma única fatia (`implement`). Base: aprovação do contrato `336249d1-e8e3-43e3-ac57-a35f8147f22d` (hash `9fc8fe2b…751f7a`, versão 1) e validação final aprovada em 2026-10-24T14:12:58.827Z (828 casos). Limitações mantidas: multifatia, Ctrl+C durante a invocação e caminhos com espaço em `--claude-bin` pendentes; limite de turnos não comprovado (P.2 não autorizada); PB-009 aberto; Node 22 não verificado; isolamento advisory. `--legacy-write` preservado; adoção em projetos reais não autorizada. Não é conformidade integral com o desenho original.
@@ -51,6 +52,14 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 | 2026-10-24 | add-spec-harness | archive (12.5, fluxo legado, `--legacy-write`) | 1 | — | C.1 a C.3 aplicados; nenhuma alteração de código nesta avaliação | cenários 218/218 (100%), suíte verde, `openspec validate --strict` válido | pass |
 
 ## Log
+
+### 2026-10-24 — use-scoped-npm-package: F1 e F2
+
+- **Contexto:** a primeira publicação falhou duas vezes sem publicar nada: E403 por falta de 2FA na conta npm (resolvido pelo usuário) e E403 "Package name too similar to existing package spec-loop". Há sobreposição de marca: `spec-loop` ("The Spec-Loop Method") e `@specloop/cli` são de outros autores. O usuário escolheu `@k0d3r/specloop`.
+- **Autorizações:** SL-005 e CI-014 na revisão 2 por `scenario_change`, gravadas pelo usuário no próprio terminal (o `!` do Claude Code não é TTY e o comando recusou); contrato aprovado pela conversa depois de inserir os ids.
+- **Feito:** `package.json` → `name`; `template.json` → `framework.package`; o CLI lê o nome do `package.json` (sem constante); README, quatro skills, `docs/agents` e mensagens do CLI com `npx @k0d3r/specloop`; `bin` mantido `specloop`.
+- **Desvio corrigido:** a substituição em massa alterou uma linha histórica deste log ("pacote npm `specloop`"); revertida, conforme a premissa de não reescrever o histórico.
+- **Evidência:** `npm pack` → `k0d3r-specloop-0.1.0.tgz`; `npx --package=<tgz> specloop init` grava `framework.package` `@k0d3r/specloop`; gate de implementação `pass` na tentativa 1.
 
 ### 2026-10-24 — PR #4: primeira execução real da CI
 

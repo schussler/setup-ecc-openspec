@@ -15,7 +15,7 @@ const OWNER_STEPS = [
   'gh repo rename specloop',
   /environment `npm`[^\n]*`main`/,
   'npm publish --access public',
-  'npm trust github specloop --file publish.yml --repo schussler/specloop --env npm',
+  'npm trust github @k0d3r/specloop --file publish.yml --repo schussler/specloop --env npm',
   /disallow tokens/,
   'gh api repos/schussler/specloop/rulesets --method POST --input .github/rulesets/main.json',
   /outside collaborators/,

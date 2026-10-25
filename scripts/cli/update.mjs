@@ -12,7 +12,7 @@ const SKILLS = '.claude/skills';
 
 function loadProjectManifest(project) {
   const manifest = readJson(join(project, 'template.json'));
-  if (!manifest) throw new CliError(`${join(project, 'template.json')} não existe: use npx specloop adopt ou install`);
+  if (!manifest) throw new CliError(`${join(project, 'template.json')} não existe: use npx @k0d3r/specloop adopt ou install`);
   if (manifest.template_only || realpathSync(project) === realpathSync(PACKAGE_ROOT)) {
     throw new CliError('este é o repositório do próprio framework: use /upstream-sync-check');
   }
@@ -40,7 +40,7 @@ export async function update(project, options) {
   try {
     checkUpdate({ template: PACKAGE_ROOT, project });
   } catch (err) {
-    throw new CliError(`${err.message} Rode npx specloop adopt (item managed).`);
+    throw new CliError(`${err.message} Rode npx @k0d3r/specloop adopt (item managed).`);
   }
   const next = nextManifest(manifest);
   const manifestChanges = toJson(next) !== toJson(manifest);

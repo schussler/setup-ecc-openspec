@@ -39,5 +39,5 @@ export async function install(project, options) {
   }
   copyFromPackage(project, [...added, ...updated]);
   if (writesManifest) writeFile(manifestPath, toJson(initialManifest(source, rules)));
-  console.log(`Toolset instalado (${added.length + updated.length} arquivos). Para o pipeline completo, rode npx specloop adopt.`);
+  console.log(`Toolset instalado (${added.length + updated.length} arquivos). Para o pipeline completo, rode npx @k0d3r/specloop adopt.`);
 }

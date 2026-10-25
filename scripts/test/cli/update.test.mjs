@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { appendFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from '../helpers.mjs';
-import { PACKAGE_VERSION, gitRepo, legacyProject, runCli, snapshot } from './support.mjs';
+import { PACKAGE_NAME, PACKAGE_VERSION, gitRepo, legacyProject, runCli, snapshot } from './support.mjs';
 
 const CHANGED = 'scripts/gates/lint.mjs';
 const OWNED = {
@@ -30,7 +30,7 @@ test('[SL-009] update converte manifesto antigo', () => {
   assert.equal(result.code, 0, result.stderr);
   assert.equal(readFileSync(join(project, CHANGED), 'utf8'), readFileSync(join(REPO_ROOT, CHANGED), 'utf8'));
   const manifest = readJsonFile(join(project, 'template.json'));
-  assert.deepEqual(manifest.framework, { package: 'specloop', version: PACKAGE_VERSION });
+  assert.deepEqual(manifest.framework, { package: PACKAGE_NAME, version: PACKAGE_VERSION });
   assert.equal('template' in manifest, false);
 });
 

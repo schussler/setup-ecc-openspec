@@ -5,7 +5,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { makeTempDir, writeTree } from '../helpers.mjs';
-import { PACKAGE_VERSION, runCli, snapshot } from './support.mjs';
+import { PACKAGE_NAME, PACKAGE_VERSION, runCli, snapshot } from './support.mjs';
 
 test('[SL-008] init cria projeto valido', () => {
   const parent = makeTempDir('specloop-init-');
@@ -16,7 +16,7 @@ test('[SL-008] init cria projeto valido', () => {
   assert.equal(result.code, 0, result.stderr);
   assert.equal(execFileSync('git', ['-C', target, 'rev-list', '--count', 'HEAD'], { encoding: 'utf8' }).trim(), '1');
   const manifest = JSON.parse(readFileSync(join(target, 'template.json'), 'utf8'));
-  assert.deepEqual(manifest.framework, { package: 'specloop', version: PACKAGE_VERSION });
+  assert.deepEqual(manifest.framework, { package: PACKAGE_NAME, version: PACKAGE_VERSION });
   assert.deepEqual(manifest.project, { name: 'demo' });
   assert.deepEqual(manifest.rules, ['common', 'typescript']);
   assert.equal('template_only' in manifest, false);

@@ -65,7 +65,16 @@ test('[SL-004] README credita os tres upstreams', () => {
 test('[SL-005] README documenta so o npx', () => {
   const readme = readRepoFile('README.md');
   for (const command of ['install', 'init', 'adopt', 'update']) {
-    assert.match(readme, new RegExp(`npx specloop(@\\S+)? ${command}\\b`), `README documenta npx specloop ${command}`);
+    assert.match(readme, new RegExp(`npx @k0d3r/specloop(@\\S+)? ${command}\\b`), `README documenta npx @k0d3r/specloop ${command}`);
   }
   assert.doesNotMatch(readme, /git (-C \S+ )?fetch/, 'README não instala por git fetch');
+});
+
+test('[SL-019] nenhum documento instala sem o escopo', () => {
+  const skills = readdirSync(join(REPO_ROOT, '.claude/skills'))
+    .map((name) => `.claude/skills/${name}/SKILL.md`)
+    .filter((rel) => existsSync(join(REPO_ROOT, rel)));
+  const agents = readdirSync(join(REPO_ROOT, 'docs/agents')).map((name) => `docs/agents/${name}`);
+  const offenders = ['README.md', ...skills, ...agents].filter((rel) => /npx specloop\b/.test(readRepoFile(rel)));
+  assert.deepEqual(offenders, []);
 });

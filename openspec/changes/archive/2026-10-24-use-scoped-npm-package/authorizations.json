@@ -1,0 +1,56 @@
+[
+  {
+    "id": "22fb82b1-ed1e-4bd0-924e-84ffdafd4b9d",
+    "kind": "revision",
+    "origin": "human",
+    "procedure": "tty",
+    "purpose": "scenario_change",
+    "scope": {
+      "scenario": "SL-005",
+      "revision": 2,
+      "change": "use-scoped-npm-package"
+    },
+    "reason": "SL-005 revisão 2: README instala por npx @k0d3r/specloop, nome specloop bloqueado no npm",
+    "approver": "mantenedor",
+    "author": "schussler",
+    "recorded_at": "2026-10-24T23:50:09.316Z",
+    "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014"
+  },
+  {
+    "id": "f8957be0-2bcc-4257-878c-b46bfb759f5c",
+    "kind": "revision",
+    "origin": "human",
+    "procedure": "tty",
+    "purpose": "scenario_change",
+    "scope": {
+      "scenario": "CI-014",
+      "revision": 2,
+      "change": "use-scoped-npm-package"
+    },
+    "reason": "CI-014 revisão 2: npm trust github usa @k0d3r/specloop",
+    "approver": "mantenedor",
+    "author": "schussler",
+    "recorded_at": "2026-10-24T23:50:16.809Z",
+    "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014"
+  },
+  {
+    "id": "5a98acb0-0fb7-40b4-8c1d-909c02bd58ac",
+    "kind": "revision",
+    "origin": "human",
+    "procedure": "conversa",
+    "purpose": "contract_approval",
+    "scope": {
+      "contract_approval": true,
+      "path": 3,
+      "change": "use-scoped-npm-package"
+    },
+    "reason": "consolidação de use-scoped-npm-package aprovada na conversa",
+    "approver": "mantenedor",
+    "author": "schussler",
+    "recorded_at": "2026-10-24T23:50:39.634Z",
+    "project_id": "ae7fabc2-4918-45fa-aefa-3c9519aba014",
+    "contract_hash": "97c03fe33ea326f86fedd036254da132cc0a0ae667ba564ea23e49a61a4a5bf2",
+    "contract_version": 1,
+    "instruction": "aprovado"
+  }
+]

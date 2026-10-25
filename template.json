@@ -1,6 +1,6 @@
 {
   "framework": {
-    "package": "specloop",
+    "package": "@k0d3r/specloop",
     "version": "0.1.0"
   },
   "upstreams": {

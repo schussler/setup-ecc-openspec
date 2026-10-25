@@ -60,7 +60,7 @@ function readmeStub(name, description) {
     + 'Projeto criado com [SpecLoop](https://github.com/schussler/specloop). O agente segue o `CLAUDE.md` '
     + 'e o contexto em `docs/agents/`.\n\n'
     + 'Pipeline: `spec-create` → `spec-implement` → `spec-archive` → `pr`. '
-    + 'Atualize o framework com `npx specloop@latest update`.\n';
+    + 'Atualize o framework com `npx @k0d3r/specloop@latest update`.\n';
 }
 
 const git = (target, ...args) => execFileSync('git', ['-C', target, ...args], { stdio: 'pipe' });

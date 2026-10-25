@@ -1,13 +1,13 @@
 ---
 name: new-project
-description: Bootstrap a new project with the SpecLoop framework. Collects the project inputs and runs `npx specloop init`, which creates the directory, copies the toolset from the package, prunes language rules the project does not use, installs docs/agents from the models, records the framework version and the chosen rules in template.json, rewrites the project CLAUDE.md and README, and makes the first commit. Use when the user asks to create, start, or bootstrap a new project with SpecLoop.
+description: Bootstrap a new project with the SpecLoop framework. Collects the project inputs and runs `npx @k0d3r/specloop init`, which creates the directory, copies the toolset from the package, prunes language rules the project does not use, installs docs/agents from the models, records the framework version and the chosen rules in template.json, rewrites the project CLAUDE.md and README, and makes the first commit. Use when the user asks to create, start, or bootstrap a new project with SpecLoop.
 metadata:
   origin: local
 ---
 
 # New Project
 
-Create a new project with the SpecLoop framework. This skill is a thin wrapper over `npx specloop init`: the CLI does the work, so creating a project from the terminal or from Claude Code gives the same result. Projects keep a `template.json` with `framework.package` and `framework.version`, so `npx specloop update` (or `/template-update`) can update them later.
+Create a new project with the SpecLoop framework. This skill is a thin wrapper over `npx @k0d3r/specloop init`: the CLI does the work, so creating a project from the terminal or from Claude Code gives the same result. Projects keep a `template.json` with `framework.package` and `framework.version`, so `npx @k0d3r/specloop update` (or `/template-update`) can update them later.
 
 Do the steps in order. Confirm with the user where the step says so, except in non-interactive mode.
 
@@ -25,7 +25,7 @@ Used by automation and the benchmark (`claude -p`). All inputs come from argumen
 
 - `--target` and `--name` are required. A missing one is an error: stop, list it, and create nothing.
 - `--description` defaults to the name. `--languages` defaults to none (`common` only). A missing `checks-*` argument is written as an empty string.
-- `--template-source <path>` runs the CLI of that local checkout (`node <path>/bin/specloop.mjs init ...`) instead of `npx specloop@latest init`. It lets a benchmark run against an unpublished branch. `template.json` in the new project still records `framework.package` and the version of that checkout.
+- `--template-source <path>` runs the CLI of that local checkout (`node <path>/bin/specloop.mjs init ...`) instead of `npx @k0d3r/specloop@latest init`. It lets a benchmark run against an unpublished branch. `template.json` in the new project still records `framework.package` and the version of that checkout.
 - The CLI runs with `--yes`: no questions, and the first commit is made without waiting for confirmation.
 - Permissions match each command literally. Run one plain command per Bash call, with absolute paths. Do not use shell variables (`T=...`), `;`, `&&` or subshells. A denied command will not be allowed on a retry: report it and stop.
 - End with one line: `NEW-PROJECT: <target> <created|failed>`.
@@ -46,7 +46,7 @@ Collect these before creating anything. Ask for any that are missing:
 
 2. **Run the CLI.** One command, with the confirmed inputs:
    ```bash
-   npx specloop@latest init <target> --yes --name <name> --description "<text>" --languages "<langs>" --checks-test "<cmd>" --checks-lint "<cmd>" --checks-typecheck "<cmd>"
+   npx @k0d3r/specloop@latest init <target> --yes --name <name> --description "<text>" --languages "<langs>" --checks-test "<cmd>" --checks-lint "<cmd>" --checks-typecheck "<cmd>"
    ```
    Add `--checks-test-file`, `--checks-coverage`, `--checks-test-report` and `--suite` when given. With `--template-source <path>`, run `node <path>/bin/specloop.mjs init ...` with the same arguments.
 
@@ -70,4 +70,4 @@ Collect these before creating anything. Ask for any that are missing:
 
 - Never create or write into a directory that already has files.
 - Never write outside `<target>`.
-- Never copy files by hand or fetch the framework with git: `npx specloop init` is the only way to create a project.
+- Never copy files by hand or fetch the framework with git: `npx @k0d3r/specloop init` is the only way to create a project.

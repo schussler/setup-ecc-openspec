@@ -6,7 +6,6 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-export const PACKAGE_NAME = 'specloop';
 const BOOLEAN_FLAGS = new Set(['yes', 'non-interactive', 'help', 'version']);
 const AFFIRMATIVE = new Set(['s', 'sim', 'y', 'yes']);
 
@@ -46,11 +45,14 @@ export function packageManifest() {
   return readJson(join(PACKAGE_ROOT, 'template.json'));
 }
 
+// Nome e versão vêm do package.json do pacote: uma fonte só (design.md D1 de use-scoped-npm-package).
+const packageJson = () => readJson(join(PACKAGE_ROOT, 'package.json'));
+
 export function packageVersion() {
-  return readJson(join(PACKAGE_ROOT, 'package.json')).version;
+  return packageJson().version;
 }
 
-export const frameworkField = () => ({ package: PACKAGE_NAME, version: packageVersion() });
+export const frameworkField = () => ({ package: packageJson().name, version: packageVersion() });
 
 // Caminhos managed de um projeto: a lista do manifesto mais as rules das linguagens escolhidas.
 export function managedEntries(managed, rules = []) {

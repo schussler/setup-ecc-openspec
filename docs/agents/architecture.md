@@ -4,7 +4,7 @@ Contexto do próprio framework SpecLoop. Projetos SpecLoop recebem os modelos de
 
 ## Visão geral
 
-- **O que o sistema faz:** é um framework de toolset para Claude Code (rules e agents do ECC, workflows do OpenSpec, skills próprias), distribuído como o pacote npm `specloop`. O CLI `npx specloop` cria (`init`), adota (`adopt`), instala (`install`) e atualiza (`update`) projetos.
+- **O que o sistema faz:** é um framework de toolset para Claude Code (rules e agents do ECC, workflows do OpenSpec, skills próprias), distribuído como o pacote npm `@k0d3r/specloop`. O CLI `npx @k0d3r/specloop` cria (`init`), adota (`adopt`), instala (`install`) e atualiza (`update`) projetos.
 - **Stack:** Markdown (skills, rules, comandos), JSON (`template.json`, `.claude/settings.json`) e scripts Node ≥ 22 em ES module, sem dependências npm.
 - **Como rodar localmente:** não há app. Valide com `template-check`, `openspec validate --all` e os comandos em `template.json` → `checks`.
 
@@ -15,7 +15,7 @@ Contexto do próprio framework SpecLoop. Projetos SpecLoop recebem os modelos de
 | `.claude/rules/`, `.claude/agents/`, `.claude/skills/`, `.claude/commands/` | Toolset (ECC + OpenSpec + skills locais) | Sim, `managed` |
 | `scripts/gates/` | Gates determinísticos (implementação, arquivamento, PR, escopo, lint, sintaxe) | Sim, `managed` |
 | `templates/docs/agents/` | Modelos `TBD` de contexto | Copiados pelo `/new-project` |
-| `bin/`, `scripts/cli/`, `package.json` | CLI `npx specloop` (`install`, `init`, `adopt`, `update`), que copia do próprio pacote | Não (`template_only`; vão no pacote npm) |
+| `bin/`, `scripts/cli/`, `package.json` | CLI `npx @k0d3r/specloop` (`install`, `init`, `adopt`, `update`), que copia do próprio pacote | Não (`template_only`; vão no pacote npm) |
 | `.github/`, `scripts/ci/` | CI de PR, publicação no npm pela `main` (trusted publishing) e regra da `main` | Não (`template_only`) |
 | `scripts/benchmark/` | Runner de benchmark, tarefas e fixtures | Não (`template_only`) |
 | `scripts/test/` | Suíte do template (`node --test`) | Não (`template_only`) |

@@ -15,5 +15,5 @@
 
 ## 3. F3 — Entrega
 
-- [ ] 3.1 PR com CI verde e merge (sob pedido do usuário)
-- [ ] 3.2 Primeira publicação manual de `@k0d3r/specloop@0.1.0` e passos 4 a 7 do README
+- [x] 3.1 PR com CI verde e merge (sob pedido do usuário) (PR #5)
+- [x] 3.2 Primeira publicação manual de `@k0d3r/specloop@0.1.0` e passos 4 a 7 do README (2026-10-25)

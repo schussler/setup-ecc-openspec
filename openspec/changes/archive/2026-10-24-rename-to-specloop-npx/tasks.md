@@ -39,6 +39,6 @@
 
 Decisão do usuário em 2026-10-24: a publicação passa a ser feita pela CI da `main`, com push direto bloqueado (só PR, sem exceção). Os passos abaixo ficam abertos e são cobertos pela change `add-npm-publish-ci`. O `gh` desta máquina só tem leitura no repositório: renomear e publicar ficam com o dono.
 
-- [ ] 5.1 Renomear o repositório no GitHub para `specloop` (dono do repositório)
-- [ ] 5.2 Primeira publicação manual de `specloop` no npm (pré-requisito do trusted publishing)
-- [ ] 5.3 Publicações seguintes pela CI, em `add-npm-publish-ci`
+- [x] 5.1 Renomear o repositório no GitHub para `specloop` (dono do repositório) (2026-10-24, `schussler/specloop`)
+- [x] 5.2 Primeira publicação manual de `specloop` no npm (pré-requisito do trusted publishing) (publicado como `@k0d3r/specloop@0.1.0`: o nome sem escopo foi recusado; ver `use-scoped-npm-package`)
+- [x] 5.3 Publicações seguintes pela CI, em `add-npm-publish-ci` (`0.1.1` pela CI em 2026-10-25)

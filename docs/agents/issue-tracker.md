@@ -4,9 +4,7 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 
 ## Ponto de restauração
 
-- **Arquivada (use-scoped-npm-package, 2026-10-24):** pacote `@k0d3r/specloop`; gates em `pass`. Publicação inicial de `@k0d3r/specloop@0.1.0` feita pelo usuário (2026-10-25); passos 1 a 5 e 7 do README concluídos. **Próximo passo:** merge da PR `fix-trust-allow-publish` (publica 0.1.1 pela CI) e, depois, o passo 6 (regra da `main`).
-- **Arquivada (rename-to-specloop-npx, 2026-10-24):** gates de implementação e arquivamento em `pass` (ver `gates.json` da change arquivada). F5 adiada: publicação pela CI em `add-npm-publish-ci`. Sem commit.
-- **Arquivada (add-npm-publish-ci, 2026-10-24):** gates de implementação e arquivamento em `pass` (ver `gates.json` da change arquivada); spec `release-ci` criada. F4 aberta: sete passos do dono (README → Publicação) e primeira PR real. **Próximo passo:** `pr` (pedido pelo usuário em 2026-10-24).
+- **Distribuição concluída (2026-10-25):** `rename-to-specloop-npx`, `add-npm-publish-ci` e `use-scoped-npm-package` arquivadas com gates em `pass`; F4 concluída. `@k0d3r/specloop` publicado (`0.1.0` manual, `0.1.1` pela CI com proveniência); regra da `main` ativa (só PR com `ci` verde, sem exceção). **Próximo passo:** nenhum pendente desta frente. Nova versão: PR que sobe `package.json` → `version` e `template.json` → `framework.version`.
 - **Marco de adoção registrado:** 2026-10-24 — aprovador: mantenedor. Escopo restrito: uso experimental supervisionado em Node 24.21.0/macOS, uma única fatia (`implement`). Base: aprovação do contrato `336249d1-e8e3-43e3-ac57-a35f8147f22d` (hash `9fc8fe2b…751f7a`, versão 1) e validação final aprovada em 2026-10-24T14:12:58.827Z (828 casos). Limitações mantidas: multifatia, Ctrl+C durante a invocação e caminhos com espaço em `--claude-bin` pendentes; limite de turnos não comprovado (P.2 não autorizada); PB-009 aberto; Node 22 não verificado; isolamento advisory. `--legacy-write` preservado; adoção em projetos reais não autorizada. Não é conformidade integral com o desenho original.
 - **Change ativa:** `add-proportional-change-flow` (implementação supervisionada concluída; arquivamento bloqueado pelo fluxo atual: o gate de implementação do runner não está em pass; change mantida aberta). `add-spec-harness` continua aberta e também bloqueia o `pr-gate`, porque o gate reprova qualquer diretório fora de `archive/`. Estado de `add-spec-harness`: (F1 a F12, A, B.1 a B.8, C, P.1 e 12.5 concluídos; 13.2, 10.3, 12.4b, B.9, P.2 e P.3 pendentes)
 - **Branch:** `rorqual` (worktree), a partir de `main` em `8401fa1`; sem commit
@@ -52,6 +50,20 @@ Log de trabalho dos agentes no template. Toda sessão lê este arquivo primeiro 
 | 2026-10-24 | add-spec-harness | archive (12.5, fluxo legado, `--legacy-write`) | 1 | — | C.1 a C.3 aplicados; nenhuma alteração de código nesta avaliação | cenários 218/218 (100%), suíte verde, `openspec validate --strict` válido | pass |
 
 ## Log
+
+### 2026-10-25 — add-npm-publish-ci: F4 concluída
+
+- **Passos do dono (README → Publicação):**
+  1. repositório renomeado para `schussler/specloop` (agente, com a conta `schussler`);
+  2. environment `npm` com política de branch só `main` (agente);
+  3. primeira publicação manual de `@k0d3r/specloop@0.1.0` pelo usuário (shasum `79fde380…`; o npm exigiu 2FA na conta e recusou o nome `specloop`, ver `use-scoped-npm-package`);
+  4. trusted publisher configurado pelo usuário e conferido com `npm trust list`: github, `schussler/specloop`, `publish.yml`, environment `npm`, `publish, stage publish`;
+  5. publicação por token bloqueada pelo usuário no npmjs.com ("Require two-factor authentication and disallow tokens"; conferência só visual, sem leitura pela CLI);
+  6. regra da `main` aplicada pelo agente depois do merge da PR #6: ruleset `25802752`, `active`, `bypass_actors` vazio, regras `deletion`, `non_fast_forward`, `pull_request`, `required_status_checks` (`ci`); conferida pela API, sem teste de push direto;
+  7. aprovação de workflows de fork em `all_external_contributors` (agente; antes `first_time_contributors`).
+- **CI em PR real:** PR #4 (falha real em MS-009 por identidade git no runner, corrigida no fixture), PR #5 e PR #6 com `ci` verde.
+- **Publicação pela CI:** o merge da PR #6 (`a6ca79b`) rodou `publish` (execução 40147019385), que publicou `@k0d3r/specloop@0.1.1` por OIDC, sem token (shasum `4ad46c9f…`), com proveniência no Sigstore (logIndex 3446824516). No registro: `dist.attestations` SLSA v1; `npm audit signatures` → "1 package has a verified attestation".
+- **Tarefas marcadas:** 4.1 e 4.2 de `add-npm-publish-ci`, 3.1 e 3.2 de `use-scoped-npm-package` e 5.1 a 5.3 de `rename-to-specloop-npx`, nas changes arquivadas (só `tasks.md`, fora do hash do contrato).
 
 ### 2026-10-25 — Caminho 1: `--allow-publish` no passo 4 e versão 0.1.1
 
